@@ -1,4 +1,5 @@
 import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
+import {Sfx} from './Sfx';
 import {P, W, H} from './theme';
 import {TIMELINE} from './timeline';
 
@@ -62,10 +63,10 @@ export const Background: React.FC = () => {
 export const Wipe: React.FC = () => {
   const frame = useCurrentFrame();
   const x = interpolate(frame, [0, 12], [-1.4, 1.4], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  if (frame > 12) return null;
   return (
     <AbsoluteFill style={{pointerEvents: 'none'}}>
-      <div
+      <Sfx name="whoosh" at={0} volume={0.35} />
+      {frame <= 12 && <div
         style={{
           position: 'absolute',
           left: x * W,
@@ -75,7 +76,7 @@ export const Wipe: React.FC = () => {
           background: P.red,
           transform: 'rotate(14deg)',
         }}
-      />
+      />}
     </AbsoluteFill>
   );
 };

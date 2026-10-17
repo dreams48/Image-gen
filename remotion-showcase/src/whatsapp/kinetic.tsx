@@ -1,4 +1,5 @@
 import {interpolate, spring, useCurrentFrame, useVideoConfig, Easing} from 'remotion';
+import {Sfx} from './Sfx';
 import {P, display} from './theme';
 
 export const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
@@ -39,6 +40,7 @@ export const Slam: React.FC<KT> = ({text, at, size = 200, color = P.black, style
       }}
     >
       {text}
+      <Sfx name="impact" at={at + 5} volume={0.45} />
     </div>
   );
 };
@@ -65,6 +67,7 @@ export const Drop: React.FC<KT & {stagger?: number}> = ({text, at, size = 200, c
           </span>
         );
       })}
+      <Sfx name="pop" at={at} volume={0.45} />
     </div>
   );
 };
@@ -75,6 +78,7 @@ export const Rise: React.FC<KT> = ({text, at, size = 200, color = P.black, style
   return (
     <div style={{overflow: 'hidden', paddingTop: 10, ...style}}>
       <div style={{...base(size, color), transform: `translateY(${interpolate(s, [0, 1], [size * 1.1, 0])}px)`}}>{text}</div>
+      <Sfx name="swish" at={at} volume={0.25} />
     </div>
   );
 };
@@ -90,6 +94,7 @@ export const Block: React.FC<KT & {bg?: string}> = ({text, at, size = 150, color
       <div style={{...base(size, color), position: 'relative', opacity: t, transform: `translateX(${(1 - t) * -30}px)`}}>
         {text}
       </div>
+      <Sfx name="swish" at={at} volume={0.4} />
     </div>
   );
 };
@@ -117,6 +122,7 @@ export const Tag: React.FC<{text: string; at?: number; bg?: string; color?: stri
       }}
     >
       {text}
+      <Sfx name="tick" at={at} volume={0.5} />
     </div>
   );
 };

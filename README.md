@@ -62,17 +62,21 @@ cd remotion-showcase
 npm run render:projets   # -> ../output/projets_claude_tutoriel.mp4
 ```
 
-## « Les Projets dans Claude » : version WhatsApp 9:16 (58 s)
+## « Les Projets dans Claude » : version WhatsApp 9:16 (47 s)
 
 `output/projets_claude_whatsapp_9x16.mp4` (1080×1920, 30 i/s, H.264 + AAC, moins de 60 s) est le même tutoriel au format vertical, pour les statuts et les discussions WhatsApp. Source : `remotion-showcase/src/whatsapp/` (composition `ProjetsWhatsApp`).
 
-- **Voix off** en français (voix neuronale `fr-FR-DeniseNeural`) générée par `scripts/voiceover.py` avec `edge-tts`. Le script enregistre aussi le minutage de chaque mot dans `src/whatsapp/voiceover.json`.
+- **Voix off** générée avec [HyperFrames](https://www.npmjs.com/package/hyperframes) : `hyperframes tts` (modèle local Kokoro-82M, voix française `ff_siwis`), puis `hyperframes transcribe` (Whisper, en français) pour le minutage de chaque mot. Le script `scripts/voiceover.py` recale ces minutages sur le texte exact du script et les enregistre dans `src/whatsapp/voiceover.json`.
+- **Sons** fabriqués en code par `scripts/sfx.py` (numpy, aucun fichier externe, donc aucun souci de droits) : « whoosh » à chaque changement de scène, impact sous les mots qui tombent, pops, petits balayages, tic des étiquettes, clic et frappe au clavier à l'étape 1, carillon final, et une musique de fond légère (104 BPM) gardée bien en dessous de la voix.
+- **Mixage** : volume final à −16 LUFS, pic à −1,5 dB.
 - **Sous-titres** synchronisés mot par mot : le mot prononcé passe en rouge.
-- **Typographie cinétique** (police Anton) : mots qui tombent du ciel, lettres en cascade, mots qui montent derrière un masque, mots sur bandeau, toujours calés sur le mot prononcé.
-- **Fond animé** : taches rouges qui ondulent, disque blanc et anneau noir qui dérivent, balayage rouge à chaque changement de scène. Les couleurs mesurées sur toute la vidéo sont crème 58 %, rouge 20,5 %, blanc 11 %, noir 11 % (cible 60/20/10/10).
+- **Typographie cinétique** (police Anton) calée sur le mot prononcé.
+- **Fond animé** crème, rouge, blanc et noir (cible 60/20/10/10).
 
 ```bash
 cd remotion-showcase
-pip install edge-tts && npm run voiceover   # régénère la voix off (texte dans scripts/voiceover.py)
-npm run render:whatsapp                      # -> ../output/projets_claude_whatsapp_9x16.mp4
+pip install kokoro-onnx soundfile numpy
+npm run voiceover        # voix off HyperFrames (texte dans scripts/voiceover.py)
+npm run sfx              # effets sonores et musique
+npm run render:whatsapp  # -> ../output/projets_claude_whatsapp_9x16.mp4 (mixage à -16 LUFS inclus)
 ```

@@ -1,9 +1,9 @@
-import {AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, Audio, Sequence, interpolate, staticFile, useCurrentFrame} from 'remotion';
 import {Background, Wipe} from './Background';
 import {Captions} from './Captions';
 import {SCENES} from './scenes';
 import {P, display} from './theme';
-import {TIMELINE} from './timeline';
+import {TIMELINE, TOTAL_FRAMES} from './timeline';
 
 const STEPS = ['create', 'instruct', 'docs', 'chat'];
 const LABELS = ['CRÉER', 'INSTRUIRE', 'ALIMENTER', 'DISCUTER'];
@@ -50,11 +50,16 @@ const Progress: React.FC = () => {
 export const WhatsAppVideo: React.FC = () => (
   <AbsoluteFill style={{background: P.cream}}>
     <Background />
+    {/* music bed, faded in/out, kept well under the voice */}
+    <Audio
+      src={staticFile('sfx/music.mp3')}
+      volume={(f) => interpolate(f, [0, 20, TOTAL_FRAMES - 40, TOTAL_FRAMES], [0, 0.14, 0.14, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}
+    />
     {TIMELINE.map(({seg, from, duration}) => {
       const Scene = SCENES[seg.id];
       return (
         <Sequence key={seg.id} from={from} durationInFrames={duration}>
-          <Audio src={staticFile(seg.file)} volume={1.7} />
+          <Audio src={staticFile(seg.file)} volume={1} />
           <Scene seg={seg} />
           <Captions seg={seg} />
           <Wipe />

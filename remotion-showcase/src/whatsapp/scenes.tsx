@@ -1,5 +1,6 @@
 import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {Block, Drop, Rise, Slam, Tag, clamp, useSpr} from './kinetic';
+import {Sfx} from './Sfx';
 import {P, body, display} from './theme';
 import {Segment, wordAt} from './timeline';
 
@@ -74,6 +75,7 @@ export const Hook: S = ({seg}) => {
               }}
             >
               « Je suis formateur, mon public est… »
+              <Sfx name="pop" at={at} volume={0.4} />
             </div>
           );
         })}
@@ -96,6 +98,7 @@ export const Solution: S = ({seg}) => {
       <div style={{position: 'absolute', top: 760, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
         <div style={{transform: `scale(${folder}) rotate(${interpolate(folder, [0, 1], [-25, 4])}deg)`}}>
           <Folder size={300} />
+          <Sfx name="pop" at={p - 4} volume={0.5} />
         </div>
         <Slam text="LES PROJETS" at={p} size={190} color={P.red} style={{marginTop: 10}} />
       </div>
@@ -170,6 +173,8 @@ export const Create: S = ({seg}) => {
           </div>
         </Card>
       </div>
+      <Sfx name="click" at={press} volume={0.6} />
+      <Sfx name="typing" at={name} volume={0.45} />
     </AbsoluteFill>
   );
 };
@@ -211,6 +216,7 @@ export const Instruct: S = ({seg}) => {
               }}
             >
               {g.t}
+              <Sfx name="pop" at={g.at} volume={0.45} />
             </div>
           );
         })}
@@ -274,6 +280,7 @@ export const Docs: S = ({seg}) => {
                 {f.ext}
               </div>
               <div style={{fontFamily: body, fontWeight: 700, fontSize: 44, color: P.black}}>{f.n}</div>
+              <Sfx name="swish" at={start + i * 6} volume={0.35} />
             </div>
           );
         })}
@@ -314,9 +321,11 @@ export const Chat: S = ({seg}) => {
             }}
           >
             Prépare la séance 2
+            <Sfx name="pop" at={wordAt(seg, 'discute') + 4} volume={0.45} />
           </div>
         </div>
         <div style={{marginTop: 26, opacity: aSpr, transform: `translateY(${(1 - aSpr) * 60}px)`}}>
+          <Sfx name="pop" at={a} volume={0.45} />
           <Card style={{borderRadius: '30px 30px 30px 6px', padding: '26px 34px', width: 800}}>
             {ANSWER.map((l, i) => (
               <div
@@ -385,6 +394,7 @@ export const Outro: S = ({seg}) => {
           <Slam key={v.t} text={v.t} at={wordAt(seg, v.t.toLowerCase() === 'créer' ? 'Créer' : v.t.toLowerCase())} size={190} color={v.c} />
         ))}
       </Top>
+      <Sfx name="whoosh" at={finale - 6} volume={0.5} />
       {grow > 0 && (
         <AbsoluteFill>
           <div
@@ -401,6 +411,7 @@ export const Outro: S = ({seg}) => {
           <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', flexDirection: 'column', top: -120}}>
             <Drop text="À TOI" at={finale + 2} size={250} color={P.white} />
             <Drop text="DE JOUER !" at={wordAt(seg, 'jouer') - 2} size={200} color={P.black} stagger={1} />
+            <Sfx name="ding" at={wordAt(seg, 'jouer') + 6} volume={0.5} />
           </AbsoluteFill>
         </AbsoluteFill>
       )}

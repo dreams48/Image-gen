@@ -2,8 +2,8 @@ import vo from './voiceover.json';
 
 export const FPS = 30;
 export const LEAD = 8; // frames of silence before the first word
-export const GAP = 8; // frames of breathing room after each segment
-export const TAIL = 30; // frames held after the last segment
+export const GAP = 16; // frames of breathing room after each segment
+export const TAIL = 45; // frames held after the last segment
 
 export type Word = {text: string; startMs: number; endMs: number};
 export type Segment = {id: string; file: string; text: string; durationMs: number; words: Word[]};
