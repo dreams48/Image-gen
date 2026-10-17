@@ -61,3 +61,18 @@ npm run render   # -> ../output/claude_motion_showcase.mp4
 cd remotion-showcase
 npm run render:projets   # -> ../output/projets_claude_tutoriel.mp4
 ```
+
+## « Les Projets dans Claude » : version WhatsApp 9:16 (58 s)
+
+`output/projets_claude_whatsapp_9x16.mp4` (1080×1920, 30 i/s, H.264 + AAC, moins de 60 s) est le même tutoriel au format vertical, pour les statuts et les discussions WhatsApp. Source : `remotion-showcase/src/whatsapp/` (composition `ProjetsWhatsApp`).
+
+- **Voix off** en français (voix neuronale `fr-FR-DeniseNeural`) générée par `scripts/voiceover.py` avec `edge-tts`. Le script enregistre aussi le minutage de chaque mot dans `src/whatsapp/voiceover.json`.
+- **Sous-titres** synchronisés mot par mot : le mot prononcé passe en rouge.
+- **Typographie cinétique** (police Anton) : mots qui tombent du ciel, lettres en cascade, mots qui montent derrière un masque, mots sur bandeau, toujours calés sur le mot prononcé.
+- **Fond animé** : taches rouges qui ondulent, disque blanc et anneau noir qui dérivent, balayage rouge à chaque changement de scène. Les couleurs mesurées sur toute la vidéo sont crème 58 %, rouge 20,5 %, blanc 11 %, noir 11 % (cible 60/20/10/10).
+
+```bash
+cd remotion-showcase
+pip install edge-tts && npm run voiceover   # régénère la voix off (texte dans scripts/voiceover.py)
+npm run render:whatsapp                      # -> ../output/projets_claude_whatsapp_9x16.mp4
+```

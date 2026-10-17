@@ -1,0 +1,647 @@
+{
+ "voice": "fr-FR-DeniseNeural",
+ "segments": [
+  {
+   "id": "hook",
+   "file": "vo/hook.mp3",
+   "text": "Tu réexpliques tout à Claude, à chaque nouvelle conversation ?",
+   "durationMs": 4128,
+   "words": [
+    {
+     "text": "Tu",
+     "startMs": 97,
+     "endMs": 262
+    },
+    {
+     "text": "réexpliques",
+     "startMs": 274,
+     "endMs": 887
+    },
+    {
+     "text": "tout",
+     "startMs": 899,
+     "endMs": 1029
+    },
+    {
+     "text": "à",
+     "startMs": 1041,
+     "endMs": 1182
+    },
+    {
+     "text": "Claude",
+     "startMs": 1194,
+     "endMs": 1536
+    },
+    {
+     "text": "à",
+     "startMs": 1866,
+     "endMs": 1901
+    },
+    {
+     "text": "chaque",
+     "startMs": 1913,
+     "endMs": 2184
+    },
+    {
+     "text": "nouvelle",
+     "startMs": 2196,
+     "endMs": 2503
+    },
+    {
+     "text": "conversation",
+     "startMs": 2515,
+     "endMs": 3293
+    }
+   ]
+  },
+  {
+   "id": "solution",
+   "file": "vo/solution.mp3",
+   "text": "Bonne nouvelle : la solution existe. Ce sont les Projets.",
+   "durationMs": 4848,
+   "words": [
+    {
+     "text": "Bonne",
+     "startMs": 97,
+     "endMs": 368
+    },
+    {
+     "text": "nouvelle",
+     "startMs": 380,
+     "endMs": 817
+    },
+    {
+     "text": "la",
+     "startMs": 1111,
+     "endMs": 1217
+    },
+    {
+     "text": "solution",
+     "startMs": 1229,
+     "endMs": 1689
+    },
+    {
+     "text": "existe",
+     "startMs": 1701,
+     "endMs": 2302
+    },
+    {
+     "text": "Ce",
+     "startMs": 3113,
+     "endMs": 3337
+    },
+    {
+     "text": "sont",
+     "startMs": 3349,
+     "endMs": 3479
+    },
+    {
+     "text": "les",
+     "startMs": 3491,
+     "endMs": 3585
+    },
+    {
+     "text": "Projets",
+     "startMs": 3597,
+     "endMs": 4033
+    }
+   ]
+  },
+  {
+   "id": "concept",
+   "file": "vo/concept.mp3",
+   "text": "Un projet, c'est un espace de travail qui réunit tes instructions, tes documents, et tes conversations.",
+   "durationMs": 6360,
+   "words": [
+    {
+     "text": "Un",
+     "startMs": 97,
+     "endMs": 239
+    },
+    {
+     "text": "projet",
+     "startMs": 250,
+     "endMs": 675
+    },
+    {
+     "text": "c'est",
+     "startMs": 1005,
+     "endMs": 1147
+    },
+    {
+     "text": "un",
+     "startMs": 1158,
+     "endMs": 1300
+    },
+    {
+     "text": "espace",
+     "startMs": 1312,
+     "endMs": 1725
+    },
+    {
+     "text": "de",
+     "startMs": 1736,
+     "endMs": 1854
+    },
+    {
+     "text": "travail",
+     "startMs": 1866,
+     "endMs": 2243
+    },
+    {
+     "text": "qui",
+     "startMs": 2255,
+     "endMs": 2385
+    },
+    {
+     "text": "réunit",
+     "startMs": 2397,
+     "endMs": 2739
+    },
+    {
+     "text": "tes",
+     "startMs": 2750,
+     "endMs": 2857
+    },
+    {
+     "text": "instructions",
+     "startMs": 2868,
+     "endMs": 3482
+    },
+    {
+     "text": "tes",
+     "startMs": 3741,
+     "endMs": 3835
+    },
+    {
+     "text": "documents",
+     "startMs": 3847,
+     "endMs": 4307
+    },
+    {
+     "text": "et",
+     "startMs": 4614,
+     "endMs": 4637
+    },
+    {
+     "text": "tes",
+     "startMs": 4649,
+     "endMs": 4767
+    },
+    {
+     "text": "conversations",
+     "startMs": 4779,
+     "endMs": 5545
+    }
+   ]
+  },
+  {
+   "id": "create",
+   "file": "vo/create.mp3",
+   "text": "Étape un : dans le menu Projets, clique sur Nouveau projet, et donne-lui un nom clair.",
+   "durationMs": 5544,
+   "words": [
+    {
+     "text": "Étape",
+     "startMs": 97,
+     "endMs": 510
+    },
+    {
+     "text": "un",
+     "startMs": 522,
+     "endMs": 687
+    },
+    {
+     "text": "dans",
+     "startMs": 946,
+     "endMs": 1076
+    },
+    {
+     "text": "le",
+     "startMs": 1088,
+     "endMs": 1194
+    },
+    {
+     "text": "menu",
+     "startMs": 1206,
+     "endMs": 1441
+    },
+    {
+     "text": "Projets",
+     "startMs": 1453,
+     "endMs": 1890
+    },
+    {
+     "text": "clique",
+     "startMs": 2161,
+     "endMs": 2408
+    },
+    {
+     "text": "sur",
+     "startMs": 2420,
+     "endMs": 2574
+    },
+    {
+     "text": "Nouveau",
+     "startMs": 2585,
+     "endMs": 2845
+    },
+    {
+     "text": "projet",
+     "startMs": 2857,
+     "endMs": 3258
+    },
+    {
+     "text": "et",
+     "startMs": 3600,
+     "endMs": 3635
+    },
+    {
+     "text": "donne-lui",
+     "startMs": 3647,
+     "endMs": 3989
+    },
+    {
+     "text": "un",
+     "startMs": 4000,
+     "endMs": 4059
+    },
+    {
+     "text": "nom",
+     "startMs": 4071,
+     "endMs": 4213
+    },
+    {
+     "text": "clair",
+     "startMs": 4225,
+     "endMs": 4720
+    }
+   ]
+  },
+  {
+   "id": "instruct",
+   "file": "vo/instruct.mp3",
+   "text": "Étape deux : écris les instructions. Ton rôle, ton public, le ton, et le format attendu.",
+   "durationMs": 7056,
+   "words": [
+    {
+     "text": "Étape",
+     "startMs": 97,
+     "endMs": 522
+    },
+    {
+     "text": "deux",
+     "startMs": 534,
+     "endMs": 769
+    },
+    {
+     "text": "écris",
+     "startMs": 1041,
+     "endMs": 1265
+    },
+    {
+     "text": "les",
+     "startMs": 1276,
+     "endMs": 1371
+    },
+    {
+     "text": "instructions",
+     "startMs": 1383,
+     "endMs": 2114
+    },
+    {
+     "text": "Ton",
+     "startMs": 2925,
+     "endMs": 3113
+    },
+    {
+     "text": "rôle",
+     "startMs": 3125,
+     "endMs": 3443
+    },
+    {
+     "text": "ton",
+     "startMs": 3715,
+     "endMs": 3868
+    },
+    {
+     "text": "public",
+     "startMs": 3880,
+     "endMs": 4304
+    },
+    {
+     "text": "le",
+     "startMs": 4564,
+     "endMs": 4658
+    },
+    {
+     "text": "ton",
+     "startMs": 4670,
+     "endMs": 4906
+    },
+    {
+     "text": "et",
+     "startMs": 5189,
+     "endMs": 5212
+    },
+    {
+     "text": "le",
+     "startMs": 5224,
+     "endMs": 5342
+    },
+    {
+     "text": "format",
+     "startMs": 5354,
+     "endMs": 5672
+    },
+    {
+     "text": "attendu",
+     "startMs": 5684,
+     "endMs": 6238
+    }
+   ]
+  },
+  {
+   "id": "docs",
+   "file": "vo/docs.mp3",
+   "text": "Étape trois : ajoute tes documents de référence. Claude s'en sert dans chaque conversation.",
+   "durationMs": 6456,
+   "words": [
+    {
+     "text": "Étape",
+     "startMs": 97,
+     "endMs": 475
+    },
+    {
+     "text": "trois",
+     "startMs": 486,
+     "endMs": 793
+    },
+    {
+     "text": "ajoute",
+     "startMs": 1064,
+     "endMs": 1465
+    },
+    {
+     "text": "tes",
+     "startMs": 1477,
+     "endMs": 1595
+    },
+    {
+     "text": "documents",
+     "startMs": 1607,
+     "endMs": 2019
+    },
+    {
+     "text": "de",
+     "startMs": 2031,
+     "endMs": 2137
+    },
+    {
+     "text": "référence",
+     "startMs": 2149,
+     "endMs": 2809
+    },
+    {
+     "text": "Claude",
+     "startMs": 3632,
+     "endMs": 3939
+    },
+    {
+     "text": "s'en",
+     "startMs": 3950,
+     "endMs": 4127
+    },
+    {
+     "text": "sert",
+     "startMs": 4139,
+     "endMs": 4422
+    },
+    {
+     "text": "dans",
+     "startMs": 4434,
+     "endMs": 4564
+    },
+    {
+     "text": "chaque",
+     "startMs": 4575,
+     "endMs": 4835
+    },
+    {
+     "text": "conversation",
+     "startMs": 4847,
+     "endMs": 5625
+    }
+   ]
+  },
+  {
+   "id": "chat",
+   "file": "vo/chat.mp3",
+   "text": "Étape quatre : discute ! Claude répond directement dans ton contexte, sans que tu aies à tout réexpliquer.",
+   "durationMs": 7224,
+   "words": [
+    {
+     "text": "Étape",
+     "startMs": 97,
+     "endMs": 475
+    },
+    {
+     "text": "quatre",
+     "startMs": 486,
+     "endMs": 828
+    },
+    {
+     "text": "discute",
+     "startMs": 1029,
+     "endMs": 1630
+    },
+    {
+     "text": "Claude",
+     "startMs": 2453,
+     "endMs": 2736
+    },
+    {
+     "text": "répond",
+     "startMs": 2748,
+     "endMs": 3078
+    },
+    {
+     "text": "directement",
+     "startMs": 3090,
+     "endMs": 3679
+    },
+    {
+     "text": "dans",
+     "startMs": 3691,
+     "endMs": 3833
+    },
+    {
+     "text": "ton",
+     "startMs": 3844,
+     "endMs": 3998
+    },
+    {
+     "text": "contexte",
+     "startMs": 4009,
+     "endMs": 4587
+    },
+    {
+     "text": "sans",
+     "startMs": 4847,
+     "endMs": 5000
+    },
+    {
+     "text": "que",
+     "startMs": 5012,
+     "endMs": 5130
+    },
+    {
+     "text": "tu",
+     "startMs": 5142,
+     "endMs": 5295
+    },
+    {
+     "text": "aies",
+     "startMs": 5307,
+     "endMs": 5366
+    },
+    {
+     "text": "à",
+     "startMs": 5377,
+     "endMs": 5484
+    },
+    {
+     "text": "tout",
+     "startMs": 5495,
+     "endMs": 5625
+    },
+    {
+     "text": "réexpliquer",
+     "startMs": 5637,
+     "endMs": 6403
+    }
+   ]
+  },
+  {
+   "id": "tip",
+   "file": "vo/tip.mp3",
+   "text": "Mon conseil : un projet, un objectif. Une formation, un client, ou un cours.",
+   "durationMs": 6960,
+   "words": [
+    {
+     "text": "Mon",
+     "startMs": 97,
+     "endMs": 309
+    },
+    {
+     "text": "conseil",
+     "startMs": 321,
+     "endMs": 923
+    },
+    {
+     "text": "un",
+     "startMs": 1265,
+     "endMs": 1312
+    },
+    {
+     "text": "projet",
+     "startMs": 1324,
+     "endMs": 1760
+    },
+    {
+     "text": "un",
+     "startMs": 2055,
+     "endMs": 2114
+    },
+    {
+     "text": "objectif",
+     "startMs": 2125,
+     "endMs": 2868
+    },
+    {
+     "text": "Une",
+     "startMs": 3691,
+     "endMs": 3880
+    },
+    {
+     "text": "formation",
+     "startMs": 3892,
+     "endMs": 4528
+    },
+    {
+     "text": "un",
+     "startMs": 4823,
+     "endMs": 4882
+    },
+    {
+     "text": "client",
+     "startMs": 4894,
+     "endMs": 5295
+    },
+    {
+     "text": "ou",
+     "startMs": 5554,
+     "endMs": 5613
+    },
+    {
+     "text": "un",
+     "startMs": 5625,
+     "endMs": 5719
+    },
+    {
+     "text": "cours",
+     "startMs": 5731,
+     "endMs": 6144
+    }
+   ]
+  },
+  {
+   "id": "outro",
+   "file": "vo/outro.mp3",
+   "text": "Créer, instruire, alimenter, discuter. À toi de jouer !",
+   "durationMs": 5496,
+   "words": [
+    {
+     "text": "Créer",
+     "startMs": 97,
+     "endMs": 486
+    },
+    {
+     "text": "instruire",
+     "startMs": 828,
+     "endMs": 1312
+    },
+    {
+     "text": "alimenter",
+     "startMs": 1548,
+     "endMs": 2114
+    },
+    {
+     "text": "discuter",
+     "startMs": 2338,
+     "endMs": 2951
+    },
+    {
+     "text": "À",
+     "startMs": 3762,
+     "endMs": 3903
+    },
+    {
+     "text": "toi",
+     "startMs": 3915,
+     "endMs": 4116
+    },
+    {
+     "text": "de",
+     "startMs": 4127,
+     "endMs": 4245
+    },
+    {
+     "text": "jouer",
+     "startMs": 4257,
+     "endMs": 4670
+    }
+   ]
+  }
+ ]
+}

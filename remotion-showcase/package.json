@@ -6,9 +6,12 @@
     "studio": "remotion studio",
     "render": "remotion render ClaudeShowcase ../output/claude_motion_showcase.mp4",
     "render:projets": "remotion render ProjetsClaude ../output/projets_claude_tutoriel.mp4",
+    "voiceover": "python3 scripts/voiceover.py",
+    "render:whatsapp": "remotion render ProjetsWhatsApp ../output/projets_claude_whatsapp_9x16.mp4",
     "still": "remotion still ClaudeShowcase ../output/preview_showcase.png --frame=60"
   },
   "dependencies": {
+    "@fontsource/anton": "^5.1.0",
     "@fontsource/fraunces": "^5.1.0",
     "@fontsource/inter": "^5.1.0",
     "@fontsource/jetbrains-mono": "^5.1.0",
