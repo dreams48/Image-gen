@@ -4,7 +4,7 @@ Every pixel of the animation comes from assets/reference.png: the poster is spli
 layers (clean paper, collage fragments, sticky notes, ink/typography), each layer is
 animated, and the last second holds the untouched reference image.
 
-Usage: python3 animate.py [--preview]   -> output/okok_sucre.mp4 (7.5 s, silent)
+Usage: python3 animate.py [--preview]   -> output/okok_sucre.mp4 (6.35 s, silent)
 """
 import argparse
 import math
@@ -16,8 +16,11 @@ import cv2
 import numpy as np
 
 FPS = 30
-TIMELINE = 8.0  # the choreography below is written on an 8 s timeline...
-DURATION = 7.5  # ...and played back faster to fit this length
+# The choreography below is written on an 8 s timeline; playback remaps it:
+# a short blank page and a brisk assembly, then the notes and typography at 1.07x.
+PLAYBACK = [0.0, 0.4, 2.6, 6.35]  # output time (s)
+TIMELINE = [0.0, 1.0, 4.0, 8.0]   # timeline time (s)
+DURATION = PLAYBACK[-1]
 REF = os.path.join(os.path.dirname(__file__), "assets", "reference.png")
 OUT_DIR = os.path.join(os.path.dirname(__file__), "output")
 rng = np.random.default_rng(7)
@@ -492,7 +495,7 @@ def main():
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     nframes = int(DURATION * FPS)
     for i in range(nframes):
-        frame = render_frame(L, C, i / FPS * TIMELINE / DURATION)
+        frame = render_frame(L, C, float(np.interp(i / FPS, PLAYBACK, TIMELINE)))
         proc.stdin.write(frame.clip(0, 255).astype(np.uint8).tobytes())
         if i % 30 == 0:
             print(f"frame {i}/{nframes}", file=sys.stderr)
