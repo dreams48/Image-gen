@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Cormorant Garamond";
+        src: url("assets/fonts/cormorant-garamond-latin-500-normal.woff2") format("woff2");
+        font-weight: 500;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "Cormorant Garamond";
+        src: url("assets/fonts/cormorant-garamond-latin-300-italic.woff2") format("woff2");
+        font-weight: 300;
+        font-style: italic;
+      }
+      @font-face {
+        font-family: "Jost";
+        src: url("assets/fonts/jost-latin-400-normal.woff2") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #050302;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #050302;
+      }
+      #bg-visual {
+        position: absolute;
+        inset: 0;
+      }
+      #bg-video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      #bg-shade {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at center, rgba(5, 3, 2, 0.35) 0%, rgba(5, 3, 2, 0.8) 75%);
+      }
+      #lockup {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      #eyebrow {
+        display: block;
+        font-family: "Jost", sans-serif;
+        font-size: 26px;
+        letter-spacing: 0.6em;
+        text-transform: uppercase;
+        color: #d9b98a;
+        margin-bottom: 36px;
+        padding-left: 0.6em;
+      }
+      #title {
+        display: block;
+        font-family: "Cormorant Garamond", serif;
+        font-weight: 500;
+        font-size: 190px;
+        line-height: 1;
+        letter-spacing: 0.04em;
+        background: linear-gradient(180deg, #f7e3c0 0%, #d6a865 55%, #9c6b34 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      #rule {
+        display: block;
+        width: 420px;
+        height: 2px;
+        margin: 48px 0 40px;
+        background: linear-gradient(90deg, rgba(214, 168, 101, 0), #d6a865 50%, rgba(214, 168, 101, 0));
+      }
+      #tagline {
+        display: block;
+        font-family: "Cormorant Garamond", serif;
+        font-style: italic;
+        font-weight: 300;
+        font-size: 64px;
+        letter-spacing: 0.02em;
+        color: #f2e6d4;
+      }
+      #fade-out {
+        position: absolute;
+        inset: 0;
+        background: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="10"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div id="bg-visual">
+        <video
+          id="bg-video"
+          class="clip"
+          src="assets/bg-smoke.mp4"
+          muted
+          playsinline
+          data-start="0"
+          data-duration="10"
+          data-track-index="0"
+        ></video>
+      </div>
+      <div id="bg-shade"></div>
+
+      <div id="lockup">
+        <span id="eyebrow">Eau de parfum</span>
+        <h1 id="title">Chocolat Noir</h1>
+        <span id="rule"></span>
+        <p id="tagline">Briller sans bruit</p>
+      </div>
+
+      <div id="fade-out"></div>
+
+      <audio
+        id="music-bed"
+        src="assets/ambient-bed.mp3"
+        data-start="0"
+        data-duration="10"
+        data-track-index="2"
+        data-volume="0.35"
+        data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0},{"t":1.5,"v":0.35},{"t":8.5,"v":0.35},{"t":10,"v":0}]}]}'
+      ></audio>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // Open from black, slow push-in on the smoke
+      tl.fromTo("#fade-out", { opacity: 1 }, { opacity: 0, duration: 1.6, ease: "power1.out" }, 0);
+      tl.fromTo("#bg-visual", { scale: 1 }, { scale: 1.12, duration: 10, ease: "none" }, 0);
+
+      // Title lockup
+      tl.fromTo("#eyebrow", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 1.2, ease: "power2.out" }, 1.0);
+      tl.fromTo(
+        "#title",
+        { opacity: 0, y: 24, scale: 1.06, filter: "blur(14px)" },
+        { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 2.2, ease: "power3.out" },
+        1.5,
+      );
+      tl.fromTo("#rule", { opacity: 0, scaleX: 0 }, { opacity: 1, scaleX: 1, duration: 1.2, ease: "power2.inOut" }, 3.4);
+      tl.fromTo("#tagline", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 1.4, ease: "power2.out" }, 4.4);
+
+      // Close to black
+      tl.to("#fade-out", { opacity: 1, duration: 1.3, ease: "power1.in" }, 8.7);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
