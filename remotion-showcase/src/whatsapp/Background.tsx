@@ -1,7 +1,6 @@
 import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {Sfx} from './Sfx';
 import {P, W, H} from './theme';
-import {TIMELINE} from './timeline';
 
 // Wobbly closed blob around (cx, cy).
 const blob = (cx: number, cy: number, r: number, t: number, seed: number) => {
@@ -15,11 +14,12 @@ const blob = (cx: number, cy: number, r: number, t: number, seed: number) => {
   return d + 'Z';
 };
 
-export const Background: React.FC = () => {
+// `cuts`: frames where a new segment starts (the blobs change shape there).
+export const Background: React.FC<{cuts: number[]}> = ({cuts}) => {
   const frame = useCurrentFrame();
   const t = frame;
   // red blobs breathe and drift; they swap sides a little on each new segment
-  const cut = TIMELINE.filter((s) => s.from <= frame).length;
+  const cut = cuts.filter((c) => c <= frame).length;
   const swing = interpolate(Math.sin(t / 45), [-1, 1], [-40, 40]);
   return (
     <AbsoluteFill style={{background: P.cream}}>

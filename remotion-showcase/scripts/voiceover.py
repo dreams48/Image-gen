@@ -9,12 +9,13 @@ Output:
   public/vo/<id>.mp3
   src/whatsapp/voiceover.json
 
-Usage: python3 scripts/voiceover.py   (needs: pip install kokoro-onnx soundfile)
+Usage: python3 scripts/voiceover.py [projets|instructions]   (needs: pip install kokoro-onnx soundfile)
 """
 import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import unicodedata
 from pathlib import Path
@@ -24,7 +25,7 @@ VOICE = "ff_siwis"
 SPEED = "1.0"
 ROOT = Path(__file__).resolve().parent.parent
 
-SEGMENTS = [
+PROJETS = [
     ("hook", "Tu réexpliques tout à Claude, à chaque nouvelle conversation ?"),
     ("solution", "Bonne nouvelle : la solution existe. Ce sont les Projets."),
     ("concept", "Un projet, c'est un espace de travail qui réunit tes instructions, tes documents, et tes conversations."),
@@ -35,6 +36,23 @@ SEGMENTS = [
     ("tip", "Mon conseil : un projet, un objectif. Une formation, un client, ou un cours."),
     ("outro", "Créer, instruire, alimenter, discuter. À toi de jouer !"),
 ]
+
+INSTRUCTIONS = [
+    ("hook", "Claude ne sait jamais qui tu es ? Un seul réglage change tout. Je te montre."),
+    ("open", "Étape un : clique sur tes initiales, en bas à gauche, puis ouvre les Paramètres."),
+    ("field", "Étape deux : dans Profil, trouve le champ des préférences personnelles."),
+    ("write", "Étape trois : écris qui tu es, ce que tu fais, et comment tu veux tes réponses."),
+    ("save", "Étape quatre : enregistre. C'est tout !"),
+    ("result", "Et voilà : dans chaque nouvelle conversation, Claude s'adapte à toi, sans que tu te répètes."),
+    ("tip", "Mon conseil : reste court et précis. Trois ou quatre phrases suffisent."),
+    ("outro", "Qui tu es, ce que tu fais, comment tu veux tes réponses. À toi de jouer !"),
+]
+
+# video -> (segments, audio folder under public/, timings file)
+VIDEOS = {
+    "projets": (PROJETS, "vo", "src/whatsapp/voiceover.json"),
+    "instructions": (INSTRUCTIONS, "vo/instructions", "src/instructions/voiceover.json"),
+}
 
 
 def letters(s: str) -> str:
@@ -65,7 +83,7 @@ def align(words: list[str], heard: list[dict]) -> list[dict]:
     return out
 
 
-def synth(seg_id: str, text: str, tmp: Path) -> dict:
+def synth(seg_id: str, text: str, tmp: Path, folder: str) -> dict:
     wav = tmp / f"{seg_id}.wav"
     subprocess.run(HF + ["tts", text, "-v", VOICE, "-s", SPEED, "-o", str(wav)], check=True, capture_output=True)
     proj = tmp / seg_id
@@ -77,14 +95,15 @@ def synth(seg_id: str, text: str, tmp: Path) -> dict:
     )
     heard = json.loads((proj / "transcript.json").read_text())
     heard = heard["words"] if isinstance(heard, dict) else heard
-    mp3 = ROOT / "public" / "vo" / f"{seg_id}.mp3"
+    mp3 = ROOT / "public" / folder / f"{seg_id}.mp3"
+    mp3.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(wav), "-b:a", "128k", str(mp3)], check=True)
     duration = float(
         subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(mp3)])
     )
     return {
         "id": seg_id,
-        "file": f"vo/{seg_id}.mp3",
+        "file": f"{folder}/{seg_id}.mp3",
         "text": text,
         "durationMs": round(duration * 1000),
         "words": align(script_words(text), heard),
@@ -93,9 +112,11 @@ def synth(seg_id: str, text: str, tmp: Path) -> dict:
 
 def main() -> None:
     os.environ.setdefault("HYPERFRAMES_NO_TELEMETRY", "1")
+    segs, folder, out = VIDEOS[sys.argv[1] if len(sys.argv) > 1 else "projets"]
     with tempfile.TemporaryDirectory() as d:
-        segments = [synth(i, t, Path(d)) for i, t in SEGMENTS]
-    dest = ROOT / "src" / "whatsapp" / "voiceover.json"
+        segments = [synth(i, t, Path(d), folder) for i, t in segs]
+    dest = ROOT / out
+    dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps({"engine": "hyperframes tts (Kokoro-82M)", "voice": VOICE, "segments": segments}, ensure_ascii=False, indent=1))
     total = sum(s["durationMs"] for s in segments) / 1000
     print(f"{len(segments)} segments, {total:.1f} s of speech -> {dest}")

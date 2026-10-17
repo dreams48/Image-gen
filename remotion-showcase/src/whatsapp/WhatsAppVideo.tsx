@@ -5,15 +5,21 @@ import {SCENES} from './scenes';
 import {P, display} from './theme';
 import {TIMELINE, TOTAL_FRAMES} from './timeline';
 
-const STEPS = ['create', 'instruct', 'docs', 'chat'];
-const LABELS = ['CRÉER', 'INSTRUIRE', 'ALIMENTER', 'DISCUTER'];
+type Timeline = {seg: {id: string}; from: number}[];
 
-// Black strip with the 4 steps; the current one turns red.
-const Progress: React.FC = () => {
+// Black strip with the steps; the current one turns red. `after` lists segments
+// that come once every step is done.
+export const Progress: React.FC<{timeline: Timeline; steps: string[]; labels: string[]; after: string[]; fontSize?: number}> = ({
+  timeline,
+  steps,
+  labels,
+  after,
+  fontSize = 38,
+}) => {
   const frame = useCurrentFrame();
-  const currentId = [...TIMELINE].reverse().find((t) => frame >= t.from)?.seg.id ?? '';
-  const idx = STEPS.indexOf(currentId);
-  const done = ['tip', 'outro'].includes(currentId) ? 4 : idx;
+  const currentId = [...timeline].reverse().find((t) => frame >= t.from)?.seg.id ?? '';
+  const idx = steps.indexOf(currentId);
+  const done = after.includes(currentId) ? steps.length : idx;
   return (
     <div
       style={{
@@ -29,12 +35,12 @@ const Progress: React.FC = () => {
         padding: '0 30px',
       }}
     >
-      {LABELS.map((l, i) => (
+      {labels.map((l, i) => (
         <div
           key={l}
           style={{
             fontFamily: display,
-            fontSize: 38,
+            fontSize,
             letterSpacing: 2,
             color: i === idx ? P.red : i < done ? P.cream : '#5a5048',
             transform: `scale(${i === idx ? 1.15 : 1})`,
@@ -49,7 +55,7 @@ const Progress: React.FC = () => {
 
 export const WhatsAppVideo: React.FC = () => (
   <AbsoluteFill style={{background: P.cream}}>
-    <Background />
+    <Background cuts={TIMELINE.map((t) => t.from)} />
     {/* music bed, faded in/out, kept well under the voice */}
     <Audio
       src={staticFile('sfx/music.mp3')}
@@ -66,6 +72,11 @@ export const WhatsAppVideo: React.FC = () => (
         </Sequence>
       );
     })}
-    <Progress />
+    <Progress
+      timeline={TIMELINE}
+      steps={['create', 'instruct', 'docs', 'chat']}
+      labels={['CRÉER', 'INSTRUIRE', 'ALIMENTER', 'DISCUTER']}
+      after={['tip', 'outro']}
+    />
   </AbsoluteFill>
 );
