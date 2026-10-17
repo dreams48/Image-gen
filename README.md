@@ -18,3 +18,24 @@ pip install -r requirements.txt   # ffmpeg doit aussi être installé
 python3 animate.py                # -> output/okok_sucre.mp4
 python3 animate.py --preview      # quelques images fixes de contrôle
 ```
+
+## Claude × Remotion — démonstration de motion design (31,5 s)
+
+`output/claude_motion_showcase.mp4` (1920×1080, 30 i/s, sans son) est entièrement codée en React avec [Remotion](https://www.remotion.dev) dans `remotion-showcase/`. Chaque scène montre une technique différente, et chaque passage d'une scène à l'autre utilise une transition différente (glissement, volet, retournement 3D, volet horaire, fondu).
+
+| Temps | Scène | Technique |
+|---|---|---|
+| 0–5 s | Intro « Claude » | Étoile qui se déploie rayon par rayon, lettres en ressort, espacement qui se resserre |
+| 5–9,3 s | « Animer. Raconter. Expliquer. » | Typographie cinétique : masque, brouillage de lettres, échelle élastique + soulignement |
+| 9,3–13,7 s | Formes | Morphing cercle → étoile → triangle → hexagone, tracé SVG qui se dessine, balles qui rebondissent |
+| 13,7–18 s | Données | Barres, anneau et compteur animés (chiffres d'exemple) |
+| 18–23,3 s | Workflow d'agent IA | Nœuds façon n8n, connexions qui se tracent, paquets de données qui circulent |
+| 23,3–26,3 s | Génératif | 576 points animés par une seule formule d'onde |
+| 26,3–31,5 s | Outro | Code tapé à l'écran, « Tout ceci est du code. » |
+
+```bash
+cd remotion-showcase
+npm install
+npm run studio   # aperçu interactif dans le navigateur
+npm run render   # -> ../output/claude_motion_showcase.mp4
+```
