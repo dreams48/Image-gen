@@ -4,7 +4,7 @@ Every pixel of the animation comes from assets/reference.png: the poster is spli
 layers (clean paper, collage fragments, sticky notes, ink/typography), each layer is
 animated, and the last second holds the untouched reference image.
 
-Usage: python3 animate.py [--preview]   -> output/okok_sucre.mp4
+Usage: python3 animate.py [--preview]   -> output/okok_sucre.mp4 (7.5 s, silent)
 """
 import argparse
 import math
@@ -15,10 +15,9 @@ import sys
 import cv2
 import numpy as np
 
-from sound import build_soundtrack
-
 FPS = 30
-DURATION = 8.0
+TIMELINE = 8.0  # the choreography below is written on an 8 s timeline...
+DURATION = 7.5  # ...and played back faster to fit this length
 REF = os.path.join(os.path.dirname(__file__), "assets", "reference.png")
 OUT_DIR = os.path.join(os.path.dirname(__file__), "output")
 rng = np.random.default_rng(7)
@@ -485,17 +484,15 @@ def main():
             cv2.imwrite(os.path.join(OUT_DIR, f"preview_{t:.2f}.png"), render_frame(L, C, t).clip(0, 255).astype(np.uint8))
         return
 
-    wav = os.path.join(OUT_DIR, "soundtrack.wav")
-    build_soundtrack(wav, C, DURATION)
     out = os.path.join(OUT_DIR, "okok_sucre.mp4")
     cmd = ["ffmpeg", "-y", "-loglevel", "error",
            "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{L.W}x{L.H}", "-r", str(FPS), "-i", "-",
-           "-i", wav, "-c:v", "libx264", "-preset", "slow", "-crf", "15", "-pix_fmt", "yuv420p",
-           "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-shortest", out]
+           "-c:v", "libx264", "-preset", "slow", "-crf", "15", "-pix_fmt", "yuv420p",
+           "-movflags", "+faststart", out]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     nframes = int(DURATION * FPS)
     for i in range(nframes):
-        frame = render_frame(L, C, i / FPS)
+        frame = render_frame(L, C, i / FPS * TIMELINE / DURATION)
         proc.stdin.write(frame.clip(0, 255).astype(np.uint8).tobytes())
         if i % 30 == 0:
             print(f"frame {i}/{nframes}", file=sys.stderr)
