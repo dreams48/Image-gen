@@ -39,3 +39,25 @@ npm install
 npm run studio   # aperçu interactif dans le navigateur
 npm run render   # -> ../output/claude_motion_showcase.mp4
 ```
+
+## Tutoriel « Les Projets dans Claude » (1 min 23)
+
+`output/projets_claude_tutoriel.mp4` (1920×1080, 30 i/s, sans son) explique, avec des sous-titres à l'écran, comment utiliser les Projets dans Claude. Source : `remotion-showcase/src/projets/` (composition `ProjetsClaude`). L'interface montrée est une maquette simplifiée, pas une capture de claude.ai.
+
+| Temps | Scène |
+|---|---|
+| 0–5 s | Titre |
+| 5–13,5 s | Le problème : sans projet, chaque conversation repart de zéro |
+| 13,5–22 s | La solution : instructions + connaissances + conversations |
+| 22–31,5 s | Étape 1 : créer le projet (nom, description) |
+| 31,5–41 s | Étape 2 : instructions du projet (rôle, public, ton, format) |
+| 41–49,5 s | Étape 3 : ajouter des documents de référence |
+| 49,5–60 s | Étape 4 : discuter dans le projet |
+| 60–67,5 s | Bonus : partage en équipe (offres Team et Enterprise) |
+| 67,5–77 s | 3 bonnes pratiques |
+| 77–83,5 s | Récapitulatif : Créer → Instruire → Alimenter → Discuter |
+
+```bash
+cd remotion-showcase
+npm run render:projets   # -> ../output/projets_claude_tutoriel.mp4
+```

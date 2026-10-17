@@ -5,6 +5,7 @@
   "scripts": {
     "studio": "remotion studio",
     "render": "remotion render ClaudeShowcase ../output/claude_motion_showcase.mp4",
+    "render:projets": "remotion render ProjetsClaude ../output/projets_claude_tutoriel.mp4",
     "still": "remotion still ClaudeShowcase ../output/preview_showcase.png --frame=60"
   },
   "dependencies": {
