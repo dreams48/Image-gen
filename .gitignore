@@ -1,2 +1,4 @@
 output/preview_*.png
 __pycache__/
+node_modules/
+remotion-showcase/out/
