@@ -120,3 +120,7 @@ npm run render:instructions      # -> ../output/instructions_claude_whatsapp_9x1
 - **Diligence** : cocher la liste de vérifications avant diffusion.
 
 Le schéma final montre les 4D en boucle. La page fonctionne en clair et en sombre, au téléphone, et sans animation quand l'appareil le demande. Elle est publiée comme artifact claude.ai.
+
+## Moteur à courant continu en 3D
+
+`web/moteur-cc/index.html` présente un moteur à courant continu en coupe, en 3D avec Three.js (`three@0.128.0`). On le fait tourner à la souris ou au doigt. Un clic sur une pièce, ou sur sa pastille sous la vue, ouvre une feuille qui monte du bas de l'écran : rôle, fonctionnement, matériaux et une formule ou une idée à retenir. La page propose aussi une vue éclatée et la rotation de l'induit. Pièces : carcasse, pôles inducteurs, bobines inductrices, induit, conducteurs d'induit, collecteur, balais, arbre, flasques et roulements, boîte à bornes.
