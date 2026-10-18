@@ -80,3 +80,47 @@ npm run voiceover        # voix off HyperFrames (texte dans scripts/voiceover.py
 npm run sfx              # effets sonores et musique
 npm run render:whatsapp  # -> ../output/projets_claude_whatsapp_9x16.mp4 (mixage à -16 LUFS inclus)
 ```
+
+## « Les instructions personnalisées dans Claude » : version WhatsApp 9:16 (41 s)
+
+`output/instructions_claude_whatsapp_9x16.mp4` (1080×1920, H.264 + AAC, −16 LUFS) reprend la charte et la chaîne de production de la vidéo « Projets » : voix off HyperFrames (`ff_siwis`), sous-titres mot par mot, typographie cinétique, sons et fond crème/rouge/blanc/noir. Source : `remotion-showcase/src/instructions/` (composition `InstructionsWhatsApp`).
+
+Éléments repris de la vidéo de référence :
+- un déroulé « Je te montre » puis Étape 1 à 4, et le résultat ;
+- un bandeau d'étape noir en haut, avec pastille numérotée rouge et points de progression ;
+- un « doigt » rouge qui tape sur l'écran, avec une onde à chaque appui ;
+- des écrans d'application filmés par une caméra qui zoome et s'incline ;
+- une notification de confirmation (« Préférences enregistrées ✓ »).
+
+| Scène | Contenu |
+|---|---|
+| Accroche | « Claude ne sait jamais qui tu es ? Un seul réglage change tout. » |
+| Étape 1 | Clic sur les initiales → menu → Paramètres |
+| Étape 2 | Profil → champ des préférences personnelles |
+| Étape 3 | On écrit qui on est, ce qu'on fait, comment on veut les réponses (QUI / QUOI / COMMENT) |
+| Étape 4 | Enregistrer → notification de confirmation |
+| Résultat | Une nouvelle conversation où la réponse est adaptée |
+| Conseil | Court et précis : 3 ou 4 phrases suffisent |
+| Fin | Récapitulatif, puis « À toi de jouer ! » |
+
+L'interface montrée est une maquette simplifiée : les libellés exacts de claude.ai peuvent légèrement différer.
+
+```bash
+cd remotion-showcase
+npm run voiceover:instructions   # voix off (texte dans scripts/voiceover.py, liste INSTRUCTIONS)
+npm run render:instructions      # -> ../output/instructions_claude_whatsapp_9x16.mp4
+```
+
+## Tutoriel web « Les 4D de l'IA » (Motion)
+
+`web/4d-ia/index.html` est un tutoriel interactif sur le cadre AI Fluency d'Anthropic (Délégation, Description, Discernement, Diligence), animé avec [Motion](https://motion.dev) (`motion@11.11.13`, chargé depuis jsDelivr). Chaque étape propose un petit exercice :
+- **Délégation** : répartir quatre tâches entre « Moi », « L'IA » et « Ensemble » ;
+- **Description** : assembler un prompt avec les ingrédients Produit, Processus et Performance ;
+- **Discernement** : repérer trois problèmes dans une réponse ;
+- **Diligence** : cocher la liste de vérifications avant diffusion.
+
+Le schéma final montre les 4D en boucle. La page fonctionne en clair et en sombre, au téléphone, et sans animation quand l'appareil le demande. Elle est publiée comme artifact claude.ai.
+
+## Moteur à courant continu en 3D
+
+`web/moteur-cc/index.html` présente un moteur à courant continu en coupe, en 3D avec Three.js (`three@0.128.0`). On le fait tourner à la souris ou au doigt. Un clic sur une pièce, ou sur sa pastille sous la vue, ouvre une feuille qui monte du bas de l'écran : rôle, fonctionnement, matériaux et une formule ou une idée à retenir. La page propose aussi une vue éclatée et la rotation de l'induit. Pièces : carcasse, pôles inducteurs, bobines inductrices, induit, conducteurs d'induit, collecteur, balais, arbre, flasques et roulements, boîte à bornes.

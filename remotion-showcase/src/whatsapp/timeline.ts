@@ -12,17 +12,22 @@ export const SEGMENTS = vo.segments as Segment[];
 
 export const segFrames = (s: Segment) => Math.ceil((s.durationMs / 1000) * FPS) + GAP;
 
-export const TIMELINE = (() => {
+// Lays segments end to end; `extra` adds hold frames after given segment ids.
+export const makeTimeline = (segments: Segment[], extra: Record<string, number> = {}) => {
   let from = LEAD;
-  return SEGMENTS.map((s, i) => {
-    const dur = segFrames(s);
-    const item = {seg: s, from, duration: i === SEGMENTS.length - 1 ? dur + TAIL : dur};
+  const timeline = segments.map((s, i) => {
+    const dur = segFrames(s) + (extra[s.id] ?? 0);
+    const item = {seg: s, from, duration: i === segments.length - 1 ? dur + TAIL : dur};
     from += dur;
     return item;
   });
-})();
+  const last = timeline[timeline.length - 1];
+  return {timeline, total: last.from + last.duration};
+};
 
-export const TOTAL_FRAMES = TIMELINE[TIMELINE.length - 1].from + TIMELINE[TIMELINE.length - 1].duration;
+const projets = makeTimeline(SEGMENTS);
+export const TIMELINE = projets.timeline;
+export const TOTAL_FRAMES = projets.total;
 
 export const msToFrame = (ms: number) => Math.round((ms / 1000) * FPS);
 

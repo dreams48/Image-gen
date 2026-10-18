@@ -1,0 +1,580 @@
+{
+ "engine": "hyperframes tts (Kokoro-82M)",
+ "voice": "ff_siwis",
+ "segments": [
+  {
+   "id": "hook",
+   "file": "vo/instructions/hook.mp3",
+   "text": "Claude ne sait jamais qui tu es ? Un seul réglage change tout. Je te montre.",
+   "durationMs": 4104,
+   "words": [
+    {
+     "text": "Claude",
+     "startMs": 80,
+     "endMs": 373
+    },
+    {
+     "text": "ne",
+     "startMs": 360,
+     "endMs": 480
+    },
+    {
+     "text": "sait",
+     "startMs": 480,
+     "endMs": 720
+    },
+    {
+     "text": "jamais",
+     "startMs": 720,
+     "endMs": 1005
+    },
+    {
+     "text": "qui",
+     "startMs": 1080,
+     "endMs": 1260
+    },
+    {
+     "text": "tu",
+     "startMs": 1260,
+     "endMs": 1380
+    },
+    {
+     "text": "es",
+     "startMs": 1380,
+     "endMs": 1560
+    },
+    {
+     "text": "Un",
+     "startMs": 1620,
+     "endMs": 1695
+    },
+    {
+     "text": "seul",
+     "startMs": 1740,
+     "endMs": 1942
+    },
+    {
+     "text": "réglage",
+     "startMs": 1930,
+     "endMs": 2273
+    },
+    {
+     "text": "change",
+     "startMs": 2280,
+     "endMs": 2607
+    },
+    {
+     "text": "tout",
+     "startMs": 2600,
+     "endMs": 2855
+    },
+    {
+     "text": "Je",
+     "startMs": 3120,
+     "endMs": 3220
+    },
+    {
+     "text": "te",
+     "startMs": 3200,
+     "endMs": 3360
+    },
+    {
+     "text": "montre",
+     "startMs": 3400,
+     "endMs": 3960
+    }
+   ]
+  },
+  {
+   "id": "open",
+   "file": "vo/instructions/open.mp3",
+   "text": "Étape un : clique sur tes initiales, en bas à gauche, puis ouvre les Paramètres.",
+   "durationMs": 4440,
+   "words": [
+    {
+     "text": "Étape",
+     "startMs": 40,
+     "endMs": 385
+    },
+    {
+     "text": "un",
+     "startMs": 378,
+     "endMs": 490
+    },
+    {
+     "text": "clique",
+     "startMs": 500,
+     "endMs": 993
+    },
+    {
+     "text": "sur",
+     "startMs": 1007,
+     "endMs": 1213
+    },
+    {
+     "text": "tes",
+     "startMs": 1227,
+     "endMs": 1450
+    },
+    {
+     "text": "initiales",
+     "startMs": 1480,
+     "endMs": 2290
+    },
+    {
+     "text": "en",
+     "startMs": 2287,
+     "endMs": 2403
+    },
+    {
+     "text": "bas",
+     "startMs": 2400,
+     "endMs": 2602
+    },
+    {
+     "text": "à",
+     "startMs": 2613,
+     "endMs": 2673
+    },
+    {
+     "text": "gauche",
+     "startMs": 2685,
+     "endMs": 3188
+    },
+    {
+     "text": "puis",
+     "startMs": 3140,
+     "endMs": 3330
+    },
+    {
+     "text": "ouvre",
+     "startMs": 3314,
+     "endMs": 3551
+    },
+    {
+     "text": "les",
+     "startMs": 3536,
+     "endMs": 3683
+    },
+    {
+     "text": "Paramètres",
+     "startMs": 3667,
+     "endMs": 4256
+    }
+   ]
+  },
+  {
+   "id": "field",
+   "file": "vo/instructions/field.mp3",
+   "text": "Étape deux : dans Profil, trouve le champ des préférences personnelles.",
+   "durationMs": 3768,
+   "words": [
+    {
+     "text": "Étape",
+     "startMs": 40,
+     "endMs": 388
+    },
+    {
+     "text": "deux",
+     "startMs": 400,
+     "endMs": 875
+    },
+    {
+     "text": "dans",
+     "startMs": 898,
+     "endMs": 1147
+    },
+    {
+     "text": "Profil",
+     "startMs": 1193,
+     "endMs": 1782
+    },
+    {
+     "text": "trouve",
+     "startMs": 1763,
+     "endMs": 2035
+    },
+    {
+     "text": "le",
+     "startMs": 2020,
+     "endMs": 2134
+    },
+    {
+     "text": "champ",
+     "startMs": 2128,
+     "endMs": 2350
+    },
+    {
+     "text": "des",
+     "startMs": 2330,
+     "endMs": 2500
+    },
+    {
+     "text": "préférences",
+     "startMs": 2492,
+     "endMs": 3070
+    },
+    {
+     "text": "personnelles",
+     "startMs": 3066,
+     "endMs": 3684
+    }
+   ]
+  },
+  {
+   "id": "write",
+   "file": "vo/instructions/write.mp3",
+   "text": "Étape trois : écris qui tu es, ce que tu fais, et comment tu veux tes réponses.",
+   "durationMs": 4008,
+   "words": [
+    {
+     "text": "Étape",
+     "startMs": 40,
+     "endMs": 300
+    },
+    {
+     "text": "trois",
+     "startMs": 300,
+     "endMs": 782
+    },
+    {
+     "text": "écris",
+     "startMs": 778,
+     "endMs": 1083
+    },
+    {
+     "text": "qui",
+     "startMs": 1130,
+     "endMs": 1350
+    },
+    {
+     "text": "tu",
+     "startMs": 1415,
+     "endMs": 1630
+    },
+    {
+     "text": "es",
+     "startMs": 1625,
+     "endMs": 1800
+    },
+    {
+     "text": "ce",
+     "startMs": 1803,
+     "endMs": 1863
+    },
+    {
+     "text": "que",
+     "startMs": 1867,
+     "endMs": 2020
+    },
+    {
+     "text": "tu",
+     "startMs": 2110,
+     "endMs": 2205
+    },
+    {
+     "text": "fais",
+     "startMs": 2180,
+     "endMs": 2525
+    },
+    {
+     "text": "et",
+     "startMs": 2570,
+     "endMs": 2677
+    },
+    {
+     "text": "comment",
+     "startMs": 2664,
+     "endMs": 2960
+    },
+    {
+     "text": "tu",
+     "startMs": 2955,
+     "endMs": 3070
+    },
+    {
+     "text": "veux",
+     "startMs": 3065,
+     "endMs": 3290
+    },
+    {
+     "text": "tes",
+     "startMs": 3277,
+     "endMs": 3520
+    },
+    {
+     "text": "réponses",
+     "startMs": 3512,
+     "endMs": 3887
+    }
+   ]
+  },
+  {
+   "id": "save",
+   "file": "vo/instructions/save.mp3",
+   "text": "Étape quatre : enregistre. C'est tout !",
+   "durationMs": 2088,
+   "words": [
+    {
+     "text": "Étape",
+     "startMs": 40,
+     "endMs": 244
+    },
+    {
+     "text": "quatre",
+     "startMs": 232,
+     "endMs": 730
+    },
+    {
+     "text": "enregistre",
+     "startMs": 745,
+     "endMs": 1430
+    },
+    {
+     "text": "C'est",
+     "startMs": 1418,
+     "endMs": 1740
+    },
+    {
+     "text": "tout",
+     "startMs": 1760,
+     "endMs": 1980
+    }
+   ]
+  },
+  {
+   "id": "result",
+   "file": "vo/instructions/result.mp3",
+   "text": "Et voilà : dans chaque nouvelle conversation, Claude s'adapte à toi, sans que tu te répètes.",
+   "durationMs": 5040,
+   "words": [
+    {
+     "text": "Et",
+     "startMs": 40,
+     "endMs": 140
+    },
+    {
+     "text": "voilà",
+     "startMs": 120,
+     "endMs": 428
+    },
+    {
+     "text": "dans",
+     "startMs": 430,
+     "endMs": 640
+    },
+    {
+     "text": "chaque",
+     "startMs": 670,
+     "endMs": 1013
+    },
+    {
+     "text": "nouvelle",
+     "startMs": 1110,
+     "endMs": 1573
+    },
+    {
+     "text": "conversation",
+     "startMs": 1570,
+     "endMs": 2437
+    },
+    {
+     "text": "Claude",
+     "startMs": 2480,
+     "endMs": 2740
+    },
+    {
+     "text": "s'adapte",
+     "startMs": 2760,
+     "endMs": 3146
+    },
+    {
+     "text": "à",
+     "startMs": 3140,
+     "endMs": 3200
+    },
+    {
+     "text": "toi",
+     "startMs": 3280,
+     "endMs": 3467
+    },
+    {
+     "text": "sans",
+     "startMs": 3690,
+     "endMs": 3862
+    },
+    {
+     "text": "que",
+     "startMs": 3840,
+     "endMs": 3980
+    },
+    {
+     "text": "tu",
+     "startMs": 3960,
+     "endMs": 4100
+    },
+    {
+     "text": "te",
+     "startMs": 4120,
+     "endMs": 4260
+    },
+    {
+     "text": "répètes",
+     "startMs": 4280,
+     "endMs": 4871
+    }
+   ]
+  },
+  {
+   "id": "tip",
+   "file": "vo/instructions/tip.mp3",
+   "text": "Mon conseil : reste court et précis. Trois ou quatre phrases suffisent.",
+   "durationMs": 3744,
+   "words": [
+    {
+     "text": "Mon",
+     "startMs": 40,
+     "endMs": 207
+    },
+    {
+     "text": "conseil",
+     "startMs": 210,
+     "endMs": 550
+    },
+    {
+     "text": "reste",
+     "startMs": 560,
+     "endMs": 896
+    },
+    {
+     "text": "court",
+     "startMs": 904,
+     "endMs": 1180
+    },
+    {
+     "text": "et",
+     "startMs": 1190,
+     "endMs": 1320
+    },
+    {
+     "text": "précis",
+     "startMs": 1330,
+     "endMs": 1695
+    },
+    {
+     "text": "Trois",
+     "startMs": 1730,
+     "endMs": 2075
+    },
+    {
+     "text": "ou",
+     "startMs": 2230,
+     "endMs": 2290
+    },
+    {
+     "text": "quatre",
+     "startMs": 2270,
+     "endMs": 2709
+    },
+    {
+     "text": "phrases",
+     "startMs": 2703,
+     "endMs": 2980
+    },
+    {
+     "text": "suffisent",
+     "startMs": 2992,
+     "endMs": 3558
+    }
+   ]
+  },
+  {
+   "id": "outro",
+   "file": "vo/instructions/outro.mp3",
+   "text": "Qui tu es, ce que tu fais, comment tu veux tes réponses. À toi de jouer !",
+   "durationMs": 3624,
+   "words": [
+    {
+     "text": "Qui",
+     "startMs": 80,
+     "endMs": 207
+    },
+    {
+     "text": "tu",
+     "startMs": 280,
+     "endMs": 355
+    },
+    {
+     "text": "es",
+     "startMs": 310,
+     "endMs": 418
+    },
+    {
+     "text": "ce",
+     "startMs": 406,
+     "endMs": 562
+    },
+    {
+     "text": "que",
+     "startMs": 630,
+     "endMs": 820
+    },
+    {
+     "text": "tu",
+     "startMs": 790,
+     "endMs": 880
+    },
+    {
+     "text": "fais",
+     "startMs": 930,
+     "endMs": 1253
+    },
+    {
+     "text": "comment",
+     "startMs": 1275,
+     "endMs": 1706
+    },
+    {
+     "text": "tu",
+     "startMs": 1697,
+     "endMs": 1860
+    },
+    {
+     "text": "veux",
+     "startMs": 1850,
+     "endMs": 2040
+    },
+    {
+     "text": "tes",
+     "startMs": 2020,
+     "endMs": 2250
+    },
+    {
+     "text": "réponses",
+     "startMs": 2220,
+     "endMs": 2737
+    },
+    {
+     "text": "À",
+     "startMs": 2749,
+     "endMs": 2809
+    },
+    {
+     "text": "toi",
+     "startMs": 2820,
+     "endMs": 3077
+    },
+    {
+     "text": "de",
+     "startMs": 3060,
+     "endMs": 3180
+    },
+    {
+     "text": "jouer",
+     "startMs": 3180,
+     "endMs": 3496
+    }
+   ]
+  }
+ ]
+}

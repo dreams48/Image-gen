@@ -7,6 +7,8 @@
     "render": "remotion render ClaudeShowcase ../output/claude_motion_showcase.mp4",
     "render:projets": "remotion render ProjetsClaude ../output/projets_claude_tutoriel.mp4",
     "voiceover": "python3 scripts/voiceover.py",
+    "voiceover:instructions": "python3 scripts/voiceover.py instructions",
+    "render:instructions": "remotion render InstructionsWhatsApp ../output/instructions_claude_whatsapp_9x16.mp4 && ffmpeg -loglevel error -y -i ../output/instructions_claude_whatsapp_9x16.mp4 -c:v copy -af loudnorm=I=-16:TP=-1.5:LRA=11 -ar 48000 -c:a aac -b:a 192k ../output/tmp_master.mp4 && mv ../output/tmp_master.mp4 ../output/instructions_claude_whatsapp_9x16.mp4",
     "sfx": "python3 scripts/sfx.py 50",
     "render:whatsapp": "remotion render ProjetsWhatsApp ../output/projets_claude_whatsapp_9x16.mp4 && ffmpeg -loglevel error -y -i ../output/projets_claude_whatsapp_9x16.mp4 -c:v copy -af loudnorm=I=-16:TP=-1.5:LRA=11 -ar 48000 -c:a aac -b:a 192k ../output/tmp_master.mp4 && mv ../output/tmp_master.mp4 ../output/projets_claude_whatsapp_9x16.mp4",
     "still": "remotion still ClaudeShowcase ../output/preview_showcase.png --frame=60"

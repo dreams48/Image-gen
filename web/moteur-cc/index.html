@@ -1,0 +1,588 @@
+<title>Moteur à courant continu 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  /* Layout: title strip, a large 3D bench with its toolbar, the parts list as chips, and a bottom sheet for the selected part. */
+  :root {
+    --paper: #F3EAD8;
+    --sheet: #FFFFFF;
+    --ink: #141414;
+    --signal: #E0262B;
+    --muted: #6B6258;
+    --line: #14141426;
+    --bench: #EADFC8;
+    --display: 'Anton', 'Impact', 'Arial Narrow', sans-serif;
+    --body: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #17130F; --sheet: #221D18; --ink: #F3EAD8; --signal: #FF4A4F;
+      --muted: #B3A797; --line: #F3EAD82E; --bench: #201B16; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #17130F; --sheet: #221D18; --ink: #F3EAD8; --signal: #FF4A4F;
+    --muted: #B3A797; --line: #F3EAD82E; --bench: #201B16; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 0 40px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 16px; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; }
+
+  header { padding-top: 28px; display: grid; gap: 8px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(38px, 7vw, 68px); line-height: .95; text-transform: uppercase; text-wrap: balance; }
+  h1 em { font-style: normal; color: var(--signal); }
+  .lede { margin: 0; max-width: 64ch; color: var(--muted); }
+
+  .bench { position: relative; border: 3px solid var(--ink); border-radius: 24px; background: var(--bench); overflow: hidden; }
+  .viewport { height: min(68vh, 620px); min-height: 380px; touch-action: none; cursor: grab; }
+  .viewport.dragging { cursor: grabbing; }
+  .viewport.hovering { cursor: pointer; }
+  .viewport canvas { display: block; width: 100%; height: 100%; }
+  .toolbar { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 8px; max-width: calc(100% - 24px); }
+  .tool {
+    border: 2px solid var(--ink); background: var(--sheet); border-radius: 999px; padding: 6px 14px; cursor: pointer;
+    font-size: 14px; font-weight: 700; display: inline-flex; gap: 6px; align-items: center;
+  }
+  .tool[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .tip {
+    position: absolute; pointer-events: none; background: var(--ink); color: var(--paper); font-weight: 700; font-size: 13px;
+    padding: 4px 10px; border-radius: 8px; transform: translate(-50%, calc(-100% - 12px)); white-space: nowrap;
+  }
+  .hint { position: absolute; right: 14px; bottom: 12px; font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; }
+  .legend { position: absolute; left: 14px; bottom: 12px; display: flex; gap: 12px; font-family: var(--mono); font-size: 12px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); color: var(--muted); }
+
+  .parts { display: grid; gap: 10px; }
+  .parts h2 { margin: 0; font-size: 15px; font-family: var(--mono); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    border: 2px solid var(--ink); background: var(--sheet); border-radius: 12px; padding: 7px 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px;
+  }
+  .chip .dot { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .chip .grp { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--muted); }
+  .chip[aria-pressed="true"] .grp { color: var(--paper); opacity: .7; }
+
+  /* ---------------- bottom sheet ---------------- */
+  .scrim { position: fixed; inset: 0; background: #0000; pointer-events: none; transition: background .3s; z-index: 20; }
+  .scrim.on { background: #14141433; pointer-events: auto; }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; margin: 0 auto; max-width: 760px;
+    background: var(--sheet); color: var(--ink); border: 3px solid var(--ink); border-bottom: 0;
+    border-radius: 26px 26px 0 0; box-shadow: 0 -12px 40px #00000033;
+    transform: translateY(105%); transition: transform .38s cubic-bezier(.2, .9, .25, 1.05);
+    max-height: min(78vh, 640px); display: flex; flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .sheet.open { transform: translateY(0); }
+  .grab { padding: 10px 0 4px; display: grid; place-items: center; cursor: grab; touch-action: none; }
+  .grab span { width: 54px; height: 6px; border-radius: 3px; background: var(--line); }
+  .sheet-head {
+    display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: start;
+    padding: 4px max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px));
+    border-bottom: 2px solid var(--line);
+  }
+  .sheet-head .kind { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--signal); font-weight: 700; }
+  .sheet-head h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(32px, 6vw, 44px); text-transform: uppercase; line-height: 1; grid-column: 1; }
+  .sheet-head h3:focus { outline: none; }
+  .close { grid-row: 1 / span 2; grid-column: 2; width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--ink); background: var(--sheet); cursor: pointer; font-size: 20px; line-height: 1; }
+  .sheet-body {
+    overflow-y: auto; display: grid; gap: 16px;
+    padding: 16px max(20px, env(safe-area-inset-right, 0px)) 18px max(20px, env(safe-area-inset-left, 0px));
+  }
+  .role { font-size: 18px; line-height: 1.55; margin: 0; max-width: 65ch; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .fact { border: 2px solid var(--line); border-radius: 16px; padding: 12px 14px; display: grid; gap: 4px; min-width: 0; }
+  .fact b { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .key { background: var(--ink); color: var(--paper); border-radius: 16px; padding: 14px 16px; display: grid; gap: 4px; }
+  .key b { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; opacity: .7; }
+  .key .f { font-family: var(--mono); font-size: 17px; font-weight: 700; }
+  .sheet-nav { display: flex; justify-content: space-between; gap: 10px; }
+  .sheet-nav button { border: 2px solid var(--ink); background: var(--sheet); border-radius: 999px; padding: 8px 16px; cursor: pointer; font-weight: 700; font-size: 14px; }
+
+  @media (max-width: 560px) {
+    .hint { display: none; }
+    .legend { right: 14px; flex-wrap: wrap; }
+    .tool { font-size: 13px; padding: 5px 11px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .sheet, .scrim { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Électrotechnique · Machine à courant continu</p>
+    <h1>Le moteur à <em>courant continu</em> en 3D</h1>
+    <p class="lede">Fais tourner le moteur à la souris ou au doigt, puis clique sur une pièce pour lire son rôle. La carcasse est coupée pour montrer l'intérieur.</p>
+  </header>
+
+  <section class="bench" aria-label="Vue 3D du moteur">
+    <div class="viewport" id="viewport"><div class="loading" id="loading">Chargement de la vue 3D…</div></div>
+    <div class="toolbar">
+      <button type="button" class="tool" id="tSpin" aria-pressed="true">Rotation de l'induit</button>
+      <button type="button" class="tool" id="tExplode" aria-pressed="false">Vue éclatée</button>
+      <button type="button" class="tool" id="tReset">Recentrer</button>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <span><i style="background:#D8423A"></i>Pôle N</span>
+      <span><i style="background:#3C6FD6"></i>Pôle S</span>
+      <span><i style="background:#C77B35"></i>Cuivre</span>
+    </div>
+    <p class="hint">Glisser : tourner · Molette ou pincer : zoomer · Clic : rôle de la pièce</p>
+    <div class="tip" id="tip" hidden></div>
+  </section>
+
+  <section class="parts" aria-labelledby="partsTitle">
+    <h2 id="partsTitle">Les pièces</h2>
+    <div class="chips" id="chips"></div>
+  </section>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="false" aria-labelledby="sheetTitle" aria-hidden="true">
+  <div class="grab" id="grab" aria-hidden="true"><span></span></div>
+  <div class="sheet-head">
+    <span class="kind" id="sheetKind"></span>
+    <h3 id="sheetTitle" tabindex="-1"></h3>
+    <button type="button" class="close" id="close" aria-label="Fermer">✕</button>
+  </div>
+  <div class="sheet-body">
+    <p class="role" id="sheetRole"></p>
+    <div class="facts">
+      <div class="fact"><b>Comment ça marche</b><span id="sheetHow"></span></div>
+      <div class="fact"><b>Matériaux</b><span id="sheetMat"></span></div>
+    </div>
+    <div class="key"><b>À retenir</b><span class="f" id="sheetKey"></span></div>
+    <div class="sheet-nav">
+      <button type="button" id="sPrev">← Pièce précédente</button>
+      <button type="button" id="sNext">Pièce suivante →</button>
+    </div>
+  </div>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(() => {
+  // ------------------------------------------------------------------ parts and their texts
+  const PARTS = [
+    { id: 'carcasse', name: 'Carcasse', kind: 'Stator · fixe', color: '#5E6670',
+      role: "Enveloppe en acier qui porte les pôles inducteurs et protège l'intérieur du moteur. Elle ferme le circuit magnétique : les lignes de champ passent d'un pôle à l'autre à travers elle.",
+      how: "On l'appelle aussi culasse. Ses pattes de fixation la relient au bâti de la machine entraînée.",
+      mat: "Acier ou fonte, bon conducteur du flux magnétique.",
+      key: "Fait partie du circuit magnétique de l'inducteur." },
+    { id: 'poles', name: 'Pôles inducteurs', kind: 'Stator · fixe', color: '#D8423A',
+      role: "Pièces fixées à l'intérieur de la carcasse, alternativement Nord et Sud. Leur épanouissement polaire répartit le champ magnétique dans l'entrefer, juste en face de l'induit.",
+      how: "Ici, 2 pôles (N en haut, S en bas). Les gros moteurs en ont 4, 6 ou plus, toujours en nombre pair.",
+      mat: "Tôles d'acier empilées, ou aimants permanents dans les petits moteurs.",
+      key: "Créent le flux magnétique Φ (en webers) qui traverse l'induit." },
+    { id: 'inducteur', name: 'Bobines inductrices', kind: 'Stator · fixe', color: '#C77B35',
+      role: "Enroulements en cuivre placés autour des noyaux polaires. Parcourus par le courant d'excitation, ils aimantent les pôles et produisent le flux Φ.",
+      how: "Selon le branchement, l'excitation est séparée, shunt (dérivation), série ou composée. Dans les petits moteurs, des aimants permanents les remplacent.",
+      mat: "Fil de cuivre émaillé.",
+      key: "Le flux Φ dépend du courant d'excitation Ie." },
+    { id: 'induit', name: 'Induit (rotor)', kind: 'Rotor · tournant', color: '#4A4F57',
+      role: "Cylindre monté sur l'arbre qui tourne dans le champ de l'inducteur. Ses encoches reçoivent le bobinage d'induit.",
+      how: "Il est fait de tôles fines isolées entre elles : ce feuilletage limite les pertes par courants de Foucault, car le flux change sans cesse dans le rotor qui tourne.",
+      mat: "Tôles d'acier au silicium feuilletées.",
+      key: "Force contre-électromotrice : E = k·Φ·Ω" },
+    { id: 'bobinage', name: "Conducteurs d'induit", kind: 'Rotor · tournant', color: '#C77B35',
+      role: "Conducteurs en cuivre logés dans les encoches de l'induit. Parcourus par le courant d'induit dans le champ des pôles, ils subissent des forces de Laplace qui font tourner le rotor.",
+      how: "Chaque conducteur subit une force F = B·I·L. Les forces des conducteurs sous le pôle N et sous le pôle S s'ajoutent pour créer le couple.",
+      mat: "Cuivre isolé (barres ou fils émaillés).",
+      key: "Couple électromagnétique : C = k·Φ·I" },
+    { id: 'collecteur', name: 'Collecteur', kind: 'Rotor · tournant', color: '#B8742F',
+      role: "Cylindre formé de lames de cuivre isolées entre elles, reliées aux sections du bobinage d'induit. En tournant sous les balais, il inverse au bon moment le sens du courant dans chaque conducteur.",
+      how: "Ce changement de sens s'appelle la commutation. Grâce à lui, le couple garde toujours le même sens alors que les conducteurs passent d'un pôle à l'autre.",
+      mat: "Lames de cuivre séparées par du mica (isolant).",
+      key: "C'est un redresseur mécanique." },
+    { id: 'balais', name: 'Balais', kind: 'Stator · fixe', color: '#2B2B2B',
+      role: "Blocs de carbone appuyés par des ressorts sur le collecteur. Ils amènent le courant de l'alimentation fixe jusqu'à l'induit qui tourne.",
+      how: "Le contact est glissant : les balais s'usent et peuvent produire des étincelles. Ils sont tenus par des porte-balais.",
+      mat: "Graphite (carbone), parfois chargé de cuivre ; ressorts en acier.",
+      key: "Pièces d'usure à contrôler et à remplacer." },
+    { id: 'arbre', name: 'Arbre', kind: 'Rotor · tournant', color: '#9AA3AD',
+      role: "Axe qui porte l'induit et le collecteur. Il transmet le couple mécanique à la machine entraînée (pompe, ventilateur, convoyeur…).",
+      how: "Son bout d'arbre, côté accouplement, reçoit une poulie, un pignon ou un accouplement.",
+      mat: "Acier traité.",
+      key: "Puissance utile : Pu = Cu·Ω" },
+    { id: 'paliers', name: 'Flasques et roulements', kind: 'Stator · fixe', color: '#7D858F',
+      role: "Les flasques ferment le moteur à chaque bout et portent les roulements. Les roulements guident l'arbre en rotation en limitant les frottements.",
+      how: "Ils maintiennent l'induit bien centré, pour garder un entrefer régulier entre le rotor et les pôles.",
+      mat: "Flasques en fonte ou aluminium ; roulements à billes en acier.",
+      key: "Sources de pertes mécaniques (frottements)." },
+    { id: 'bornes', name: 'Boîte à bornes', kind: 'Raccordement', color: '#E0262B',
+      role: "Boîtier où l'on raccorde l'alimentation électrique du moteur.",
+      how: "Repères normalisés : A1-A2 pour l'induit, F1-F2 pour un inducteur à excitation séparée (E1-E2 en shunt, D1-D2 en série).",
+      mat: "Boîtier en aluminium ou plastique, bornes en laiton.",
+      key: "Inverser le sens de rotation : inverser A1-A2 ou l'excitation, pas les deux." },
+  ];
+  const byId = Object.fromEntries(PARTS.map((p, i) => [p.id, { ...p, index: i }]));
+
+  // ------------------------------------------------------------------ chips
+  const chips = document.getElementById('chips');
+  PARTS.forEach((p) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.dataset.part = p.id; b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = `<span class="dot" style="background:${p.color}"></span>${p.name}<span class="grp">${p.kind.split(' · ')[0]}</span>`;
+    b.addEventListener('click', () => select(p.id));
+    chips.append(b);
+  });
+
+  // ------------------------------------------------------------------ bottom sheet
+  const sheet = document.getElementById('sheet');
+  const scrim = document.getElementById('scrim');
+  let selected = null;
+  let lastFocus = null;
+
+  function openSheet(id) {
+    const p = byId[id];
+    document.getElementById('sheetKind').textContent = p.kind;
+    document.getElementById('sheetTitle').textContent = p.name;
+    document.getElementById('sheetRole').textContent = p.role;
+    document.getElementById('sheetHow').textContent = p.how;
+    document.getElementById('sheetMat').textContent = p.mat;
+    document.getElementById('sheetKey').textContent = p.key;
+    if (!sheet.classList.contains('open')) lastFocus = document.activeElement;
+    sheet.classList.add('open'); scrim.classList.add('on');
+    sheet.setAttribute('aria-hidden', 'false');
+    sheet.style.transform = '';
+    document.getElementById('sheetTitle').focus({ preventScroll: true });
+  }
+  function closeSheet() {
+    sheet.classList.remove('open'); scrim.classList.remove('on');
+    sheet.setAttribute('aria-hidden', 'true');
+    sheet.style.transform = '';
+    select(null);
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+  document.getElementById('close').addEventListener('click', closeSheet);
+  scrim.addEventListener('click', closeSheet);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheet.classList.contains('open')) closeSheet(); });
+  const step = (d) => { const i = selected ? byId[selected].index : 0; select(PARTS[(i + d + PARTS.length) % PARTS.length].id); };
+  document.getElementById('sPrev').addEventListener('click', () => step(-1));
+  document.getElementById('sNext').addEventListener('click', () => step(1));
+
+  // drag the handle down to close
+  const grab = document.getElementById('grab');
+  let dragY = null;
+  grab.addEventListener('pointerdown', (e) => { dragY = e.clientY; grab.setPointerCapture(e.pointerId); sheet.style.transition = 'none'; });
+  grab.addEventListener('pointermove', (e) => { if (dragY === null) return; const d = Math.max(0, e.clientY - dragY); sheet.style.transform = `translateY(${d}px)`; });
+  grab.addEventListener('pointerup', (e) => {
+    if (dragY === null) return;
+    const d = e.clientY - dragY; dragY = null; sheet.style.transition = '';
+    if (d > 90) closeSheet(); else sheet.style.transform = '';
+  });
+
+  // ------------------------------------------------------------------ 3D scene
+  const host = document.getElementById('viewport');
+  if (!window.THREE) { document.getElementById('loading').textContent = "La vue 3D n'a pas pu se charger. Les fiches des pièces restent disponibles ci-dessous."; return; }
+  document.getElementById('loading').remove();
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  host.append(renderer.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+  const HOME = new THREE.Vector3(7.2, 4.6, 8.6);
+  camera.position.copy(HOME);
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.minDistance = 5; controls.maxDistance = 22;
+  controls.target.set(0.4, 0.2, 0);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a7c66, 0.85));
+  const key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(6, 9, 7); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.35); rim.position.set(-7, 3, -6); scene.add(rim);
+
+  const mat = (hex, o = {}) => new THREE.MeshStandardMaterial({ color: hex, metalness: o.m ?? 0.35, roughness: o.r ?? 0.5, side: o.side ?? THREE.FrontSide });
+  const AX = (g) => { g.rotateZ(Math.PI / 2); return g; }; // cylinders along X
+
+  // annular sector extruded along X (used for the cut frame, pole shoes and end shields)
+  function sector(rIn, rOut, a0, a1, len, x0) {
+    const s = new THREE.Shape();
+    s.absarc(0, 0, rOut, a0, a1, false);
+    s.absarc(0, 0, rIn, a1, a0, true);
+    s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: len, bevelEnabled: false, curveSegments: 48 });
+    g.rotateY(Math.PI / 2);   // shape (x, y) -> world (-z, y); extrusion along +X
+    g.translate(x0, 0, 0);
+    return g;
+  }
+  // the frame is cut open on the quadrant that faces the default camera
+  const CUT0 = (172 * Math.PI) / 180, CUT1 = ((100 + 360) * Math.PI) / 180;
+
+  const groups = {};
+  const part = (id) => { const g = new THREE.Group(); g.userData.part = id; groups[id] = g; return g; };
+  const rotor = new THREE.Group(); scene.add(rotor);
+  const stator = new THREE.Group(); scene.add(stator);
+
+  // Carcasse (frame) with feet
+  {
+    const g = part('carcasse'); stator.add(g);
+    const m = mat(0x5e6670, { m: 0.5, r: 0.45, side: THREE.DoubleSide });
+    g.add(new THREE.Mesh(sector(2.0, 2.35, CUT0, CUT1, 4.3, -1.7), m));
+    [-1.0, 2.0].forEach((x) => {
+      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 3.4), m);
+      foot.position.set(x, -2.45, 0); g.add(foot);
+    });
+  }
+  // Poles (N top, S bottom)
+  {
+    const g = part('poles'); stator.add(g);
+    [[1, 0xd8423a], [-1, 0x3c6fd6]].forEach(([s, c]) => {
+      const m = mat(c, { m: 0.3, r: 0.55 });
+      const core = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.7, 0.85), m);
+      core.position.set(0, s * 1.65, 0); g.add(core);
+      const a = s > 0 ? Math.PI / 2 : -Math.PI / 2;
+      g.add(new THREE.Mesh(sector(1.17, 1.32, a - 0.75, a + 0.75, 2.0, -1.0), m));
+    });
+  }
+  // Field coils: rectangular copper rings around the pole cores
+  {
+    const g = part('inducteur'); stator.add(g);
+    const m = mat(0xc77b35, { m: 0.65, r: 0.35 });
+    [1, -1].forEach((s) => {
+      const y = s * 1.62, h = 0.42, t = 0.2;
+      const pieces = [
+        [2.4, h, t, 0, y, 0.425 + t / 2], [2.4, h, t, 0, y, -0.425 - t / 2],
+        [t, h, 0.85 + 2 * t, 1.0 + t / 2, y, 0], [t, h, 0.85 + 2 * t, -1.0 - t / 2, y, 0],
+      ];
+      pieces.forEach(([w, hh, d, x, yy, z]) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), m); b.position.set(x, yy, z); g.add(b); });
+    });
+  }
+  // Armature core with 16 slots
+  const SLOTS = 16;
+  {
+    const g = part('induit'); rotor.add(g);
+    const s = new THREE.Shape();
+    const R = 1.05, depth = 0.2, half = 0.08;
+    for (let i = 0; i < SLOTS; i++) {
+      const a = (i / SLOTS) * Math.PI * 2;
+      const p = (r, da) => [r * Math.cos(a + da), r * Math.sin(a + da)];
+      const pts = [p(R, -Math.PI / SLOTS + half), p(R, -half), p(R - depth, -half), p(R - depth, half), p(R, half)];
+      pts.forEach(([x, y], k) => (i === 0 && k === 0 ? s.moveTo(x, y) : s.lineTo(x, y)));
+    }
+    s.closePath();
+    const hole = new THREE.Path(); hole.absarc(0, 0, 0.15, 0, Math.PI * 2, true); s.holes.push(hole);
+    const geo = new THREE.ExtrudeGeometry(s, { depth: 2.2, bevelEnabled: false });
+    geo.rotateY(Math.PI / 2); geo.translate(-1.1, 0, 0);
+    g.add(new THREE.Mesh(geo, mat(0x4a4f57, { m: 0.55, r: 0.4 })));
+  }
+  // Armature conductors + end windings
+  {
+    const g = part('bobinage'); rotor.add(g);
+    const m = mat(0xc77b35, { m: 0.7, r: 0.3 });
+    for (let i = 0; i < SLOTS; i++) {
+      const a = (i / SLOTS) * Math.PI * 2;
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.14, 0.13), m);
+      bar.position.set(0, 0.94 * Math.sin(a), 0.94 * Math.cos(a));
+      bar.rotation.x = -a;
+      g.add(bar);
+    }
+    [-1.32, 1.32].forEach((x) => {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.88, 0.11, 12, 48), m);
+      ring.rotation.y = Math.PI / 2; ring.position.x = x; g.add(ring);
+    });
+  }
+  // Commutator: copper bars on an insulating sleeve
+  {
+    const g = part('collecteur'); rotor.add(g);
+    const sleeve = new THREE.Mesh(AX(new THREE.CylinderGeometry(0.4, 0.4, 0.95, 32)), mat(0x3a2a1c, { m: 0.1, r: 0.8 }));
+    sleeve.position.x = 2.05; g.add(sleeve);
+    const m = mat(0xb8742f, { m: 0.75, r: 0.28 });
+    for (let i = 0; i < SLOTS; i++) {
+      const a = (i / SLOTS) * Math.PI * 2;
+      const lame = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.12, 0.15), m);
+      lame.position.set(2.05, 0.46 * Math.sin(a), 0.46 * Math.cos(a));
+      lame.rotation.x = -a; g.add(lame);
+      // risers linking commutator bars to the winding
+      const riser = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.06), m);
+      riser.position.set(1.55, 0.7 * Math.sin(a), 0.7 * Math.cos(a));
+      riser.rotation.x = -a; g.add(riser);
+    }
+  }
+  // Brushes with holders and springs
+  {
+    const g = part('balais'); stator.add(g);
+    const carbon = mat(0x2b2b2b, { m: 0.1, r: 0.85 });
+    const holder = mat(0x8c939b, { m: 0.6, r: 0.4 });
+    [1, -1].forEach((s) => {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.42, 0.3), carbon);
+      b.position.set(2.1, s * (0.53 + 0.21), 0); g.add(b);
+      const h = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.34, 0.4), holder);
+      h.position.set(2.1, s * (0.53 + 0.5), 0); g.add(h);
+      const spring = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.42, 8), holder);
+      spring.position.set(2.1, s * (0.53 + 0.82), 0); g.add(spring);
+    });
+  }
+  // Shaft
+  {
+    const g = part('arbre'); rotor.add(g);
+    const shaft = new THREE.Mesh(AX(new THREE.CylinderGeometry(0.15, 0.15, 7.2, 32)), mat(0x9aa3ad, { m: 0.8, r: 0.25 }));
+    shaft.position.x = 0.3; g.add(shaft);
+    const keyway = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.06, 0.1), mat(0x6e767f));
+    keyway.position.set(-2.95, 0.15, 0); g.add(keyway);
+  }
+  // End shields + bearings
+  {
+    const g = part('paliers'); stator.add(g);
+    const shield = mat(0x7d858f, { m: 0.45, r: 0.5, side: THREE.DoubleSide });
+    [[-1.95, -1], [2.85, 1]].forEach(([x]) => {
+      g.add(new THREE.Mesh(sector(0.42, 2.35, CUT0, CUT1, 0.22, x), shield));
+      const outer = new THREE.Mesh(AX(new THREE.CylinderGeometry(0.4, 0.4, 0.28, 32, 1, true)), mat(0xb7bec6, { m: 0.85, r: 0.2, side: THREE.DoubleSide }));
+      outer.position.x = x + 0.11; g.add(outer);
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2;
+        const ball = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 12), mat(0xdfe4ea, { m: 0.9, r: 0.15 }));
+        ball.position.set(x + 0.11, 0.27 * Math.sin(a), 0.27 * Math.cos(a)); g.add(ball);
+      }
+    });
+  }
+  // Terminal box with labelled lid
+  {
+    const g = part('bornes'); stator.add(g);
+    const box = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.55, 1.1), mat(0x8d949c, { m: 0.4, r: 0.5 }));
+    box.position.set(1.6, 2.55, -0.9); g.add(box);
+    const c = document.createElement('canvas'); c.width = 512; c.height = 420;
+    const x = c.getContext('2d');
+    x.fillStyle = '#E0262B'; x.fillRect(0, 0, 512, 420);
+    x.fillStyle = '#ffffff'; x.font = 'bold 92px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    [['A1', 128, 120], ['A2', 384, 120], ['F1', 128, 300], ['F2', 384, 300]].forEach(([t, px, py]) => {
+      x.beginPath(); x.arc(px, py, 74, 0, Math.PI * 2); x.fillStyle = '#141414'; x.fill();
+      x.fillStyle = '#ffffff'; x.fillText(t, px, py + 4);
+    });
+    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+    const lid = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.1), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6 }));
+    lid.rotation.x = -Math.PI / 2; lid.position.set(1.6, 2.83, -0.9); g.add(lid);
+  }
+
+  // every mesh keeps its own material so it can be highlighted or faded alone
+  const meshes = [];
+  Object.values(groups).forEach((g) => g.traverse((o) => {
+    if (o.isMesh) {
+      o.material = o.material.clone(); o.material.transparent = true;
+      o.userData.part = g.userData.part; o.userData.baseEmissive = o.material.emissive.clone();
+      meshes.push(o);
+    }
+  }));
+
+  // exploded-view offsets
+  const OFFSETS = {
+    carcasse: [-3.6, 0, 0], poles: [-3.6, 0, 0], inducteur: [-3.6, 0, 0], bornes: [-3.6, 0.8, 0],
+    collecteur: [1.3, 0, 0], balais: [1.3, 0, 0], paliers: [0, 0, 0],
+  };
+  const explodeSpread = { balais: 0.7 };
+  let explode = 0, explodeTarget = 0;
+
+  // ------------------------------------------------------------------ selection / highlight
+  const red = new THREE.Color(0xe0262b);
+  function applyHighlight() {
+    meshes.forEach((m) => {
+      const on = !selected || m.userData.part === selected;
+      m.material.opacity = on ? 1 : 0.18;
+      m.material.depthWrite = on;
+      m.material.emissive.copy(m.userData.part === selected ? red : m.userData.baseEmissive);
+      m.material.emissiveIntensity = m.userData.part === selected ? 0.35 : 1;
+    });
+  }
+  function select(id) {
+    selected = id;
+    document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.part === id)));
+    applyHighlight();
+    if (id) openSheet(id);
+  }
+
+  // ------------------------------------------------------------------ picking
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const tip = document.getElementById('tip');
+  function pick(e) {
+    const r = renderer.domElement.getBoundingClientRect();
+    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const visible = meshes.filter((m) => m.material.opacity > 0.5);
+    const hit = ray.intersectObjects(visible, false)[0];
+    return hit ? hit.object.userData.part : null;
+  }
+  let down = null;
+  renderer.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; host.classList.add('dragging'); });
+  window.addEventListener('pointerup', (e) => {
+    host.classList.remove('dragging');
+    if (!down) return;
+    const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+    const onCanvas = e.target === renderer.domElement;
+    down = null;
+    if (moved < 6 && onCanvas) { const id = pick(e); if (id) select(id); else if (selected) closeSheet(); }
+  });
+  renderer.domElement.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' || down) { tip.hidden = true; return; }
+    const id = pick(e);
+    host.classList.toggle('hovering', !!id);
+    if (id) {
+      const r = host.getBoundingClientRect();
+      tip.textContent = byId[id].name; tip.hidden = false;
+      tip.style.left = `${e.clientX - r.left}px`; tip.style.top = `${e.clientY - r.top}px`;
+    } else tip.hidden = true;
+  });
+  renderer.domElement.addEventListener('pointerleave', () => { tip.hidden = true; });
+
+  // ------------------------------------------------------------------ toolbar
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let spin = !reduce;
+  const tSpin = document.getElementById('tSpin');
+  tSpin.setAttribute('aria-pressed', String(spin));
+  tSpin.addEventListener('click', () => { spin = !spin; tSpin.setAttribute('aria-pressed', String(spin)); });
+  const tExplode = document.getElementById('tExplode');
+  tExplode.addEventListener('click', () => {
+    explodeTarget = explodeTarget ? 0 : 1; tExplode.setAttribute('aria-pressed', String(!!explodeTarget));
+    if (reduce) explode = explodeTarget;
+  });
+  document.getElementById('tReset').addEventListener('click', () => { camera.position.copy(HOME); controls.target.set(0.4, 0.2, 0); controls.update(); });
+
+  // ------------------------------------------------------------------ size + loop
+  function resize() {
+    const w = host.clientWidth, h = host.clientHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h;
+    camera.fov = w < 560 ? 48 : 36; camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(host); resize();
+
+  const clock = new THREE.Clock();
+  (function loop() {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    if (spin) rotor.rotation.x += dt * 1.6;
+    explode += (explodeTarget - explode) * Math.min(1, dt * 6);
+    Object.entries(groups).forEach(([id, g]) => {
+      const o = OFFSETS[id] || [0, 0, 0];
+      g.position.set(o[0] * explode, o[1] * explode, o[2] * explode);
+    });
+    // end shields move outwards on each side
+    groups.paliers.children.forEach((c) => {
+      if (c.userData.x0 === undefined) c.userData.x0 = c.position.x;
+      c.position.x = c.userData.x0 + (c.userData.x0 < 0.5 ? -2.4 : 2.0) * explode;
+    });
+    groups.balais.children.forEach((c) => {
+      if (c.userData.y0 === undefined) c.userData.y0 = c.position.y;
+      c.position.y = c.userData.y0 + Math.sign(c.userData.y0) * explodeSpread.balais * explode;
+    });
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  })();
+})();
+</script>
