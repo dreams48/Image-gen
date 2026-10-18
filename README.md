@@ -110,3 +110,13 @@ cd remotion-showcase
 npm run voiceover:instructions   # voix off (texte dans scripts/voiceover.py, liste INSTRUCTIONS)
 npm run render:instructions      # -> ../output/instructions_claude_whatsapp_9x16.mp4
 ```
+
+## Tutoriel web « Les 4D de l'IA » (Motion)
+
+`web/4d-ia/index.html` est un tutoriel interactif sur le cadre AI Fluency d'Anthropic (Délégation, Description, Discernement, Diligence), animé avec [Motion](https://motion.dev) (`motion@11.11.13`, chargé depuis jsDelivr). Chaque étape propose un petit exercice :
+- **Délégation** : répartir quatre tâches entre « Moi », « L'IA » et « Ensemble » ;
+- **Description** : assembler un prompt avec les ingrédients Produit, Processus et Performance ;
+- **Discernement** : repérer trois problèmes dans une réponse ;
+- **Diligence** : cocher la liste de vérifications avant diffusion.
+
+Le schéma final montre les 4D en boucle. La page fonctionne en clair et en sombre, au téléphone, et sans animation quand l'appareil le demande. Elle est publiée comme artifact claude.ai.

@@ -1,0 +1,506 @@
+<title>Les 4D de l'IA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  /* Layout: one column, a sticky step rail, one "workbench" card per step that the learner manipulates. */
+  :root {
+    --paper: #F3EAD8;      /* 60 % crème */
+    --sheet: #FFFFFF;      /* 10 % blanc */
+    --ink: #141414;        /* 10 % noir */
+    --signal: #E0262B;     /* 20 % rouge */
+    --muted: #6B6258;
+    --line: #14141426;
+    --signal-soft: #E0262B1F;
+    --ok: #1F7A4D;
+    --display: 'Anton', 'Impact', 'Arial Narrow', sans-serif;
+    --body: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #17130F; --sheet: #221D18; --ink: #F3EAD8; --signal: #FF4A4F;
+      --muted: #B3A797; --line: #F3EAD82E; --signal-soft: #FF4A4F26; --ok: #4CC38A;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #17130F; --sheet: #221D18; --ink: #F3EAD8; --signal: #FF4A4F;
+    --muted: #B3A797; --line: #F3EAD82E; --signal-soft: #FF4A4F26; --ok: #4CC38A;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.55;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 0 64px;
+  }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+  p { margin: 0; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--signal); outline-offset: 3px; }
+
+  /* ---------- hero ---------- */
+  .hero { padding-block: 48px 28px; display: grid; gap: 18px; }
+  .eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .hero h1 { font-family: var(--display); font-weight: 400; font-size: clamp(56px, 13vw, 128px); line-height: .9; text-transform: uppercase; }
+  .hero h1 .d { color: var(--signal); display: inline-block; }
+  .hero .lede { max-width: 62ch; font-size: 19px; }
+  .ds { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .ds button {
+    font-family: var(--display); font-size: 22px; text-transform: uppercase; letter-spacing: .02em;
+    padding: 6px 16px 4px; border: 3px solid var(--ink); background: var(--sheet); border-radius: 999px; cursor: pointer;
+  }
+  .ds button[aria-current="step"] { background: var(--ink); color: var(--paper); }
+
+  /* ---------- step rail ---------- */
+  .rail {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+    background: var(--paper); padding-block: 12px; border-bottom: 2px solid var(--ink);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .rail .track { flex: 1; height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+  .rail .fill { height: 100%; width: 25%; background: var(--signal); border-radius: 5px; transform-origin: left; }
+  .rail .count { font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rail .nav { display: flex; gap: 8px; }
+  .rail .nav button {
+    width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--ink); background: var(--sheet);
+    font-size: 20px; font-weight: 800; cursor: pointer; display: grid; place-items: center;
+  }
+  .rail .nav button:disabled { opacity: .35; cursor: default; }
+
+  /* ---------- step ---------- */
+  .stage { position: relative; margin-top: 28px; }
+  .step { display: grid; gap: 22px; }
+  .step-head { display: grid; grid-template-columns: auto 1fr; gap: 6px 20px; align-items: end; }
+  .step-num {
+    grid-row: span 2; font-family: var(--display); font-size: clamp(84px, 20vw, 150px); line-height: .8;
+    color: var(--signal); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill;
+  }
+  .step-head h2 { font-family: var(--display); font-weight: 400; font-size: clamp(40px, 9vw, 72px); line-height: .95; text-transform: uppercase; }
+  .step-head .def { font-size: 19px; max-width: 58ch; }
+  .questions { display: grid; gap: 8px; padding: 0; margin: 0; list-style: none; }
+  .questions li { display: flex; gap: 12px; align-items: baseline; }
+  .questions li::before { content: "?"; font-family: var(--display); color: var(--signal); font-size: 22px; line-height: 1; }
+
+  .bench {
+    background: var(--sheet); border: 3px solid var(--ink); border-radius: 26px; box-shadow: 10px 10px 0 var(--ink);
+    padding: clamp(18px, 4vw, 30px); display: grid; gap: 18px; min-width: 0;
+  }
+  .bench-title { font-family: var(--mono); font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+  .bench h3 { font-size: 22px; font-weight: 800; }
+  .hint { color: var(--muted); font-size: 15px; }
+
+  /* Délégation */
+  .tasks { display: grid; gap: 12px; }
+  .task { border: 2px solid var(--line); border-radius: 18px; padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+  .task p { font-weight: 700; }
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+  .choices button {
+    border: 2px solid var(--ink); border-radius: 999px; background: transparent; padding: 6px 14px; cursor: pointer; font-size: 15px; font-weight: 700;
+  }
+  .choices button[aria-pressed="true"].right { background: var(--ok); border-color: var(--ok); color: var(--sheet); }
+  .choices button[aria-pressed="true"].wrong { background: var(--signal); border-color: var(--signal); color: var(--sheet); }
+  .feedback { font-size: 15px; min-height: 1.5em; }
+  .modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .mode { border-left: 6px solid var(--signal); padding: 4px 0 4px 14px; }
+  .mode strong { font-family: var(--display); font-weight: 400; font-size: 24px; text-transform: uppercase; display: block; }
+  .mode span { font-size: 15px; color: var(--muted); }
+
+  /* Description */
+  .toggles { display: flex; flex-wrap: wrap; gap: 10px; }
+  .toggle {
+    border: 3px solid var(--ink); border-radius: 16px; background: transparent; padding: 10px 16px; cursor: pointer; text-align: left;
+    display: grid; gap: 2px; min-width: 0; flex: 1 1 180px;
+  }
+  .toggle b { font-family: var(--display); font-weight: 400; font-size: 22px; text-transform: uppercase; }
+  .toggle small { font-size: 14px; color: var(--muted); }
+  .toggle[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .toggle[aria-pressed="true"] small { color: var(--paper); opacity: .75; }
+  .prompt {
+    font-family: var(--mono); font-size: 15px; line-height: 1.6; background: var(--paper); border-radius: 16px; padding: 16px 18px;
+    border: 2px dashed var(--line); min-height: 120px; overflow-wrap: anywhere;
+  }
+  .prompt .part { display: block; }
+  .prompt .tag { color: var(--signal); font-weight: 700; }
+  .meter { display: grid; gap: 6px; }
+  .meter .bar { height: 14px; border-radius: 7px; background: var(--line); overflow: hidden; }
+  .meter .bar i { display: block; height: 100%; width: 25%; background: var(--signal); border-radius: 7px; }
+  .meter .label { font-family: var(--mono); font-size: 14px; }
+
+  /* Discernement */
+  .answer { background: var(--paper); border-radius: 16px; padding: 18px; display: grid; gap: 10px; }
+  .answer .who { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .flag {
+    background: none; border: none; padding: 0 2px; cursor: pointer; text-align: left; font-size: inherit; line-height: inherit;
+    text-decoration: underline wavy var(--signal); text-underline-offset: 4px;
+  }
+  .flag[aria-expanded="true"] { background: var(--signal-soft); border-radius: 4px; text-decoration-style: solid; }
+  .notes { display: grid; gap: 10px; }
+  .note { border: 2px solid var(--ink); border-radius: 14px; padding: 12px 14px; display: grid; gap: 4px; }
+  .note b { font-family: var(--display); font-weight: 400; font-size: 20px; text-transform: uppercase; color: var(--signal); }
+  .score { font-family: var(--mono); font-size: 14px; }
+
+  /* Diligence */
+  .checks { display: grid; gap: 12px; }
+  .check {
+    display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; text-align: left;
+    border: 2px solid var(--line); border-radius: 18px; padding: 14px; background: transparent; cursor: pointer;
+  }
+  .check .box { width: 44px; height: 44px; border: 3px solid var(--ink); border-radius: 12px; display: grid; place-items: center; }
+  .check .box svg { width: 26px; height: 26px; }
+  .check .box path { stroke: var(--sheet); stroke-width: 4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .check[aria-pressed="true"] .box { background: var(--signal); border-color: var(--signal); }
+  .check b { font-family: var(--display); font-weight: 400; font-size: 22px; text-transform: uppercase; display: block; }
+  .check span { font-size: 15px; color: var(--muted); }
+  .badge {
+    justify-self: start; font-family: var(--display); font-size: 26px; text-transform: uppercase; background: var(--ink); color: var(--paper);
+    padding: 8px 20px 5px; border-radius: 999px; transform: rotate(-3deg);
+  }
+
+  /* ---------- loop ---------- */
+  .loop { margin-top: 56px; display: grid; gap: 18px; }
+  .loop h2 { font-family: var(--display); font-weight: 400; font-size: clamp(36px, 8vw, 60px); text-transform: uppercase; line-height: 1; }
+  .loop-art { max-width: 520px; width: 100%; aspect-ratio: 1; margin: 0 auto; position: relative; }
+  .loop-art svg { width: 100%; height: 100%; }
+  .loop-art text { font-family: var(--display); fill: var(--ink); text-transform: uppercase; }
+  .sources { font-size: 14px; color: var(--muted); max-width: 70ch; }
+  .sources a { color: var(--ink); }
+
+  @media (max-width: 560px) {
+    .step-head { grid-template-columns: 1fr; }
+    .step-num { grid-row: auto; }
+    .rail .count { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Cadre AI Fluency · Anthropic</p>
+    <h1><span class="d">4D</span> pour bien travailler avec l'IA</h1>
+    <p class="lede">Quatre compétences liées entre elles pour que ton travail avec Claude soit efficace, efficient, éthique et sûr. Parcours-les dans l'ordre : chaque étape a un petit exercice.</p>
+    <nav class="ds" aria-label="Les quatre compétences">
+      <button type="button" data-go="0" aria-current="step">Délégation</button>
+      <button type="button" data-go="1">Description</button>
+      <button type="button" data-go="2">Discernement</button>
+      <button type="button" data-go="3">Diligence</button>
+    </nav>
+  </header>
+
+  <div class="rail">
+    <div class="track" aria-hidden="true"><div class="fill" id="fill"></div></div>
+    <span class="count" id="count">Étape 1 sur 4</span>
+    <div class="nav">
+      <button type="button" id="prev" aria-label="Étape précédente" disabled>←</button>
+      <button type="button" id="next" aria-label="Étape suivante">→</button>
+    </div>
+  </div>
+
+  <main class="stage" id="stage" aria-live="polite">
+
+    <!-- ================= D1 ================= -->
+    <section class="step" data-step="0" aria-labelledby="t0">
+      <div class="step-head">
+        <span class="step-num" aria-hidden="true">1</span>
+        <h2 id="t0">Délégation</h2>
+        <p class="def">Décider <strong>si, quand et comment</strong> faire appel à l'IA, après avoir fixé ton objectif.</p>
+      </div>
+      <ul class="questions">
+        <li>Qu'est-ce que je cherche vraiment à obtenir ?</li>
+        <li>Quelles parties du travail me reviennent, lesquelles l'IA fait bien ?</li>
+      </ul>
+      <div class="bench">
+        <p class="bench-title">Exercice · préparer un atelier IA</p>
+        <h3>Qui fait quoi ? Choisis pour chaque tâche.</h3>
+        <div class="tasks" id="tasks"></div>
+        <p class="score" id="score0">0 bonne réponse sur 4</p>
+      </div>
+      <div class="bench">
+        <p class="bench-title">Trois façons de travailler avec l'IA</p>
+        <div class="modes">
+          <div class="mode"><strong>Automatisation</strong><span>L'IA exécute une tâche précise que tu lui confies.</span></div>
+          <div class="mode"><strong>Augmentation</strong><span>Toi et l'IA réfléchissez ensemble, comme deux partenaires.</span></div>
+          <div class="mode"><strong>Agentivité</strong><span>Tu configures l'IA pour qu'elle agisse seule sur des tâches futures.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= D2 ================= -->
+    <section class="step" data-step="1" aria-labelledby="t1" hidden>
+      <div class="step-head">
+        <span class="step-num" aria-hidden="true">2</span>
+        <h2 id="t1">Description</h2>
+        <p class="def">Décrire ton objectif assez clairement pour obtenir <strong>des réponses utiles</strong>.</p>
+      </div>
+      <ul class="questions">
+        <li>Qu'est-ce que je veux recevoir, et sous quelle forme ?</li>
+        <li>Comment l'IA doit-elle s'y prendre et se comporter avec moi ?</li>
+      </ul>
+      <div class="bench">
+        <p class="bench-title">Exercice · construis ta demande</p>
+        <h3>Active les trois ingrédients et regarde le prompt se compléter.</h3>
+        <div class="toggles">
+          <button type="button" class="toggle" data-part="product" aria-pressed="false"><b>Produit</b><small>Ce que tu veux recevoir</small></button>
+          <button type="button" class="toggle" data-part="process" aria-pressed="false"><b>Processus</b><small>Comment y arriver</small></button>
+          <button type="button" class="toggle" data-part="performance" aria-pressed="false"><b>Performance</b><small>Comment l'IA se comporte</small></button>
+        </div>
+        <div class="prompt" id="prompt"></div>
+        <div class="meter">
+          <div class="bar" aria-hidden="true"><i id="meter"></i></div>
+          <span class="label" id="meterLabel">Demande vague</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= D3 ================= -->
+    <section class="step" data-step="2" aria-labelledby="t2" hidden>
+      <div class="step-head">
+        <span class="step-num" aria-hidden="true">3</span>
+        <h2 id="t2">Discernement</h2>
+        <p class="def">Évaluer avec justesse <strong>l'utilité</strong> de ce que l'IA produit et de sa façon de faire.</p>
+      </div>
+      <ul class="questions">
+        <li>Le résultat est-il juste, complet et adapté ?</li>
+        <li>Le raisonnement tient-il debout ? Le ton me convient-il ?</li>
+      </ul>
+      <div class="bench">
+        <p class="bench-title">Exercice · relis cette réponse</p>
+        <h3>Trois passages posent problème. Clique sur chacun.</h3>
+        <div class="answer">
+          <span class="who">Réponse de l'IA</span>
+          <p>Voici un atelier de 2 h pour débutants.
+            <button type="button" class="flag" data-note="0" aria-expanded="false">87 % des formateurs utilisent déjà l'IA chaque jour</button>,
+            donc tes participants seront à l'aise. Étape 1 : présenter les modèles.
+            <button type="button" class="flag" data-note="1" aria-expanded="false">Étape 2 : exercice final.</button>
+            <button type="button" class="flag" data-note="2" aria-expanded="false">Les paramètres de température et de top-p doivent être maîtrisés dès la première séance.</button>
+          </p>
+        </div>
+        <div class="notes" id="notes"></div>
+        <p class="score" id="score2">0 problème repéré sur 3</p>
+      </div>
+    </section>
+
+    <!-- ================= D4 ================= -->
+    <section class="step" data-step="3" aria-labelledby="t3" hidden>
+      <div class="step-head">
+        <span class="step-num" aria-hidden="true">4</span>
+        <h2 id="t3">Diligence</h2>
+        <p class="def">Assumer la responsabilité de <strong>ce que tu fais avec l'IA</strong> et de la manière dont tu le fais.</p>
+      </div>
+      <ul class="questions">
+        <li>Est-ce un usage que j'assume ?</li>
+        <li>Les personnes concernées savent-elles que l'IA a aidé ?</li>
+      </ul>
+      <div class="bench">
+        <p class="bench-title">Exercice · avant de diffuser ton support</p>
+        <h3>Coche les trois vérifications.</h3>
+        <div class="checks" id="checks">
+          <button type="button" class="check" aria-pressed="false"><span class="box"><svg viewBox="0 0 26 26"><path d="M5 14 L11 20 L21 7" pathLength="1"/></svg></span><span><b>Création</b><span>J'ai choisi l'outil et la façon de l'utiliser en connaissance de cause.</span></span></button>
+          <button type="button" class="check" aria-pressed="false"><span class="box"><svg viewBox="0 0 26 26"><path d="M5 14 L11 20 L21 7" pathLength="1"/></svg></span><span><b>Transparence</b><span>Je dis honnêtement à mes participants ce que l'IA a produit.</span></span></button>
+          <button type="button" class="check" aria-pressed="false"><span class="box"><svg viewBox="0 0 26 26"><path d="M5 14 L11 20 L21 7" pathLength="1"/></svg></span><span><b>Diffusion</b><span>J'ai vérifié le contenu et j'en réponds avant de le partager.</span></span></button>
+        </div>
+        <span class="badge" id="badge" hidden>Prêt à diffuser</span>
+      </div>
+    </section>
+  </main>
+
+  <section class="loop" aria-labelledby="loopTitle">
+    <p class="eyebrow">À retenir</p>
+    <h2 id="loopTitle">Les 4D tournent en boucle</h2>
+    <p class="lede" style="max-width:62ch">Tu délègues, tu décris, tu évalues, tu assumes. Ce que tu observes en évaluant te fait souvent revenir à la délégation ou à la description pour ajuster.</p>
+    <div class="loop-art" id="loopArt" aria-hidden="true"></div>
+    <p class="sources">D'après le cadre « AI Fluency » de Rick Dakan, Joseph Feller et Anthropic (licence CC BY-NC-SA 4.0). Formulations adaptées en français. En savoir plus :
+      <a href="https://www.anthropic.com/learn" target="_blank" rel="noopener">anthropic.com/learn</a>.</p>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.js"></script>
+<script>
+(() => {
+  const M = window.Motion;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Animate only when Motion loaded and the viewer accepts motion; otherwise jump to the end state.
+  const anim = (el, kf, opts) => (M && !reduce ? M.animate(el, kf, opts) : null);
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+  // ---------------------------------------------------------- step navigation
+  const steps = $$('.step');
+  const names = ['Délégation', 'Description', 'Discernement', 'Diligence'];
+  let current = 0;
+
+  function go(i) {
+    if (i === current || i < 0 || i >= steps.length) return;
+    const dir = i > current ? 1 : -1;
+    const from = steps[current];
+    const to = steps[i];
+    current = i;
+    from.hidden = true;
+    to.hidden = false;
+    anim(to, { opacity: [0, 1], x: [60 * dir, 0] }, { type: 'spring', stiffness: 260, damping: 26 });
+    anim($$('.step-num, h2, .def, .questions li, .bench', to), { opacity: [0, 1], y: [24, 0] },
+      { delay: M ? M.stagger(0.06) : 0, duration: 0.45, ease: [0.22, 1, 0.36, 1] });
+    anim($('.step-num', to), { scale: [1.6, 1], rotate: [-12, 0] }, { type: 'spring', stiffness: 300, damping: 14 });
+    anim($('#fill'), { width: `${(i + 1) * 25}%` }, { type: 'spring', stiffness: 200, damping: 24 });
+    if (!M || reduce) $('#fill').style.width = `${(i + 1) * 25}%`;
+    $('#count').textContent = `Étape ${i + 1} sur 4 · ${names[i]}`;
+    $('#prev').disabled = i === 0;
+    $('#next').disabled = i === steps.length - 1;
+    $$('.ds button').forEach((b, k) => (k === i ? b.setAttribute('aria-current', 'step') : b.removeAttribute('aria-current')));
+    try { localStorage.setItem('4d-step', String(i)); } catch (e) {}
+    const top = $('.rail').getBoundingClientRect().top + window.scrollY - 4;
+    if (window.scrollY > top) window.scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' });
+  }
+  $('#prev').addEventListener('click', () => go(current - 1));
+  $('#next').addEventListener('click', () => go(current + 1));
+  $$('.ds button').forEach((b) => b.addEventListener('click', () => go(Number(b.dataset.go))));
+  document.addEventListener('keydown', (e) => {
+    if (e.target.closest('input, textarea')) return;
+    if (e.key === 'ArrowRight') go(current + 1);
+    if (e.key === 'ArrowLeft') go(current - 1);
+  });
+
+  // ---------------------------------------------------------- D1 Délégation
+  const TASKS = [
+    { t: 'Choisir l\'objectif de l\'atelier et le public visé', a: 'Moi', why: 'Fixer l\'objectif reste ton rôle : c\'est le point de départ de toute délégation.' },
+    { t: 'Rédiger 10 exemples de prompts pour l\'exercice', a: 'L\'IA', why: 'Tâche précise et vérifiable : l\'automatisation fait gagner du temps.' },
+    { t: 'Trouver des idées d\'activités pour rendre la séance vivante', a: 'Ensemble', why: 'Bon terrain pour l\'augmentation : l\'IA propose, tu tries selon ton public.' },
+    { t: 'Décider ce qui sera évalué en fin de séance', a: 'Moi', why: 'C\'est une décision pédagogique qui engage ta responsabilité.' },
+  ];
+  const tasksEl = $('#tasks');
+  const answered = new Set();
+  TASKS.forEach((task, i) => {
+    const el = document.createElement('div');
+    el.className = 'task';
+    el.innerHTML = `<p>${task.t}</p><div class="choices">${['Moi', 'L\'IA', 'Ensemble']
+      .map((c) => `<button type="button" aria-pressed="false" data-c="${c}">${c}</button>`).join('')}</div><p class="feedback" aria-live="polite"></p>`;
+    tasksEl.append(el);
+    $$('button', el).forEach((btn) => btn.addEventListener('click', () => {
+      $$('button', el).forEach((b) => { b.setAttribute('aria-pressed', 'false'); b.classList.remove('right', 'wrong'); });
+      const ok = btn.dataset.c === task.a;
+      btn.setAttribute('aria-pressed', 'true');
+      btn.classList.add(ok ? 'right' : 'wrong');
+      const fb = $('.feedback', el);
+      fb.textContent = ok ? `Oui. ${task.why}` : `Plutôt « ${task.a} ». ${task.why}`;
+      ok ? answered.add(i) : answered.delete(i);
+      $('#score0').textContent = `${answered.size} bonne${answered.size > 1 ? 's' : ''} réponse${answered.size > 1 ? 's' : ''} sur 4`;
+      anim(btn, { scale: [0.85, 1.08, 1] }, { duration: 0.35 });
+      if (!ok) anim(el, { x: [0, -8, 8, -5, 5, 0] }, { duration: 0.35 });
+      anim(fb, { opacity: [0, 1], y: [-6, 0] }, { duration: 0.25 });
+    }));
+  });
+
+  // ---------------------------------------------------------- D2 Description
+  const PARTS = {
+    base: 'Prépare un atelier sur les prompts.',
+    product: 'Je veux un déroulé de 2 h, en 4 étapes, avec un exercice pratique et une fiche à distribuer.',
+    process: 'Commence par un exemple concret, puis propose deux variantes d\'exercice et explique ton choix.',
+    performance: 'Sois simple et direct, sans jargon, et pose-moi une question si une information te manque.',
+  };
+  const LABELS = ['Demande vague', 'Ça se précise', 'Bonne demande', 'Demande complète'];
+  const on = new Set();
+  const promptEl = $('#prompt');
+  function renderPrompt(added) {
+    const order = ['product', 'process', 'performance'].filter((k) => on.has(k));
+    promptEl.innerHTML = `<span class="part">${PARTS.base}</span>` + order
+      .map((k) => `<span class="part" data-k="${k}"><span class="tag">${{ product: 'Produit', process: 'Processus', performance: 'Performance' }[k]} · </span>${PARTS[k]}</span>`)
+      .join('');
+    const fresh = added && $(`[data-k="${added}"]`, promptEl);
+    if (fresh) anim(fresh, { opacity: [0, 1], x: [-16, 0], backgroundColor: ['var(--signal-soft)', 'rgba(0,0,0,0)'] }, { duration: 0.6 });
+    const ratio = (on.size + 1) / 4;
+    anim($('#meter'), { width: `${ratio * 100}%` }, { type: 'spring', stiffness: 220, damping: 20 });
+    if (!M || reduce) $('#meter').style.width = `${ratio * 100}%`;
+    $('#meterLabel').textContent = LABELS[on.size];
+  }
+  $$('.toggle').forEach((t) => t.addEventListener('click', () => {
+    const k = t.dataset.part;
+    const now = !on.has(k);
+    now ? on.add(k) : on.delete(k);
+    t.setAttribute('aria-pressed', String(now));
+    anim(t, { scale: [0.94, 1] }, { type: 'spring', stiffness: 500, damping: 15 });
+    renderPrompt(now ? k : null);
+  }));
+  renderPrompt(null);
+
+  // ---------------------------------------------------------- D3 Discernement
+  const NOTES = [
+    { k: 'Produit', t: 'Chiffre invérifiable : aucune source. Une IA peut inventer des statistiques, vérifie-les ou retire-les.' },
+    { k: 'Processus', t: 'Il manque des étapes : on passe de la présentation à l\'exercice final sans pratique guidée.' },
+    { k: 'Performance', t: 'Trop technique pour des débutants : la réponse ne respecte pas le public demandé.' },
+  ];
+  const seen = new Set();
+  $$('.flag').forEach((f) => f.addEventListener('click', () => {
+    const i = Number(f.dataset.note);
+    if (seen.has(i)) return;
+    seen.add(i);
+    f.setAttribute('aria-expanded', 'true');
+    const n = document.createElement('div');
+    n.className = 'note';
+    n.innerHTML = `<b>${NOTES[i].k}</b><span>${NOTES[i].t}</span>`;
+    $('#notes').append(n);
+    anim(n, { opacity: [0, 1], y: [20, 0], scale: [0.96, 1] }, { type: 'spring', stiffness: 320, damping: 22 });
+    anim(f, { backgroundColor: ['var(--signal)', 'var(--signal-soft)'] }, { duration: 0.5 });
+    $('#score2').textContent = seen.size === 3 ? '3 problèmes repérés sur 3 : bien vu !' : `${seen.size} problème${seen.size > 1 ? 's' : ''} repéré${seen.size > 1 ? 's' : ''} sur 3`;
+  }));
+
+  // ---------------------------------------------------------- D4 Diligence
+  const checks = $$('.check');
+  checks.forEach((c) => c.addEventListener('click', () => {
+    const now = c.getAttribute('aria-pressed') !== 'true';
+    c.setAttribute('aria-pressed', String(now));
+    const path = $('path', c);
+    if (now) anim(path, { pathLength: [0, 1] }, { duration: 0.35, ease: 'easeOut' });
+    anim($('.box', c), { scale: [0.8, 1] }, { type: 'spring', stiffness: 500, damping: 14 });
+    const all = checks.every((x) => x.getAttribute('aria-pressed') === 'true');
+    const badge = $('#badge');
+    if (all && badge.hidden) {
+      badge.hidden = false;
+      anim(badge, { scale: [0, 1.15, 1], rotate: [-20, -3] }, { duration: 0.5 });
+    } else if (!all) badge.hidden = true;
+  }));
+
+  // ---------------------------------------------------------- loop diagram
+  const art = $('#loopArt');
+  const R = 190, C = 260;
+  const pts = names.map((_, i) => {
+    const a = -Math.PI / 2 + (i * Math.PI) / 2;
+    return [C + R * Math.cos(a), C + R * Math.sin(a)];
+  });
+  art.innerHTML = `<svg viewBox="0 0 520 520">
+    <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="var(--line)" stroke-width="18"/>
+    <circle id="ring" cx="${C}" cy="${C}" r="${R}" fill="none" stroke="var(--signal)" stroke-width="18" stroke-linecap="round"
+      pathLength="1" stroke-dasharray="0.18 0.82" transform="rotate(-90 ${C} ${C})"/>
+    ${pts.map(([x, y], i) => `<g class="node" style="transform-origin:${x}px ${y}px">
+      <circle cx="${x}" cy="${y}" r="62" fill="var(--sheet)" stroke="var(--ink)" stroke-width="5"/>
+      <text x="${x}" y="${y + 9}" text-anchor="middle" font-size="26">${names[i].slice(0, 5)}.</text></g>`).join('')}
+    <text x="${C}" y="${C + 22}" text-anchor="middle" font-size="76" style="fill:var(--signal)">4D</text>
+  </svg>`;
+  if (M && !reduce) {
+    // the red arc travels around the loop forever
+    M.animate($('#ring', art), { strokeDashoffset: [0, -1] }, { duration: 6, repeat: Infinity, ease: 'linear' });
+    M.inView(art, () => {
+      M.animate($$('.node', art), { scale: [0.6, 1], opacity: [0, 1] }, { delay: M.stagger(0.12), type: 'spring', stiffness: 260, damping: 16 });
+    });
+  }
+
+  // ---------------------------------------------------------- page load
+  if (M && !reduce) {
+    M.animate('.hero h1 .d', { rotate: [-8, 0], scale: [1.4, 1] }, { type: 'spring', stiffness: 220, damping: 12 });
+    M.animate('.ds button', { y: [16, 0], opacity: [0.4, 1] }, { delay: M.stagger(0.07, { startDelay: 0.2 }), duration: 0.4 });
+  }
+  let saved = 0;
+  try { saved = Number(localStorage.getItem('4d-step')) || 0; } catch (e) {}
+  if (saved > 0 && saved < 4) go(saved);
+})();
+</script>
