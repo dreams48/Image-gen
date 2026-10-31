@@ -124,3 +124,25 @@ Le schéma final montre les 4D en boucle. La page fonctionne en clair et en somb
 ## Moteur à courant continu en 3D
 
 `web/moteur-cc/index.html` présente un moteur à courant continu en coupe, en 3D avec Three.js (`three@0.128.0`). On le fait tourner à la souris ou au doigt. Un clic sur une pièce, ou sur sa pastille sous la vue, ouvre une feuille qui monte du bas de l'écran : rôle, fonctionnement, matériaux et une formule ou une idée à retenir. La page propose aussi une vue éclatée et la rotation de l'induit. Pièces : carcasse, pôles inducteurs, bobines inductrices, induit, conducteurs d'induit, collecteur, balais, arbre, flasques et roulements, boîte à bornes.
+
+## Atelier de séparation (sérigraphie)
+
+`web/separation/index.html` est une application web qui décompose une image en films pour la sérigraphie. On charge une image (bouton, glisser-déposer ou coller), on choisit un style et un textile, et on récupère les films.
+
+| Style | Ce que fait l'appli | Films |
+|---|---|---|
+| Tons directs | Réduit l'image à 2–8 couleurs (k-moyennes en Lab), nettoie les petits îlots | Aplats aux contours lissés |
+| Quadrichromie CMJN | Conversion CMJN avec remplacement par le noir (GCR) réglable | Trame ronde, angles 7,5° / 52,5° / 22,5° / 82,5° (décalés de 7,5° contre le moiré avec le tamis) |
+| Quadri simulée | 3–10 encres opaques tirées de l'image, réparties en demi-teintes entre les deux encres les plus proches | Trame ronde à 22,5°, blanc de rehaut imprimé en dernier |
+| Couleurs indexées | 3–12 couleurs, diffusion d'erreur (Floyd–Steinberg serpentin) | Pixels carrés de 100 à 300 ppi |
+
+La taille de l'image fait référence : l'appli en déduit le format de film à utiliser (A4, A3 ou A3+, en portrait ou en paysage, sinon un rouleau), marges de 1,6 cm comprises. Le format apparaît sous les réglages, dans l'aperçu et dans la fiche d'impression.
+
+Options communes : couleur du textile (la couleur la plus proche du textile peut être remplacée par le textile, ce qui économise un écran), sous-couche blanche rétrécie d'environ 0,2 mm avec flash sur textile foncé, retrait automatique d'un fond uni, largeur imprimée et résolution des films (150 à 360 dpi). La loupe montre une zone réelle de 2 × 2 cm du film, avec ses points de trame.
+
+L'export ZIP contient :
+- un PNG noir sur blanc par écran, numéroté dans l'ordre d'impression, avec la résolution inscrite dans le fichier (chunk pHYs), quatre repères de calage et une légende (couleur, trame, format) ;
+- `apercu-impression.png`, le rendu simulé sur le textile ;
+- `fiche-impression.txt` : ordre d'impression, couleurs, couverture, tamis conseillé (fils/cm) et conseils.
+
+Tout le calcul se fait dans le navigateur ; seul JSZip (`jszip@3.10.1`, cdnjs) est chargé de l'extérieur. Publiée comme artifact claude.ai, la page enregistre le ZIP via la capacité `downloads` ; ouverte en fichier local, elle le télécharge directement.

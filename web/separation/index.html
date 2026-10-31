@@ -1,0 +1,1005 @@
+<title>Atelier de séparation</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* Layout : un établi d'atelier. Réglages à gauche, plateau d'impression au centre, films numérotés dans l'ordre d'impression dessous. */
+:root{
+  --bg:#eceef2;
+  --surface:#fbfbfd;
+  --ink:#15171d;
+  --muted:#596070;
+  --line:#d2d6df;
+  --accent:#2f3dc2;        /* bleu d'émulsion photo */
+  --accent-ink:#ffffff;
+  --accent-soft:#e2e5fa;
+  --warn:#8f4e00;
+  --warn-soft:#faefdb;
+  --film:#ffffff;          /* les films restent noir sur blanc dans les deux thèmes */
+  --film-ink:#000000;
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111318; --surface:#1a1d24; --ink:#e8eaf0; --muted:#9aa1b0; --line:#2d323d;
+    --accent:#8e97ff; --accent-ink:#0d1030; --accent-soft:#252a52; --warn:#f2b866; --warn-soft:#3a2c14;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111318; --surface:#1a1d24; --ink:#e8eaf0; --muted:#9aa1b0; --line:#2d323d;
+  --accent:#8e97ff; --accent-ink:#0d1030; --accent-soft:#252a52; --warn:#f2b866; --warn-soft:#3a2c14;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.app{max-width:1440px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px}
+h1,h2,h3{text-wrap:balance;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* En-tête */
+.top{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.brand{display:flex;gap:14px;align-items:center;min-width:0}
+.brand svg{flex:none;color:var(--ink)}
+h1{font-family:var(--f-display);font-stretch:125%;font-weight:800;font-size:clamp(21px,2.6vw,28px);letter-spacing:-.01em;line-height:1.05;text-transform:uppercase}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:14px}
+.top-actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 16px;font-weight:600;cursor:pointer;line-height:1.2}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Établi */
+.bench{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:920px){.bench{grid-template-columns:minmax(0,1fr)}}
+.panel{display:flex;flex-direction:column;gap:22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;border:1px solid var(--line);background:transparent;border-radius:8px;padding:10px;cursor:pointer;min-width:0}
+.mode svg{color:var(--ink)}
+.mode b{font-size:13.5px;line-height:1.2}
+.mode span{font-size:12px;color:var(--muted);line-height:1.3}
+.mode[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.modeinfo{margin-top:10px;font-size:13.5px;color:var(--muted)}
+.modeinfo dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:8px 0 0}
+.modeinfo dt{font-weight:600;color:var(--ink)}
+.modeinfo dd{margin:0}
+.row{display:flex;flex-direction:column;gap:5px}
+.row + .row{margin-top:14px}
+.row-head{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;font-weight:600}
+.row-head output{font-family:var(--f-mono);font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.hint{font-size:12px;color:var(--muted);line-height:1.35}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;cursor:pointer}
+.check input{margin-top:3px;accent-color:var(--accent)}
+.textiles{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tex{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);cursor:pointer;padding:0;position:relative}
+.tex[aria-checked="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.tex-custom{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.tex-custom input{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;padding:0;background:none;cursor:pointer}
+.texname{font-size:13px;margin-top:8px}
+.field{display:flex;gap:8px;align-items:center}
+.field input[type=number],.field select{width:100%;border:1px solid var(--line);border-radius:7px;background:var(--bg);padding:7px 9px}
+
+/* Plateau */
+.stage-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.stage-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface)}
+.seg button{border:0;background:transparent;border-radius:999px;padding:6px 13px;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.status{font-size:13px;color:var(--muted)}
+.stage{position:relative;border-radius:var(--r);background:var(--textile,#1c1c1f);display:flex;align-items:center;justify-content:center;padding:clamp(14px,4vw,40px);min-height:280px;overflow:hidden;border:1px solid var(--line)}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.16;mix-blend-mode:soft-light;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.5) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(0,0,0,.5) 0 1px,transparent 1px 3px)}
+.stage canvas{display:block;max-width:100%;max-height:min(64vh,700px);width:auto;height:auto;position:relative;z-index:0}
+.stage.drag{outline:3px dashed var(--accent);outline-offset:-8px}
+.drop-hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:#fff;background:rgba(0,0,0,.45);padding:3px 9px;border-radius:999px;z-index:1}
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;gap:6px;align-items:baseline;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:13px}
+.chip b{font-family:var(--f-mono);font-weight:500;font-variant-numeric:tabular-nums}
+.warns{display:flex;flex-direction:column;gap:8px}
+.warn{border-radius:8px;padding:9px 12px;font-size:13.5px;background:var(--warn-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent)}
+.warn strong{color:var(--warn)}
+.note{border-radius:8px;padding:9px 12px;font-size:13.5px;background:var(--accent-soft);color:var(--ink)}
+.films-title{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:6px}
+.films-title h2{font-family:var(--f-display);font-stretch:112%;font-weight:750;font-size:18px}
+.films{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:12px}
+.film{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.film.off{opacity:.55}
+.film-thumb{position:relative;background:var(--film);aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line);padding:10px}
+.film-thumb canvas{max-width:100%;max-height:100%;display:block}
+.order{position:absolute;top:8px;left:8px;font-family:var(--f-mono);font-size:12px;font-weight:500;background:var(--film-ink);color:var(--film);border-radius:4px;padding:1px 6px}
+.flash{position:absolute;top:8px;right:8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#ffd23f;color:#1a1500;border-radius:4px;padding:2px 6px}
+.film-body{padding:12px;display:flex;flex-direction:column;gap:10px;flex:1}
+.film-head{display:flex;gap:10px;align-items:center;min-width:0}
+.film-head > div{min-width:0}
+.film-head strong{display:block;font-size:14.5px;line-height:1.2;overflow-wrap:anywhere}
+.film-head .mono{font-size:12px;color:var(--muted)}
+.swatch{flex:none;width:32px;height:32px;border-radius:7px;border:1px solid var(--line);overflow:hidden;cursor:pointer;position:relative}
+.swatch input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);border:0;padding:0;cursor:pointer;opacity:0}
+.film dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0;font-size:12.5px}
+.film dt{color:var(--muted)}
+.film dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.film-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;flex-wrap:wrap}
+.linkbtn{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer}
+.linkbtn:hover{border-color:var(--ink)}
+.absorbed{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--line);vertical-align:-1px}
+
+/* Export en cours */
+.progress{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.18);z-index:20}
+.progress p{margin:0 0 8px;font-size:13.5px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+.msg{min-height:1.4em;font-size:13.5px}
+.msg.err{color:var(--warn)}
+
+/* Loupe */
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:0;width:min(860px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgba(10,12,18,.55)}
+.lp-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.lp-head h3{font-size:16px}
+.lp-body{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:16px;padding:16px;overflow:auto}
+@media (max-width:640px){.lp-body{grid-template-columns:minmax(0,1fr)}}
+.lp-thumb{background:var(--film);border:1px solid var(--line);border-radius:8px;padding:8px;cursor:crosshair;position:relative}
+.lp-thumb canvas{display:block;width:100%;height:auto}
+.lp-zoom{background:var(--film);border:1px solid var(--line);border-radius:8px;display:flex;justify-content:center;align-items:center;padding:8px;min-width:0}
+.lp-zoom canvas{image-rendering:pixelated;width:100%;max-width:480px;height:auto;display:block}
+.lp-cap{grid-column:1/-1;font-size:13px;color:var(--muted);margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="42" height="42" viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="11" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M21 2v38M2 21h38" stroke="currentColor" stroke-width="2.4"/></svg>
+      <div>
+        <h1>Atelier de séparation</h1>
+        <p>Décomposez une image en films pour la sérigraphie, un film par écran.</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn" id="pick" type="button">Charger une image</button>
+      <input class="vh" id="file" type="file" accept="image/*" tabindex="-1" aria-hidden="true">
+      <button class="btn primary" id="export" type="button">Exporter les films (ZIP)</button>
+    </div>
+  </header>
+
+  <main class="bench">
+    <aside class="panel" aria-label="Réglages">
+      <section>
+        <h2 class="eyebrow" id="modes-label">Style de séparation</h2>
+        <div class="modes" role="radiogroup" aria-labelledby="modes-label">
+          <button class="mode" type="button" role="radio" data-mode="spot" aria-checked="false">
+            <svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><rect x="0" y="2" width="12" height="14" rx="2" fill="#d6293b"/><rect x="16" y="2" width="12" height="14" rx="2" fill="#f2b51d"/><rect x="32" y="2" width="12" height="14" rx="2" fill="currentColor"/></svg>
+            <b>Tons directs</b><span>Aplats, logos, texte</span>
+          </button>
+          <button class="mode" type="button" role="radio" data-mode="cmyk" aria-checked="false">
+            <svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><g style="mix-blend-mode:multiply"><circle cx="9" cy="9" r="7" fill="#00aeef" opacity=".85"/><circle cx="18" cy="9" r="7" fill="#ec008c" opacity=".85"/><circle cx="27" cy="9" r="7" fill="#fff200" opacity=".9"/><circle cx="36" cy="9" r="7" fill="#231f20" opacity=".85"/></g></svg>
+            <b>Quadri CMJN</b><span>Photos, textile clair</span>
+          </button>
+          <button class="mode" type="button" role="radio" data-mode="sim" aria-checked="false">
+            <svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><rect width="44" height="18" rx="3" fill="#1c1c1f"/><circle cx="7" cy="9" r="4" fill="#fff"/><circle cx="17" cy="9" r="3.4" fill="#e2477a"/><circle cx="27" cy="9" r="2.8" fill="#f59a3e"/><circle cx="37" cy="9" r="2.2" fill="#ffd36b"/></svg>
+            <b>Quadri simulée</b><span>Photos, textile foncé</span>
+          </button>
+          <button class="mode" type="button" role="radio" data-mode="index" aria-checked="false">
+            <svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><g fill="#2f3dc2"><rect x="0" y="0" width="6" height="6"/><rect x="12" y="0" width="6" height="6"/><rect x="6" y="6" width="6" height="6"/><rect x="24" y="6" width="6" height="6"/><rect x="0" y="12" width="6" height="6"/><rect x="18" y="12" width="6" height="6"/><rect x="36" y="0" width="6" height="6"/></g><g fill="#f2b51d"><rect x="6" y="0" width="6" height="6"/><rect x="18" y="0" width="6" height="6"/><rect x="12" y="12" width="6" height="6"/><rect x="30" y="12" width="6" height="6"/><rect x="36" y="6" width="6" height="6"/></g><g fill="currentColor"><rect x="24" y="0" width="6" height="6"/><rect x="12" y="6" width="6" height="6"/><rect x="30" y="0" width="6" height="6"/><rect x="6" y="12" width="6" height="6"/><rect x="24" y="12" width="6" height="6"/></g></svg>
+            <b>Couleurs indexées</b><span>Pixels carrés, rendu doux</span>
+          </button>
+        </div>
+        <div class="modeinfo" id="modeinfo"></div>
+      </section>
+
+      <section>
+        <h2 class="eyebrow">Réglages</h2>
+        <div class="row" data-modes="spot sim index">
+          <div class="row-head"><label for="k" id="k-label">Nombre de couleurs</label><output id="k-out" for="k"></output></div>
+          <input type="range" id="k" min="2" max="8" step="1">
+        </div>
+        <div class="row" data-modes="cmyk sim">
+          <div class="row-head"><label for="lpi">Linéature de trame</label><output id="lpi-out" for="lpi"></output></div>
+          <input type="range" id="lpi" min="30" max="85" step="5">
+          <span class="hint" id="lpi-hint"></span>
+        </div>
+        <div class="row" data-modes="cmyk">
+          <div class="row-head"><label for="gcr">Remplacement par le noir (GCR)</label><output id="gcr-out" for="gcr"></output></div>
+          <input type="range" id="gcr" min="0" max="100" step="5">
+          <span class="hint">Plus le noir remplace les gris, moins on dépose d'encre et plus les ombres restent neutres.</span>
+        </div>
+        <div class="row" data-modes="index">
+          <div class="row-head"><label for="ppi">Taille des pixels carrés</label><output id="ppi-out" for="ppi"></output></div>
+          <input type="range" id="ppi" min="100" max="300" step="25">
+        </div>
+        <div class="row" data-modes="spot">
+          <label class="check"><input type="checkbox" id="clean"> <span>Nettoyer les petits îlots de couleur</span></label>
+        </div>
+        <div class="row" data-modes="spot sim index">
+          <label class="check"><input type="checkbox" id="absorb"> <span>Laisser le textile remplacer la couleur la plus proche (un écran de moins)</span></label>
+        </div>
+        <div class="row" data-modes="spot cmyk sim index">
+          <label class="check"><input type="checkbox" id="removeBg"> <span>Retirer le fond uni de l'image</span></label>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="eyebrow" id="tex-label">Textile</h2>
+        <div class="textiles" role="radiogroup" aria-labelledby="tex-label" id="textiles"></div>
+        <div class="texname" id="texname"></div>
+        <div class="row" style="margin-top:12px">
+          <label class="check"><input type="checkbox" id="underbase"> <span>Sous-couche blanche, suivie d'un flash</span></label>
+          <span class="hint">Indispensable sur textile foncé : elle fait ressortir les couleurs. Elle est rétrécie (chokée) d'environ 0,2 mm pour ne pas déborder.</span>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="eyebrow">Films</h2>
+        <div class="row">
+          <div class="row-head"><label for="width">Largeur imprimée (cm)</label></div>
+          <div class="field"><input type="number" id="width" min="4" max="60" step="0.5" inputmode="decimal"></div>
+        </div>
+        <div class="row">
+          <div class="row-head"><label for="dpi">Résolution des films</label></div>
+          <div class="field"><select id="dpi"><option value="150">150 dpi (brouillon)</option><option value="200">200 dpi</option><option value="300">300 dpi (standard)</option><option value="360">360 dpi</option></select></div>
+          <span class="hint mono" id="film-size"></span>
+        </div>
+      </section>
+    </aside>
+
+    <section class="stage-col" aria-label="Aperçu et films">
+      <div class="stage-bar">
+        <div class="seg" role="group" aria-label="Affichage">
+          <button type="button" id="v-print" aria-pressed="true">Impression simulée</button>
+          <button type="button" id="v-orig" aria-pressed="false">Image d'origine</button>
+        </div>
+        <span class="status" id="status" aria-live="polite"></span>
+      </div>
+      <div class="stage" id="stage">
+        <canvas id="preview" width="10" height="10" aria-label="Aperçu de l'impression sur le textile"></canvas>
+        <span class="drop-hint">Déposez une image ici (PNG, JPG, SVG)</span>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="warns" id="warns"></div>
+      <p class="msg" id="msg" role="status"></p>
+      <div class="films-title">
+        <h2>Films, dans l'ordre d'impression</h2>
+        <span class="hint">Cliquez sur une pastille de couleur pour changer l'encre.</span>
+      </div>
+      <ol class="films" id="films"></ol>
+    </section>
+  </main>
+
+  <div class="progress" id="progress" hidden>
+    <p id="progress-text">Préparation…</p>
+    <div class="bar"><i id="progress-bar"></i></div>
+  </div>
+
+  <dialog id="loupe" aria-labelledby="lp-title">
+    <div class="lp-head"><h3 id="lp-title">Film</h3><button class="linkbtn" type="button" id="lp-close">Fermer</button></div>
+    <div class="lp-body">
+      <div>
+        <div class="lp-thumb" id="lp-thumb"><canvas id="lp-thumb-c"></canvas></div>
+        <p class="hint" style="margin:6px 0 0">Cliquez sur le film pour déplacer la loupe.</p>
+      </div>
+      <div class="lp-zoom"><canvas id="lp-zoom-c"></canvas></div>
+      <p class="lp-cap" id="lp-cap"></p>
+    </div>
+  </dialog>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+
+/* ---------- Données ---------- */
+const TEXTILES = [
+  {name:"Blanc", hex:"#f4f4f1"},
+  {name:"Gris chiné", hex:"#9c9d9f"},
+  {name:"Noir", hex:"#1c1c1f"},
+  {name:"Marine", hex:"#1f2a45"},
+  {name:"Rouge", hex:"#b0222c"},
+  {name:"Kaki", hex:"#59583a"},
+];
+const MODES = {
+  spot:{label:"Tons directs", desc:"Une encre opaque, mélangée à l'avance, par couleur. Les aplats sont nets, sans trame.", pour:"logos, texte, illustrations à plat", textile:"tous", ecrans:"1 à 6", kMin:2, kMax:8, kLabel:"Nombre de couleurs"},
+  cmyk:{label:"Quadrichromie CMJN", desc:"Quatre encres translucides tramées (cyan, magenta, jaune, noir) qui se mélangent à l'œil.", pour:"photos et dégradés", textile:"blanc ou très clair", ecrans:"4 (+ sous-couche sur foncé)"},
+  sim:{label:"Quadri simulée", desc:"Des encres opaques choisies dans l'image, toutes tramées au même angle, posées sur une sous-couche blanche.", pour:"photos et illustrations détaillées", textile:"foncé surtout", ecrans:"6 à 12", kMin:3, kMax:10, kLabel:"Nombre d'encres"},
+  index:{label:"Couleurs indexées", desc:"Un nombre limité de couleurs imprimées en pixels carrés de taille fixe, répartis par diffusion d'erreur.", pour:"images détaillées, rendu doux", textile:"clair ou foncé", ecrans:"4 à 12", kMin:3, kMax:12, kLabel:"Nombre de couleurs"},
+};
+const MESH = [34,43,48,55,61,68,77,90,100,120,140,150];
+const FILM_MARGIN_CM = 1.6;  // marge autour de l'image, pour les repères de calage
+const FORMATS = [
+  {name:"A4", w:21, h:29.7},
+  {name:"A3", w:29.7, h:42},
+  {name:"A3+", w:32.9, h:48.3},
+];
+// Le format de film découle de la taille de l'image : on prend le plus petit qui la contient, marges comprises.
+function filmFormat(widthCm,heightCm){
+  const fw=widthCm+2*FILM_MARGIN_CM, fh=heightCm+2*FILM_MARGIN_CM;
+  for (const f of FORMATS){
+    if (fw<=f.w && fh<=f.h) return {fw,fh,name:f.name,orient:"portrait",label:`${f.name} portrait`};
+    if (fw<=f.h && fh<=f.w) return {fw,fh,name:f.name,orient:"paysage",label:`${f.name} paysage`};
+  }
+  return {fw,fh,name:"Rouleau",orient:"",label:`rouleau de ${fmt(Math.ceil(Math.min(fw,fh)))} cm de large minimum`};
+}
+
+const S = {
+  mode:"sim", k:{spot:4, sim:6, index:8}, lpi:{cmyk:55, sim:50}, gcr:60, ppi:150,
+  clean:true, absorb:true, removeBg:true,
+  textile:"#1c1c1f", textileName:"Noir", underbase:true,
+  widthCm:25, dpi:300, view:"print", srcName:"exemple-badge"
+};
+let SRC = null;   // canvas source
+let AN = null;    // résultat de séparation
+let busy = false;
+
+/* ---------- Couleur ---------- */
+const LIN = new Float32Array(256);
+for (let i=0;i<256;i++){ const c=i/255; LIN[i]= c<=0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4); }
+const f3 = t => t>0.008856 ? Math.cbrt(t) : 7.787*t+16/116;
+function rgb2lab(r,g,b,out,o){
+  const R=LIN[r],G=LIN[g],B=LIN[b];
+  const x=(R*0.4124+G*0.3576+B*0.1805)/0.95047, y=R*0.2126+G*0.7152+B*0.0722, z=(R*0.0193+G*0.1192+B*0.9505)/1.08883;
+  const fx=f3(x), fy=f3(y), fz=f3(z);
+  out[o]=116*fy-16; out[o+1]=500*(fx-fy); out[o+2]=200*(fy-fz);
+}
+const hex2rgb = h => { const n=parseInt(h.slice(1),16); return [n>>16&255, n>>8&255, n&255]; };
+const rgb2hex = c => "#"+c.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,"0")).join("");
+const lum = c => 0.2126*LIN[c[0]|0]+0.7152*LIN[c[1]|0]+0.0722*LIN[c[2]|0];
+const labOf = c => { const o=new Float32Array(3); rgb2lab(c[0]|0,c[1]|0,c[2]|0,o,0); return o; };
+const d2 = (a,b) => (a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2;
+const fmt = (n,d=1) => n.toLocaleString("fr-FR",{maximumFractionDigits:d});
+
+function colorName(c){
+  const r=c[0]/255,g=c[1]/255,b=c[2]/255, mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2, d=mx-mn;
+  const s = d===0 ? 0 : d/(1-Math.abs(2*l-1));
+  if ((l>0.88 && s<0.7) || l>0.95) return "Blanc";
+  if (l<0.1) return "Noir";
+  if (s<0.14) return l>0.66 ? "Gris clair" : l<0.33 ? "Gris foncé" : "Gris";
+  let h = mx===r ? ((g-b)/d)%6 : mx===g ? (b-r)/d+2 : (r-g)/d+4; h*=60; if(h<0) h+=360;
+  let n;
+  if (h<12 || h>=342) n = l>0.65 ? "Rose" : "Rouge";
+  else if (h<40) n = l<0.32 ? "Brun" : "Orange";
+  else if (h<66) n = l<0.3 ? "Olive" : "Jaune";
+  else if (h<95) n = "Vert anis";
+  else if (h<160) n = "Vert";
+  else if (h<196) n = "Turquoise";
+  else if (h<252) n = "Bleu";
+  else if (h<288) n = "Violet";
+  else n = l>0.62 ? "Rose" : "Magenta";
+  const mod = l>0.74 ? " clair" : l<0.28 ? " foncé" : "";
+  return n+mod;
+}
+
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+/* ---------- Échantillonnage de l'image ---------- */
+function sampleImage(W,H){
+  const c=document.createElement("canvas"); c.width=W; c.height=H;
+  const x=c.getContext("2d",{willReadFrequently:true});
+  x.imageSmoothingEnabled=true; x.imageSmoothingQuality="high";
+  x.drawImage(SRC,0,0,W,H);
+  const data=x.getImageData(0,0,W,H).data, N=W*H;
+  const alpha=new Uint8Array(N), lab=new Float32Array(N*3);
+  for (let i=0;i<N;i++){ const p=i*4; alpha[i]=data[p+3]>=128?1:0; rgb2lab(data[p],data[p+1],data[p+2],lab,i*3); }
+  let bgRemoved=false;
+  if (S.removeBg){
+    const border=[];
+    for (let x0=0;x0<W;x0++){ border.push(x0, (H-1)*W+x0); }
+    for (let y0=1;y0<H-1;y0++){ border.push(y0*W, y0*W+W-1); }
+    const op = border.filter(i=>alpha[i]);
+    if (op.length > border.length*0.6){
+      const m=[0,0,0]; for (const i of op){ m[0]+=lab[i*3]; m[1]+=lab[i*3+1]; m[2]+=lab[i*3+2]; }
+      m[0]/=op.length; m[1]/=op.length; m[2]/=op.length;
+      let spread=0; for (const i of op){ spread+=Math.sqrt((lab[i*3]-m[0])**2+(lab[i*3+1]-m[1])**2+(lab[i*3+2]-m[2])**2); }
+      spread/=op.length;
+      if (spread<7){
+        const T=14*14, seen=new Uint8Array(N), q=new Int32Array(N); let qh=0, qt=0;
+        const ok = i => alpha[i] && (lab[i*3]-m[0])**2+(lab[i*3+1]-m[1])**2+(lab[i*3+2]-m[2])**2 < T;
+        for (const i of op){ if(!seen[i] && ok(i)){ seen[i]=1; q[qt++]=i; } }
+        while (qh<qt){
+          const i=q[qh++]; alpha[i]=0; const x1=i%W;
+          const nb=[x1>0?i-1:-1, x1<W-1?i+1:-1, i>=W?i-W:-1, i<N-W?i+W:-1];
+          for (const j of nb){ if(j>=0 && !seen[j] && ok(j)){ seen[j]=1; q[qt++]=j; } }
+        }
+        bgRemoved = qt>0;
+      }
+    }
+  }
+  return {W,H,N,data,alpha,lab,bgRemoved};
+}
+
+function kmeans(img,k,seed){
+  const {N,lab,alpha,data}=img;
+  const idx=[]; for (let i=0;i<N;i++) if(alpha[i]) idx.push(i);
+  if (!idx.length) return [];
+  const rng=mulberry32(seed), M=Math.min(idx.length,14000), samp=new Int32Array(M);
+  for (let j=0;j<M;j++) samp[j]=idx[Math.floor(rng()*idx.length)];
+  k=Math.min(k,M);
+  const C=new Float32Array(k*3), D=new Float32Array(M).fill(Infinity);
+  let p0=samp[Math.floor(rng()*M)]*3; C[0]=lab[p0]; C[1]=lab[p0+1]; C[2]=lab[p0+2];
+  for (let c=1;c<k;c++){
+    let sum=0; const o=(c-1)*3;
+    for (let j=0;j<M;j++){ const p=samp[j]*3; const dd=(lab[p]-C[o])**2+(lab[p+1]-C[o+1])**2+(lab[p+2]-C[o+2])**2; if(dd<D[j]) D[j]=dd; sum+=D[j]; }
+    let r=rng()*sum, pick=M-1; for (let j=0;j<M;j++){ r-=D[j]; if(r<=0){ pick=j; break; } }
+    const p=samp[pick]*3; C[c*3]=lab[p]; C[c*3+1]=lab[p+1]; C[c*3+2]=lab[p+2];
+  }
+  const asg=new Int32Array(M);
+  for (let it=0;it<16;it++){
+    const sums=new Float64Array(k*3), cnt=new Int32Array(k);
+    for (let j=0;j<M;j++){
+      const p=samp[j]*3; let best=0, bd=Infinity;
+      for (let c=0;c<k;c++){ const o=c*3; const dd=(lab[p]-C[o])**2+(lab[p+1]-C[o+1])**2+(lab[p+2]-C[o+2])**2; if(dd<bd){bd=dd;best=c;} }
+      asg[j]=best; cnt[best]++; sums[best*3]+=lab[p]; sums[best*3+1]+=lab[p+1]; sums[best*3+2]+=lab[p+2];
+    }
+    for (let c=0;c<k;c++) if(cnt[c]){ C[c*3]=sums[c*3]/cnt[c]; C[c*3+1]=sums[c*3+1]/cnt[c]; C[c*3+2]=sums[c*3+2]/cnt[c]; }
+  }
+  const rs=new Float64Array(k*3), cnt=new Int32Array(k);
+  for (let j=0;j<M;j++){ const c=asg[j], p=samp[j]*4; cnt[c]++; rs[c*3]+=data[p]; rs[c*3+1]+=data[p+1]; rs[c*3+2]+=data[p+2]; }
+  const out=[];
+  for (let c=0;c<k;c++) if(cnt[c]>M*0.002){
+    const rgb=[rs[c*3]/cnt[c], rs[c*3+1]/cnt[c], rs[c*3+2]/cnt[c]].map(Math.round);
+    out.push({rgb, lab:labOf(rgb), count:cnt[c]});
+  }
+  return out;
+}
+
+function flatLab(list){ const f=new Float32Array(list.length*3); list.forEach((c,i)=>f.set(c,i*3)); return f; }
+function nearest(lab,p,P,n){ let best=0,bd=Infinity; for(let c=0;c<n;c++){ const o=c*3; const dd=(lab[p]-P[o])**2+(lab[p+1]-P[o+1])**2+(lab[p+2]-P[o+2])**2; if(dd<bd){bd=dd;best=c;} } return best; }
+
+function mkLayer(rgb,kind,cov,extra={}){
+  return Object.assign({rgb:rgb.slice(), name:colorName(rgb), kind, cov, angle:0, lpi:0, blend:"opaque", visible:true, flash:false, isUnderbase:false}, extra);
+}
+
+/* ---------- Les 4 styles ---------- */
+function buildSpot(img,texLab){
+  const {W,H,N,lab,alpha}=img;
+  const pal=kmeans(img,S.k.spot,11), k=pal.length, P=flatLab(pal.map(p=>p.lab));
+  let lbl=new Int16Array(N).fill(-1);
+  for (let i=0;i<N;i++) if(alpha[i]) lbl[i]=nearest(lab,i*3,P,k);
+  if (S.clean){
+    const out=new Int16Array(lbl), cnt=new Int32Array(k);
+    for (let y=1;y<H-1;y++) for (let x=1;x<W-1;x++){
+      const i=y*W+x; if(lbl[i]<0) continue; cnt.fill(0);
+      for (let dy=-1;dy<=1;dy++) for (let dx=-1;dx<=1;dx++){ const l=lbl[i+dy*W+dx]; if(l>=0) cnt[l]++; }
+      let b=lbl[i], bc=0; for (let c=0;c<k;c++) if(cnt[c]>bc){bc=cnt[c];b=c;}
+      if (bc>=5) out[i]=b;
+    }
+    lbl=out;
+  }
+  const absorbed=pal.map(p=>S.absorb && d2(p.lab,texLab)<18*18);
+  const layers=[];
+  pal.forEach((p,c)=>{
+    if (absorbed[c]) return;
+    const cov=new Uint8Array(N); for (let i=0;i<N;i++) if(lbl[i]===c) cov[i]=255;
+    layers.push(mkLayer(p.rgb,"solid",cov));
+  });
+  layers.sort((a,b)=>lum(b.rgb)-lum(a.rgb));
+  return {layers, absorbed:pal.filter((p,c)=>absorbed[c]).map(p=>p.rgb)};
+}
+
+function buildCmyk(img){
+  const {N,data,alpha}=img, g=S.gcr/100;
+  const C=new Uint8Array(N), M=new Uint8Array(N), Y=new Uint8Array(N), K=new Uint8Array(N);
+  for (let i=0;i<N;i++){
+    if(!alpha[i]) continue; const p=i*4;
+    let c=1-data[p]/255, m=1-data[p+1]/255, y=1-data[p+2]/255;
+    const k=Math.min(c,m,y)*g, s=1-k;
+    if (s>1e-4){ c=(c-k)/s; m=(m-k)/s; y=(y-k)/s; } else { c=m=y=0; }
+    C[i]=c*255; M[i]=m*255; Y[i]=y*255; K[i]=k*255;
+  }
+  const lpi=S.lpi.cmyk, base={kind:"halftone", lpi, blend:"multiply"};
+  const layers=[
+    mkLayer([255,242,0],"halftone",Y,{...base,name:"Jaune",angle:7.5}),
+    mkLayer([236,0,140],"halftone",M,{...base,name:"Magenta",angle:52.5}),
+    mkLayer([0,174,239],"halftone",C,{...base,name:"Cyan",angle:22.5}),
+    mkLayer([35,31,32],"halftone",K,{...base,name:"Noir",angle:82.5}),
+  ];
+  return {layers, absorbed:[]};
+}
+
+function buildSim(img,texLab,tex){
+  const {N,lab,alpha}=img;
+  const pal0=kmeans(img,S.k.sim,23);
+  const absorbed=pal0.filter(p=>S.absorb && d2(p.lab,texLab)<18*18);
+  const pal=pal0.filter(p=>!absorbed.includes(p)), k=pal.length;
+  const cand=flatLab([...pal.map(p=>p.lab), texLab]), n=k+1;  // le textile est une "couleur" sans encre
+  const covs=pal.map(()=>new Uint8Array(N));
+  for (let i=0;i<N;i++){
+    if(!alpha[i]) continue; const p=i*3;
+    let b1=0,b2=1,d1=Infinity,dd2=Infinity;
+    for (let c=0;c<n;c++){ const o=c*3; const dd=(lab[p]-cand[o])**2+(lab[p+1]-cand[o+1])**2+(lab[p+2]-cand[o+2])**2;
+      if(dd<d1){ dd2=d1; b2=b1; d1=dd; b1=c; } else if(dd<dd2){ dd2=dd; b2=c; } }
+    if (n<2){ if(b1<k) covs[b1][i]=255; continue; }
+    const a=b1*3, b=b2*3;
+    const ab0=cand[b]-cand[a], ab1=cand[b+1]-cand[a+1], ab2=cand[b+2]-cand[a+2];
+    const den=ab0*ab0+ab1*ab1+ab2*ab2;
+    let t= den>0 ? ((lab[p]-cand[a])*ab0+(lab[p+1]-cand[a+1])*ab1+(lab[p+2]-cand[a+2])*ab2)/den : 0;
+    t=Math.max(0,Math.min(0.5,t)); // b1 est le plus proche : sa part reste majoritaire
+    if (b1<k) covs[b1][i]=Math.round((1-t)*255);
+    if (b2<k) covs[b2][i]=Math.round(t*255);
+  }
+  const lpi=S.lpi.sim;
+  let layers=pal.map((p,c)=>mkLayer(p.rgb,"halftone",covs[c],{lpi,angle:22.5}));
+  const whites=layers.filter(l=>l.name==="Blanc"), others=layers.filter(l=>l.name!=="Blanc");
+  others.sort((a,b)=>lum(b.rgb)-lum(a.rgb));
+  whites.forEach(l=>l.name="Blanc de rehaut");
+  layers=[...others,...whites];
+  return {layers, absorbed:absorbed.map(p=>p.rgb)};
+}
+
+function buildIndex(img,texLab,tex){
+  const {W,H,N,data,alpha}=img;
+  const pal0=kmeans(img,S.k.index,31);
+  const absorbed=pal0.filter(p=>S.absorb && d2(p.lab,texLab)<18*18);
+  const pal=pal0.filter(p=>!absorbed.includes(p)), k=pal.length;
+  const cands=[...pal.map(p=>p.rgb)]; if (S.absorb) cands.push(tex);
+  const n=cands.length, CR=cands.map(c=>c[0]), CG=cands.map(c=>c[1]), CB=cands.map(c=>c[2]);
+  const lbl=new Int16Array(N).fill(-1);
+  let cur=new Float32Array((W+2)*3), nxt=new Float32Array((W+2)*3);
+  for (let y=0;y<H;y++){
+    const dir= y%2 ? -1 : 1;
+    for (let xi=0;xi<W;xi++){
+      const x= dir>0 ? xi : W-1-xi, i=y*W+x, o=(x+1)*3;
+      if(!alpha[i]) continue;
+      const r=data[i*4]+cur[o], g=data[i*4+1]+cur[o+1], b=data[i*4+2]+cur[o+2];
+      let best=0, bd=Infinity;
+      for (let c=0;c<n;c++){ const dr=r-CR[c], dg=g-CG[c], db=b-CB[c]; const dd=2*dr*dr+4*dg*dg+3*db*db; if(dd<bd){bd=dd;best=c;} }
+      lbl[i]=best;
+      const er=r-CR[best], eg=g-CG[best], eb=b-CB[best], f=o+dir*3, bk=o-dir*3;
+      cur[f]+=er*7/16; cur[f+1]+=eg*7/16; cur[f+2]+=eb*7/16;
+      nxt[bk]+=er*3/16; nxt[bk+1]+=eg*3/16; nxt[bk+2]+=eb*3/16;
+      nxt[o]+=er*5/16; nxt[o+1]+=eg*5/16; nxt[o+2]+=eb*5/16;
+      nxt[f]+=er/16; nxt[f+1]+=eg/16; nxt[f+2]+=eb/16;
+    }
+    const t=cur; cur=nxt; nxt=t; nxt.fill(0);
+  }
+  const layers=pal.map((p,c)=>{ const cov=new Uint8Array(N); for(let i=0;i<N;i++) if(lbl[i]===c) cov[i]=255; return mkLayer(p.rgb,"index",cov); });
+  layers.sort((a,b)=>lum(b.rgb)-lum(a.rgb));
+  return {layers, absorbed:absorbed.map(p=>p.rgb)};
+}
+
+function buildUnderbase(img,layers,mode){
+  const {W,H,N,alpha}=img, u=new Uint8Array(N);
+  for (let i=0;i<N;i++){
+    if(!alpha[i]) continue;
+    if (mode==="cmyk"){ let prod=1; for (const L of layers) prod*=1-L.cov[i]/255; u[i]=Math.round((1-prod)*255); }
+    else { let s=0; for (const L of layers) s+=L.cov[i]; u[i]=Math.min(255,s); }
+  }
+  const ch=new Uint8Array(N);  // choke : filtre minimum 3×3
+  for (let y=0;y<H;y++) for (let x=0;x<W;x++){
+    let m=255;
+    for (let dy=-1;dy<=1 && m;dy++){ const yy=y+dy; if(yy<0||yy>=H){m=0;break;}
+      for (let dx=-1;dx<=1;dx++){ const xx=x+dx; if(xx<0||xx>=W){m=0;break;} const v=u[yy*W+xx]; if(v<m) m=v; } }
+    ch[y*W+x]=m;
+  }
+  const kind = mode==="spot" ? "solid" : mode==="index" ? "index" : "halftone";
+  const lpi = mode==="cmyk" ? S.lpi.cmyk : S.lpi.sim;
+  return mkLayer([255,255,255],kind,ch,{name:"Sous-couche blanche", isUnderbase:true, flash:true, lpi, angle: mode==="cmyk" ? 37.5 : 22.5});
+}
+
+/* ---------- Analyse ---------- */
+function analyze(){
+  if (!SRC) return;
+  const t0=performance.now();
+  const ar=SRC.height/SRC.width;
+  let W,H;
+  if (S.mode==="index"){
+    W=Math.round(S.widthCm/2.54*S.ppi); H=Math.round(W*ar);
+    const cap=2400, m=Math.max(W,H); if(m>cap){ W=Math.round(W*cap/m); H=Math.round(H*cap/m); }
+  } else {
+    const L=1200; if(ar<=1){ W=L; H=Math.round(L*ar); } else { H=L; W=Math.round(L/ar); }
+  }
+  W=Math.max(8,W); H=Math.max(8,H);
+  const img=sampleImage(W,H), tex=hex2rgb(S.textile), texLab=labOf(tex);
+  let res;
+  if (S.mode==="spot") res=buildSpot(img,texLab);
+  else if (S.mode==="cmyk") res=buildCmyk(img);
+  else if (S.mode==="sim") res=buildSim(img,texLab,tex);
+  else res=buildIndex(img,texLab,tex);
+  const layers=res.layers;
+  if (S.underbase && layers.length) layers.unshift(buildUnderbase(img,layers,S.mode));
+  let opaque=0; for (let i=0;i<img.N;i++) opaque+=img.alpha[i];
+  for (const L of layers){ let s=0; for (let i=0;i<img.N;i++) s+=L.cov[i]; L.coverage= opaque ? s/(255*opaque) : 0; }
+  const seen={};
+  for (const L of layers){ seen[L.name]=(seen[L.name]||0)+1; if(seen[L.name]>1) L.name+=" "+seen[L.name]; }
+  AN={W,H,alpha:img.alpha,layers,mode:S.mode,bgRemoved:img.bgRemoved,absorbed:res.absorbed,opaque,ms:performance.now()-t0};
+  renderAll();
+}
+
+/* ---------- Aperçu ---------- */
+function composite(){
+  const {W,H,alpha,layers}=AN, N=W*H, out=new ImageData(W,H), o=out.data, tex=hex2rgb(S.textile);
+  const vis=layers.filter(l=>l.visible).map(l=>({cov:l.cov, mul:l.blend==="multiply", r:l.rgb[0], g:l.rgb[1], b:l.rgb[2], fr:1-l.rgb[0]/255, fg:1-l.rgb[1]/255, fb:1-l.rgb[2]/255}));
+  for (let i=0;i<N;i++){
+    let r=tex[0], g=tex[1], b=tex[2];
+    if (alpha[i]) for (const L of vis){
+      const c=L.cov[i]; if(!c) continue; const a=c/255;
+      if (L.mul){ r*=1-a*L.fr; g*=1-a*L.fg; b*=1-a*L.fb; }
+      else { r+=(L.r-r)*a; g+=(L.g-g)*a; b+=(L.b-b)*a; }
+    }
+    const p=i*4; o[p]=r; o[p+1]=g; o[p+2]=b; o[p+3]=255;
+  }
+  return out;
+}
+function drawPreview(){
+  const cv=$("#preview"), x=cv.getContext("2d");
+  $("#stage").style.setProperty("--textile",S.textile);
+  if (!AN) return;
+  cv.width=AN.W; cv.height=AN.H;
+  if (S.view==="orig"){ x.fillStyle=S.textile; x.fillRect(0,0,AN.W,AN.H); x.imageSmoothingQuality="high"; x.drawImage(SRC,0,0,AN.W,AN.H); }
+  else x.putImageData(composite(),0,0);
+}
+
+function thumb(L,maxSide){
+  const {W,H}=AN, f=Math.min(1,maxSide/Math.max(W,H)), tw=Math.max(1,Math.round(W*f)), th=Math.max(1,Math.round(H*f));
+  const c=document.createElement("canvas"); c.width=tw; c.height=th;
+  const x=c.getContext("2d"), id=x.createImageData(tw,th), d=id.data;
+  for (let y=0;y<th;y++){ const sy=Math.min(H-1,Math.floor((y+0.5)/f));
+    for (let xx=0;xx<tw;xx++){ const sx=Math.min(W-1,Math.floor((xx+0.5)/f)); const v=255-L.cov[sy*W+sx], o=(y*tw+xx)*4; d[o]=d[o+1]=d[o+2]=v; d[o+3]=255; } }
+  x.putImageData(id,0,0); return c;
+}
+
+/* ---------- Films ---------- */
+function filmParams(){
+  const filmW=Math.max(1,Math.round(S.widthCm/2.54*S.dpi)), filmH=Math.max(1,Math.round(filmW*AN.H/AN.W));
+  return {filmW, filmH, dpi:S.dpi, heightCm:S.widthCm*AN.H/AN.W};
+}
+function bil(a,W,H,u,v){
+  if(u<0)u=0; if(v<0)v=0; if(u>W-1)u=W-1; if(v>H-1)v=H-1;
+  const x0=u|0, y0=v|0, x1=x0+1<W?x0+1:x0, y1=y0+1<H?y0+1:y0, fx=u-x0, fy=v-y0, i0=y0*W, i1=y1*W;
+  const t=a[i0+x0]+(a[i0+x1]-a[i0+x0])*fx, b=a[i1+x0]+(a[i1+x1]-a[i1+x0])*fx;
+  return t+(b-t)*fy;
+}
+// Remplit dst (RVBA, largeur w) avec le film : noir = encre, blanc = film transparent.
+function renderRegion(L,P,x0,y0,w,h,dst,rowOff){
+  const {W,H}=AN, cov=L.cov, sx=W/P.filmW, sy=H/P.filmH, half=L.kind==="halftone", PI=Math.PI;
+  let cs=0, sn=0, inv=1;
+  if (half){ const a=L.angle*PI/180; cs=Math.cos(a); sn=Math.sin(a); inv=L.lpi/P.dpi; }
+  for (let yy=0;yy<h;yy++){
+    const fy=y0+yy, v=(fy+0.5)*sy-0.5, iy=Math.min(H-1,Math.floor((fy+0.5)*sy));
+    let o=(rowOff+yy)*w*4;
+    for (let xx=0;xx<w;xx++,o+=4){
+      const fx=x0+xx; let ink=false;
+      if (L.kind==="index"){ const ix=Math.min(W-1,Math.floor((fx+0.5)*sx)); ink=cov[iy*W+ix]>=128; }
+      else {
+        const c=bil(cov,W,H,(fx+0.5)*sx-0.5,v);
+        if (!half) ink=c>=128;
+        else { const t=c/255;
+          if (t<0.04) ink=false; else if (t>0.96) ink=true;
+          else { const xr=(fx*cs+fy*sn)*inv, yr=(fy*cs-fx*sn)*inv, nx=2*(xr-Math.floor(xr))-1, ny=2*(yr-Math.floor(yr))-1;
+            ink = t > 0.5-0.25*(Math.cos(PI*nx)+Math.cos(PI*ny)); } }
+      }
+      const g=ink?0:255; dst[o]=g; dst[o+1]=g; dst[o+2]=g; dst[o+3]=255;
+    }
+  }
+}
+function kindLabel(L){
+  if (L.kind==="solid") return "Aplat";
+  if (L.kind==="index") return `Pixels ${S.ppi} ppi`;
+  return `${L.lpi} lpi · ${fmt(L.angle)}°`;
+}
+const nearestMesh = v => MESH.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?b:a);
+function meshFor(L){
+  if (L.kind==="solid") return L.isUnderbase ? "43 à 55 fils/cm" : "55 à 77 fils/cm";
+  if (L.kind==="index") return L.isUnderbase ? "55 à 77 fils/cm" : "90 à 120 fils/cm";
+  if (L.isUnderbase) return `${nearestMesh(L.lpi*2.5/2.54)} à ${nearestMesh(L.lpi*3.5/2.54)} fils/cm`;
+  const lo=nearestMesh(L.lpi*4/2.54), hi=nearestMesh(L.lpi*5/2.54);
+  return lo===hi ? `${lo} fils/cm` : `${lo} à ${hi} fils/cm`;
+}
+
+/* ---------- Interface ---------- */
+function renderControls(){
+  document.querySelectorAll(".mode").forEach(b=>b.setAttribute("aria-checked", String(b.dataset.mode===S.mode)));
+  const M=MODES[S.mode];
+  const info=$("#modeinfo"); info.textContent="";
+  const p=document.createElement("p"); p.style.margin="0"; p.textContent=M.desc; info.append(p);
+  const dl=document.createElement("dl");
+  [["Pour",M.pour],["Textile",M.textile],["Écrans",M.ecrans]].forEach(([a,b])=>{ const dt=document.createElement("dt"); dt.textContent=a; const dd=document.createElement("dd"); dd.textContent=b; dl.append(dt,dd); });
+  info.append(dl);
+  document.querySelectorAll("[data-modes]").forEach(r=>{ r.hidden=!r.dataset.modes.split(" ").includes(S.mode); });
+  if (M.kMin){ const k=$("#k"); k.min=M.kMin; k.max=M.kMax; k.value=S.k[S.mode]; $("#k-out").textContent=S.k[S.mode]; $("#k-label").textContent=M.kLabel; }
+  if (S.mode==="cmyk"||S.mode==="sim"){
+    const l=S.lpi[S.mode]; $("#lpi").value=l; $("#lpi-out").textContent=l+" lpi";
+    $("#lpi-hint").textContent=`Règle d'atelier : tamis ≈ 4 à 5 × la linéature, soit ${nearestMesh(l*4/2.54)} à ${nearestMesh(l*5/2.54)} fils/cm (${l*4} à ${l*5} fils/pouce).`;
+  }
+  $("#gcr").value=S.gcr; $("#gcr-out").textContent=S.gcr+" %";
+  $("#ppi").value=S.ppi; $("#ppi-out").textContent=`${S.ppi} ppi · ${fmt(25.4/S.ppi,2)} mm`;
+  $("#clean").checked=S.clean; $("#absorb").checked=S.absorb; $("#removeBg").checked=S.removeBg; $("#underbase").checked=S.underbase;
+  $("#width").value=S.widthCm; $("#dpi").value=String(S.dpi);
+  document.querySelectorAll(".tex").forEach(b=>b.setAttribute("aria-checked", String(b.dataset.hex===S.textile)));
+  $("#texname").innerHTML=""; const sp=document.createElement("span"); sp.textContent=`${S.textileName} `; const m=document.createElement("span"); m.className="mono"; m.style.color="var(--muted)"; m.textContent=S.textile.toUpperCase(); $("#texname").append(sp,m);
+  $("#v-print").setAttribute("aria-pressed",String(S.view==="print")); $("#v-orig").setAttribute("aria-pressed",String(S.view==="orig"));
+}
+
+function chip(label,val){ const s=document.createElement("span"); s.className="chip"; s.append(label+" "); const b=document.createElement("b"); b.textContent=val; s.append(b); return s; }
+
+function renderInfo(){
+  if (!AN) return;
+  const P=filmParams(), L=AN.layers, flashes=L.filter(l=>l.flash).length;
+  const F=filmFormat(S.widthCm,P.heightCm);
+  $("#film-size").textContent=`Image ${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm · film ${fmt(F.fw)} × ${fmt(F.fh)} cm avec repères · à imprimer sur ${F.label}`;
+  const st=$("#stats"); st.textContent="";
+  st.append(chip("Écrans",String(L.length)), chip("Flash",String(flashes)), chip("Image",`${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm`), chip("Film",F.label));
+  if (S.mode==="cmyk"||S.mode==="sim") st.append(chip("Trame",`${S.lpi[S.mode]} lpi`));
+  const w=$("#warns"); w.textContent="";
+  const add=(html,cls="warn")=>{ const d=document.createElement("div"); d.className=cls; d.innerHTML=html; w.append(d); };
+  const dark=lum(hex2rgb(S.textile))<0.18;
+  if (S.mode==="cmyk" && dark && !S.underbase) add("<strong>Encres translucides sur textile foncé.</strong> La quadri CMJN disparaît presque sur ce textile. Activez la sous-couche blanche ou passez en quadri simulée.");
+  if (S.mode==="sim" && !dark) add("Sur textile clair, la quadrichromie CMJN donne souvent un rendu proche avec moins d'écrans.","note");
+  if (dark && !S.underbase && S.mode!=="cmyk") add("<strong>Pas de sous-couche.</strong> Sur textile foncé, les couleurs claires vont paraître ternes sans sous-couche blanche.");
+  if (S.mode==="spot" && L.length>6) add(`<strong>${L.length} écrans en tons directs.</strong> Au-delà de 6, le calage devient long et coûteux. Réduisez le nombre de couleurs si possible.`);
+  if (L.length>8) add(`Vérifiez que votre carrousel a au moins ${L.length} stations, plus une pour le flash.`);
+  if ((S.mode==="cmyk"||S.mode==="sim") && S.dpi/S.lpi[S.mode]<4) add("<strong>Trame trop fine pour la résolution choisie.</strong> Montez la résolution des films ou baissez la linéature.");
+  if (AN.bgRemoved) add("Le fond uni de l'image a été retiré : à ces endroits, c'est le textile qui apparaît.","note");
+  if (AN.absorbed.length){
+    const d=document.createElement("div"); d.className="note absorbed"; d.append("Couleur remplacée par le textile (aucun écran) : ");
+    AN.absorbed.forEach(c=>{ const s=document.createElement("span"); const dot=document.createElement("i"); dot.className="dot"; dot.style.background=rgb2hex(c); s.append(dot," "+colorName(c)+" "+rgb2hex(c).toUpperCase()); d.append(s); });
+    w.append(d);
+  }
+  $("#status").textContent=`${L.length} films calculés en ${fmt(AN.ms/1000,1)} s`;
+}
+
+function renderFilms(){
+  const ol=$("#films"); ol.textContent="";
+  AN.layers.forEach((L,i)=>{
+    const li=document.createElement("li"); li.className="film"+(L.visible?"":" off");
+    const th=document.createElement("div"); th.className="film-thumb"; th.append(thumb(L,260));
+    const ord=document.createElement("span"); ord.className="order"; ord.textContent=String(i+1).padStart(2,"0"); th.append(ord);
+    if (L.flash){ const f=document.createElement("span"); f.className="flash"; f.textContent="Flash après"; th.append(f); }
+    const body=document.createElement("div"); body.className="film-body";
+    const head=document.createElement("div"); head.className="film-head";
+    const sw=document.createElement("label"); sw.className="swatch"; sw.style.background=rgb2hex(L.rgb); sw.title="Changer la couleur de l'encre";
+    const ci=document.createElement("input"); ci.type="color"; ci.value=rgb2hex(L.rgb); ci.id="ink-"+i; ci.setAttribute("aria-label","Couleur de l'encre : "+L.name);
+    sw.append(ci);
+    const nm=document.createElement("div"); const st=document.createElement("strong"); st.textContent=L.name; const hx=document.createElement("span"); hx.className="mono"; hx.textContent=rgb2hex(L.rgb).toUpperCase(); nm.append(st,hx);
+    head.append(sw,nm);
+    ci.addEventListener("input",()=>{ L.rgb=hex2rgb(ci.value); sw.style.background=ci.value; hx.textContent=ci.value.toUpperCase(); schedulePreview(); });
+    const dl=document.createElement("dl");
+    [["Film",kindLabel(L)],["Couverture",fmt(L.coverage*100,0)+" %"],["Tamis",meshFor(L)]].forEach(([a,b])=>{ const dt=document.createElement("dt"); dt.textContent=a; const dd=document.createElement("dd"); dd.textContent=b; dl.append(dt,dd); });
+    const act=document.createElement("div"); act.className="film-actions";
+    const lab=document.createElement("label"); lab.className="check"; const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=L.visible; cb.id="vis-"+i; lab.append(cb," Afficher");
+    cb.addEventListener("change",()=>{ L.visible=cb.checked; li.classList.toggle("off",!L.visible); drawPreview(); });
+    const bt=document.createElement("button"); bt.type="button"; bt.className="linkbtn"; bt.textContent="Voir le film"; bt.addEventListener("click",()=>openLoupe(i));
+    act.append(lab,bt);
+    body.append(head,dl,act); li.append(th,body); ol.append(li);
+  });
+}
+function renderAll(){ renderControls(); renderInfo(); drawPreview(); renderFilms(); }
+
+let tA=0, tP=0;
+function scheduleAnalyze(){ $("#status").textContent="Calcul…"; clearTimeout(tA); tA=setTimeout(analyze,160); }
+function schedulePreview(){ clearTimeout(tP); tP=setTimeout(drawPreview,40); }
+
+/* ---------- Loupe ---------- */
+const LP={i:0,u:0.5,v:0.5};
+function openLoupe(i){ LP.i=i; LP.u=0.5; LP.v=0.5;
+  // place la loupe sur une demi-teinte (ou un bord d'aplat), là où le film montre quelque chose
+  const L=AN.layers[i], {W,H}=AN, st=Math.max(2,Math.round(Math.max(W,H)/90)); let best=Infinity;
+  for (let y=st;y<H-st;y+=st) for (let x=st;x<W-st;x+=st){ const c=L.cov[y*W+x]; if(!c) continue;
+    let m=0; for (let dy=-1;dy<=1;dy++) for (let dx=-1;dx<=1;dx++){ const yy=Math.min(H-1,Math.max(0,y+dy*st*2)), xx=Math.min(W-1,Math.max(0,x+dx*st*2)); m+=Math.abs(L.cov[yy*W+xx]-128); }
+    const sc=m/9+((Math.abs(x/W-0.5)+Math.abs(y/H-0.5))*8);
+    const edge = L.kind!=="halftone" && (L.cov[y*W+x-st]!==c || L.cov[(y-st)*W+x]!==c);
+    const v = L.kind==="halftone" ? sc : (edge ? sc-200 : Infinity);
+    if (v<best){ best=v; LP.u=x/W; LP.v=y/H; } }
+  drawLoupe(); const d=$("#loupe"); if(d.showModal) d.showModal(); else d.setAttribute("open",""); }
+function drawLoupe(){
+  const L=AN.layers[LP.i], P=filmParams();
+  $("#lp-title").textContent=`Film ${String(LP.i+1).padStart(2,"0")} : ${L.name}`;
+  const tc=$("#lp-thumb-c"), t=thumb(L,520); tc.width=t.width; tc.height=t.height;
+  const x=tc.getContext("2d"); x.drawImage(t,0,0);
+  const size=Math.min(Math.round(2/2.54*S.dpi), P.filmW, P.filmH);
+  const x0=Math.max(0,Math.min(P.filmW-size,Math.round(LP.u*P.filmW-size/2))), y0=Math.max(0,Math.min(P.filmH-size,Math.round(LP.v*P.filmH-size/2)));
+  const k=t.width/P.filmW; x.strokeStyle="#2f3dc2"; x.lineWidth=Math.max(2,t.width/160); x.strokeRect(x0*k,y0*k,size*k,size*k);
+  const zc=$("#lp-zoom-c"); zc.width=size; zc.height=size;
+  const zx=zc.getContext("2d"), id=zx.createImageData(size,size); renderRegion(L,P,x0,y0,size,size,id.data,0); zx.putImageData(id,0,0);
+  let cap=`Zone réelle de 2 × 2 cm à ${S.dpi} dpi, agrandie. `;
+  if (L.kind==="halftone") cap+=`Trame ${L.lpi} lpi à ${fmt(L.angle)}° : une cellule mesure ${fmt(S.dpi/L.lpi,1)} px. Les points sous 4 % sont supprimés et ceux au-dessus de 96 % bouchés, car l'écran ne les tiendrait pas.`;
+  else if (L.kind==="index") cap+=`Pixels carrés de ${fmt(25.4/S.ppi,2)} mm (${S.ppi} ppi), soit ${fmt(S.dpi/S.ppi,1)} px de film chacun.`;
+  else cap+="Aplat plein : les contours sont lissés à partir de l'image source.";
+  $("#lp-cap").textContent=cap;
+}
+$("#lp-thumb").addEventListener("click",e=>{ const r=$("#lp-thumb-c").getBoundingClientRect(); LP.u=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)); LP.v=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height)); drawLoupe(); });
+$("#lp-close").addEventListener("click",()=>{ const d=$("#loupe"); if(d.close) d.close(); else d.removeAttribute("open"); });
+
+/* ---------- Export ZIP ---------- */
+const CRC=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c= c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(b){ let c=0xFFFFFFFF; for (let i=0;i<b.length;i++) c=CRC[(c^b[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+// Ajoute la résolution (chunk pHYs) au PNG pour que le RIP imprime le film à la bonne taille.
+function withDpi(png,dpi){
+  for (let p=8;p<png.length-8;){ const len=(png[p]<<24|png[p+1]<<16|png[p+2]<<8|png[p+3])>>>0; const ty=String.fromCharCode(png[p+4],png[p+5],png[p+6],png[p+7]); if(ty==="pHYs") return png; if(ty==="IDAT"||ty==="IEND") break; p+=12+len; }
+  const ppm=Math.round(dpi/0.0254), ch=new Uint8Array(21), dv=new DataView(ch.buffer);
+  dv.setUint32(0,9); ch.set([112,72,89,115],4); dv.setUint32(8,ppm); dv.setUint32(12,ppm); ch[16]=1; dv.setUint32(17,crc32(ch.subarray(4,17)));
+  const out=new Uint8Array(png.length+21); out.set(png.subarray(0,33)); out.set(ch,33); out.set(png.subarray(33),54); return out;
+}
+const slug = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "film";
+const tick = () => new Promise(r=>setTimeout(r,0));
+const toBlob = cv => new Promise((res,rej)=>cv.toBlob(b=> b?res(b):rej(new Error("toBlob")),"image/png"));
+
+function drawMarks(x,cw,chh,m,L,i,P){
+  const lw=Math.max(2,Math.round(S.dpi/150)), r=Math.round(0.28/2.54*S.dpi), arm=Math.round(0.45/2.54*S.dpi);
+  x.strokeStyle="#000"; x.fillStyle="#000"; x.lineWidth=lw;
+  const cross=(cx,cy)=>{ x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.moveTo(cx-arm,cy); x.lineTo(cx+arm,cy); x.moveTo(cx,cy-arm); x.lineTo(cx,cy+arm); x.stroke(); };
+  cross(cw/2,m/2); cross(cw/2,chh-m/2); cross(m/2,chh/2); cross(cw-m/2,chh/2);
+  const fs=Math.round(0.28/2.54*S.dpi);
+  x.font=`500 ${fs}px "IBM Plex Mono", ui-monospace, monospace`; x.textBaseline="middle";
+  const txt=`${String(i+1).padStart(2,"0")} ${L.name} · ${rgb2hex(L.rgb).toUpperCase()} · ${kindLabel(L)} · ${fmt(S.widthCm)} cm @ ${S.dpi} dpi`;
+  x.fillText(txt, m, chh-m/2, Math.max(50, cw/2-m-arm*1.5));
+}
+
+function fiche(P){
+  const M=MODES[S.mode], lines=[];
+  lines.push("ATELIER DE SÉPARATION · FICHE D'IMPRESSION","");
+  lines.push(`Image          : ${S.srcName}`);
+  lines.push(`Style          : ${M.label}`);
+  lines.push(`Format imprimé : ${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm`);
+  const F=filmFormat(S.widthCm,P.heightCm);
+  lines.push(`Films          : ${P.filmW} × ${P.filmH} px à ${S.dpi} dpi (+ marges de 1,6 cm avec repères)`);
+  lines.push(`Support        : film transparent ${F.label} (chaque film mesure ${fmt(F.fw)} × ${fmt(F.fh)} cm), imprimé à 100 %`);
+  if (S.mode==="cmyk"||S.mode==="sim") lines.push(`Trame          : ${S.lpi[S.mode]} lpi, point rond`);
+  if (S.mode==="index") lines.push(`Pixels carrés  : ${S.ppi} ppi (${fmt(25.4/S.ppi,2)} mm)`);
+  lines.push(`Textile        : ${S.textileName} (${S.textile.toUpperCase()})`);
+  lines.push(`Écrans         : ${AN.layers.length}   Flash : ${AN.layers.filter(l=>l.flash).length}`,"");
+  lines.push("ORDRE D'IMPRESSION");
+  AN.layers.forEach((L,i)=>{
+    lines.push(`${String(i+1).padStart(2,"0")}. ${L.name.padEnd(22)} ${rgb2hex(L.rgb).toUpperCase()}  ${kindLabel(L).padEnd(16)} couverture ${fmt(L.coverage*100,0).padStart(3)} %  tamis ${meshFor(L)}${L.flash?"  → FLASH":""}`);
+  });
+  if (AN.absorbed.length) lines.push("", "Couleurs rendues par le textile (sans écran) : "+AN.absorbed.map(c=>colorName(c)+" "+rgb2hex(c).toUpperCase()).join(", "));
+  lines.push("","CONSEILS");
+  lines.push("- Imprimez les films à 100 %, sans mise à l'échelle, sur film transparent, encre noire bien couvrante.");
+  lines.push("- Calez chaque écran sur les 4 repères de repérage avant de tirer.");
+  if (S.mode==="cmyk") lines.push("- Angles décalés de 7,5° par rapport aux angles offset pour limiter le moiré avec le tissage du tamis.");
+  if (S.mode==="sim"||S.mode==="cmyk") lines.push("- Tamis conseillé : environ 4 à 5 fois la linéature (en fils/pouce). Tension élevée et racle dure pour garder les points.");
+  if (S.underbase) lines.push("- Flashez la sous-couche (séchage de surface) avant les couleurs. Elle est rétrécie d'environ 0,2 mm.");
+  lines.push("- Les couleurs affichées sont des approximations écran : choisissez vos encres sur un nuancier.");
+  return lines.join("\n");
+}
+
+async function saveFile(filename,blob){
+  if (window.claude && typeof window.claude.use==="function"){
+    const dl=await window.claude.use("downloads");
+    if (!dl) throw {code:"unavailable"};
+    return dl.save({filename, data:blob});
+  }
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=filename; document.body.append(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),8000);
+  return {status:"saved"};
+}
+function say(t,err=false){ const m=$("#msg"); m.textContent=t; m.classList.toggle("err",err); }
+
+async function exportZip(){
+  if (busy || !AN) return;
+  if (!window.JSZip){ say("L'outil de compression ne s'est pas chargé. Vérifiez la connexion puis rechargez la page.",true); return; }
+  busy=true; $("#export").disabled=true; say("");
+  const pr=$("#progress"), pt=$("#progress-text"), pb=$("#progress-bar"); pr.hidden=false;
+  try{
+    const P=filmParams(), m=Math.round(FILM_MARGIN_CM/2.54*S.dpi), zip=new JSZip(), Ls=AN.layers, total=Ls.length*P.filmH;
+    let done=0;
+    for (let i=0;i<Ls.length;i++){
+      const L=Ls[i]; pt.textContent=`Film ${i+1} sur ${Ls.length} : ${L.name}`;
+      const cw=P.filmW+2*m, chh=P.filmH+2*m, cv=document.createElement("canvas"); cv.width=cw; cv.height=chh;
+      const x=cv.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,cw,chh);
+      const id=x.createImageData(P.filmW,P.filmH), step=Math.max(16,Math.floor(1.5e6/P.filmW));
+      for (let y=0;y<P.filmH;y+=step){
+        const h=Math.min(step,P.filmH-y); renderRegion(L,P,0,y,P.filmW,h,id.data,y);
+        done+=h; pb.style.width=(done/total*92).toFixed(1)+"%"; await tick();
+      }
+      x.putImageData(id,m,m); drawMarks(x,cw,chh,m,L,i,P);
+      const bytes=withDpi(new Uint8Array(await (await toBlob(cv)).arrayBuffer()),S.dpi);
+      zip.file(`${String(i+1).padStart(2,"0")}_${slug(L.name)}.png`, bytes);
+      cv.width=cv.height=0;
+    }
+    pt.textContent="Aperçu et fiche d'impression…";
+    const pv=document.createElement("canvas"); pv.width=AN.W; pv.height=AN.H; pv.getContext("2d").putImageData(composite(),0,0);
+    zip.file("apercu-impression.png", new Uint8Array(await (await toBlob(pv)).arrayBuffer()));
+    zip.file("fiche-impression.txt", "﻿"+fiche(P));
+    pt.textContent="Compression du ZIP…"; pb.style.width="96%"; await tick();
+    const blob=await zip.generateAsync({type:"blob",compression:"STORE"});
+    pb.style.width="100%";
+    const name=`${slug(S.srcName)}_${S.mode}_films.zip`;
+    const r=await saveFile(name,blob);
+    if (r && r.status==="saved") say(`ZIP enregistré : ${name} (${Ls.length} films, ${fmt(blob.size/1048576,1)} Mo).`);
+    else say("ZIP transmis.");
+  } catch(e){
+    const code=e && e.code;
+    if (code==="declined") say("Export annulé.");
+    else if (code==="too_large") say("Le fichier est trop lourd pour cette vue. Baissez la résolution des films ou la largeur imprimée.",true);
+    else if (code==="rate_limited") say("Une demande d'enregistrement est déjà ouverte. Répondez-y, puis réessayez.",true);
+    else if (code==="unavailable"||code==="not_granted"||code==="capability_disabled"||code==="capability_removed") say("Le téléchargement n'est pas disponible dans cette vue. Ouvrez la page sur claude.ai pour exporter.",true);
+    else say("L'export a échoué, sans doute par manque de mémoire. Essayez à 200 dpi ou avec une largeur plus petite.",true);
+  } finally {
+    busy=false; $("#export").disabled=false; setTimeout(()=>{ pr.hidden=true; pb.style.width="0"; },600);
+  }
+}
+
+/* ---------- Chargement ---------- */
+function setSource(img,name){
+  const max=2400, f=Math.min(1,max/Math.max(img.width,img.height));
+  const c=document.createElement("canvas"); c.width=Math.max(1,Math.round(img.width*f)); c.height=Math.max(1,Math.round(img.height*f));
+  c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+  SRC=c; S.srcName=name; analyze();
+}
+function loadFile(file){
+  if (!file || !/^image\//.test(file.type)){ say("Ce fichier n'est pas une image. Choisissez un PNG, un JPG ou un SVG.",true); return; }
+  const url=URL.createObjectURL(file), im=new Image();
+  im.onload=()=>{ setSource(im,file.name.replace(/\.[^.]+$/,"")); URL.revokeObjectURL(url); say(`Image chargée : ${file.name}`); };
+  im.onerror=()=>{ say("Impossible de lire cette image. Essayez de l'enregistrer en PNG.",true); URL.revokeObjectURL(url); };
+  im.src=url;
+}
+
+function makeSample(){
+  const s=900, c=document.createElement("canvas"); c.width=s; c.height=s;
+  const x=c.getContext("2d"), R=410, cx=450, cy=450, rng=mulberry32(5);
+  x.save(); x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.clip();
+  const sky=x.createLinearGradient(0,40,0,640);
+  sky.addColorStop(0,"#1b2a6b"); sky.addColorStop(.35,"#6a2c8f"); sky.addColorStop(.62,"#e2477a"); sky.addColorStop(.82,"#f59a3e"); sky.addColorStop(1,"#ffd36b");
+  x.fillStyle=sky; x.fillRect(0,0,s,s);
+  x.fillStyle="#fff"; for (let i=0;i<46;i++){ const px=80+rng()*740, py=60+rng()*230, pr=1.5+rng()*3.5; x.beginPath(); x.arc(px,py,pr,0,Math.PI*2); x.fill(); }
+  const sun=x.createRadialGradient(450,500,10,450,500,160); sun.addColorStop(0,"#fffbe0"); sun.addColorStop(.55,"#ffd84d"); sun.addColorStop(1,"#ffb22e");
+  x.fillStyle=sun; x.beginPath(); x.arc(450,500,150,0,Math.PI*2); x.fill();
+  const mountain=(pts,fill)=>{ x.fillStyle=fill; x.beginPath(); x.moveTo(0,s); pts.forEach(([a,b])=>x.lineTo(a,b)); x.lineTo(s,s); x.closePath(); x.fill(); };
+  mountain([[0,560],[120,470],[220,530],[330,420],[450,520],[560,440],[690,520],[800,450],[900,540]],"#4a2a6e");
+  const g2=x.createLinearGradient(0,520,0,760); g2.addColorStop(0,"#16505a"); g2.addColorStop(1,"#0b2a30");
+  mountain([[0,640],[150,560],[260,610],[400,530],[520,620],[640,560],[780,630],[900,580]],g2);
+  x.fillStyle="#0a1c20"; x.fillRect(0,700,s,200);
+  x.strokeStyle="#ffd36b"; x.lineCap="round";
+  [[330,570,6],[360,540,9],[395,510,12],[430,485,15]].forEach(([w,y,lw],i)=>{ x.globalAlpha=.85-i*.12; x.lineWidth=lw/2; x.beginPath(); x.moveTo(450-w/2+i*40,y+250); x.lineTo(450+w/2-i*40,y+250); x.stroke(); });
+  x.globalAlpha=1; x.restore();
+  x.lineWidth=26; x.strokeStyle="#141414"; x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.stroke();
+  x.lineWidth=6; x.strokeStyle="#f5efe0"; x.beginPath(); x.arc(cx,cy,R-24,0,Math.PI*2); x.stroke();
+  x.fillStyle="#d6293b"; x.strokeStyle="#141414"; x.lineWidth=10;
+  x.beginPath(); x.roundRect ? x.roundRect(110,690,680,110,18) : x.rect(110,690,680,110); x.fill(); x.stroke();
+  x.fillStyle="#fff"; x.font='800 74px "Archivo", "Arial Black", Arial, sans-serif'; x.textAlign="center"; x.textBaseline="middle";
+  x.fillText("SÉRIGRAPHIE",450,748,620);
+  return c;
+}
+
+/* ---------- Événements ---------- */
+function buildTextiles(){
+  const box=$("#textiles");
+  TEXTILES.forEach(t=>{ const b=document.createElement("button"); b.type="button"; b.className="tex"; b.setAttribute("role","radio"); b.dataset.hex=t.hex; b.style.background=t.hex; b.setAttribute("aria-label",t.name); b.title=t.name;
+    b.addEventListener("click",()=>setTextile(t.hex,t.name)); box.append(b); });
+  const lab=document.createElement("label"); lab.className="tex-custom"; const inp=document.createElement("input"); inp.type="color"; inp.id="tex-custom"; inp.value="#2d6a4f"; inp.setAttribute("aria-label","Couleur de textile personnalisée");
+  inp.addEventListener("input",()=>setTextile(inp.value,"Personnalisé")); lab.append(inp,"Autre"); box.append(lab);
+}
+function setTextile(hex,name){ S.textile=hex; S.textileName=name; S.underbase=lum(hex2rgb(hex))<0.18; renderControls(); drawPreview(); scheduleAnalyze(); }
+
+document.querySelectorAll(".mode").forEach(b=>b.addEventListener("click",()=>{ if(S.mode===b.dataset.mode) return; S.mode=b.dataset.mode; renderControls(); scheduleAnalyze(); }));
+$("#k").addEventListener("input",e=>{ S.k[S.mode]=+e.target.value; $("#k-out").textContent=e.target.value; scheduleAnalyze(); });
+$("#lpi").addEventListener("input",e=>{ S.lpi[S.mode]=+e.target.value; renderControls(); scheduleAnalyze(); });
+$("#gcr").addEventListener("input",e=>{ S.gcr=+e.target.value; $("#gcr-out").textContent=S.gcr+" %"; scheduleAnalyze(); });
+$("#ppi").addEventListener("input",e=>{ S.ppi=+e.target.value; renderControls(); scheduleAnalyze(); });
+["clean","absorb","removeBg","underbase"].forEach(id=>$("#"+id).addEventListener("change",e=>{ S[id]=e.target.checked; scheduleAnalyze(); }));
+$("#width").addEventListener("change",e=>{ const v=parseFloat(String(e.target.value).replace(",",".")); if(!(v>=4&&v<=60)){ e.target.value=S.widthCm; say("La largeur doit être comprise entre 4 et 60 cm.",true); return; } S.widthCm=v; say(""); if(S.mode==="index") scheduleAnalyze(); else renderInfo(); });
+$("#dpi").addEventListener("change",e=>{ S.dpi=+e.target.value; renderInfo(); });
+$("#v-print").addEventListener("click",()=>{ S.view="print"; renderControls(); drawPreview(); });
+$("#v-orig").addEventListener("click",()=>{ S.view="orig"; renderControls(); drawPreview(); });
+$("#pick").addEventListener("click",()=>$("#file").click());
+$("#file").addEventListener("change",e=>{ loadFile(e.target.files[0]); e.target.value=""; });
+$("#export").addEventListener("click",exportZip);
+const stage=$("#stage");
+["dragenter","dragover"].forEach(t=>stage.addEventListener(t,e=>{ e.preventDefault(); stage.classList.add("drag"); }));
+["dragleave","drop"].forEach(t=>stage.addEventListener(t,e=>{ e.preventDefault(); stage.classList.remove("drag"); }));
+stage.addEventListener("drop",e=>{ const f=e.dataTransfer && e.dataTransfer.files[0]; if(f) loadFile(f); });
+document.addEventListener("paste",e=>{ const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith("image/")); if(it) loadFile(it.getAsFile()); });
+
+if (window.claude && typeof window.claude.use==="function"){
+  window.claude.use("downloads").then(d=>{ if(!d){ $("#export").disabled=true; say("L'export n'est pas disponible dans cette vue. Ouvrez la page sur claude.ai pour récupérer les films."); } });
+}
+
+buildTextiles(); renderControls();
+$("#status").textContent="Chargement de l'image d'exemple…";
+Promise.race([document.fonts ? document.fonts.load('800 74px "Archivo"') : Promise.resolve(), new Promise(r=>setTimeout(r,1500))])
+  .catch(()=>{}).then(()=>{ SRC=makeSample(); analyze(); say("Exemple chargé : remplacez-le par votre image avec « Charger une image » ou par glisser-déposer."); });
+})();
+</script>
