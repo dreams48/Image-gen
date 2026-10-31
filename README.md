@@ -136,6 +136,8 @@ Le schéma final montre les 4D en boucle. La page fonctionne en clair et en somb
 | Quadri simulée | 3–10 encres opaques tirées de l'image, réparties en demi-teintes entre les deux encres les plus proches | Trame ronde à 22,5°, blanc de rehaut imprimé en dernier |
 | Couleurs indexées | 3–12 couleurs, diffusion d'erreur (Floyd–Steinberg serpentin) | Pixels carrés de 100 à 300 ppi |
 
+La taille de l'image fait référence : l'appli en déduit le format de film à utiliser (A4, A3 ou A3+, en portrait ou en paysage, sinon un rouleau), marges de 1,6 cm comprises. Le format apparaît sous les réglages, dans l'aperçu et dans la fiche d'impression.
+
 Options communes : couleur du textile (la couleur la plus proche du textile peut être remplacée par le textile, ce qui économise un écran), sous-couche blanche rétrécie d'environ 0,2 mm avec flash sur textile foncé, retrait automatique d'un fond uni, largeur imprimée et résolution des films (150 à 360 dpi). La loupe montre une zone réelle de 2 × 2 cm du film, avec ses points de trame.
 
 L'export ZIP contient :

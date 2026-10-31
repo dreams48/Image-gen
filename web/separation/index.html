@@ -316,6 +316,21 @@ const MODES = {
   index:{label:"Couleurs indexées", desc:"Un nombre limité de couleurs imprimées en pixels carrés de taille fixe, répartis par diffusion d'erreur.", pour:"images détaillées, rendu doux", textile:"clair ou foncé", ecrans:"4 à 12", kMin:3, kMax:12, kLabel:"Nombre de couleurs"},
 };
 const MESH = [34,43,48,55,61,68,77,90,100,120,140,150];
+const FILM_MARGIN_CM = 1.6;  // marge autour de l'image, pour les repères de calage
+const FORMATS = [
+  {name:"A4", w:21, h:29.7},
+  {name:"A3", w:29.7, h:42},
+  {name:"A3+", w:32.9, h:48.3},
+];
+// Le format de film découle de la taille de l'image : on prend le plus petit qui la contient, marges comprises.
+function filmFormat(widthCm,heightCm){
+  const fw=widthCm+2*FILM_MARGIN_CM, fh=heightCm+2*FILM_MARGIN_CM;
+  for (const f of FORMATS){
+    if (fw<=f.w && fh<=f.h) return {fw,fh,name:f.name,orient:"portrait",label:`${f.name} portrait`};
+    if (fw<=f.h && fh<=f.w) return {fw,fh,name:f.name,orient:"paysage",label:`${f.name} paysage`};
+  }
+  return {fw,fh,name:"Rouleau",orient:"",label:`rouleau de ${fmt(Math.ceil(Math.min(fw,fh)))} cm de large minimum`};
+}
 
 const S = {
   mode:"sim", k:{spot:4, sim:6, index:8}, lpi:{cmyk:55, sim:50}, gcr:60, ppi:150,
@@ -711,9 +726,10 @@ function chip(label,val){ const s=document.createElement("span"); s.className="c
 function renderInfo(){
   if (!AN) return;
   const P=filmParams(), L=AN.layers, flashes=L.filter(l=>l.flash).length;
-  $("#film-size").textContent=`${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm · ${P.filmW} × ${P.filmH} px par film`;
+  const F=filmFormat(S.widthCm,P.heightCm);
+  $("#film-size").textContent=`Image ${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm · film ${fmt(F.fw)} × ${fmt(F.fh)} cm avec repères · à imprimer sur ${F.label}`;
   const st=$("#stats"); st.textContent="";
-  st.append(chip("Écrans",String(L.length)), chip("Flash",String(flashes)), chip("Format",`${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm`));
+  st.append(chip("Écrans",String(L.length)), chip("Flash",String(flashes)), chip("Image",`${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm`), chip("Film",F.label));
   if (S.mode==="cmyk"||S.mode==="sim") st.append(chip("Trame",`${S.lpi[S.mode]} lpi`));
   const w=$("#warns"); w.textContent="";
   const add=(html,cls="warn")=>{ const d=document.createElement("div"); d.className=cls; d.innerHTML=html; w.append(d); };
@@ -826,7 +842,9 @@ function fiche(P){
   lines.push(`Image          : ${S.srcName}`);
   lines.push(`Style          : ${M.label}`);
   lines.push(`Format imprimé : ${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm`);
+  const F=filmFormat(S.widthCm,P.heightCm);
   lines.push(`Films          : ${P.filmW} × ${P.filmH} px à ${S.dpi} dpi (+ marges de 1,6 cm avec repères)`);
+  lines.push(`Support        : film transparent ${F.label} (chaque film mesure ${fmt(F.fw)} × ${fmt(F.fh)} cm), imprimé à 100 %`);
   if (S.mode==="cmyk"||S.mode==="sim") lines.push(`Trame          : ${S.lpi[S.mode]} lpi, point rond`);
   if (S.mode==="index") lines.push(`Pixels carrés  : ${S.ppi} ppi (${fmt(25.4/S.ppi,2)} mm)`);
   lines.push(`Textile        : ${S.textileName} (${S.textile.toUpperCase()})`);
@@ -865,7 +883,7 @@ async function exportZip(){
   busy=true; $("#export").disabled=true; say("");
   const pr=$("#progress"), pt=$("#progress-text"), pb=$("#progress-bar"); pr.hidden=false;
   try{
-    const P=filmParams(), m=Math.round(1.6/2.54*S.dpi), zip=new JSZip(), Ls=AN.layers, total=Ls.length*P.filmH;
+    const P=filmParams(), m=Math.round(FILM_MARGIN_CM/2.54*S.dpi), zip=new JSZip(), Ls=AN.layers, total=Ls.length*P.filmH;
     let done=0;
     for (let i=0;i<Ls.length;i++){
       const L=Ls[i]; pt.textContent=`Film ${i+1} sur ${Ls.length} : ${L.name}`;
