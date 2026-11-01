@@ -155,6 +155,11 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
 .lp-zoom{background:var(--film);border:1px solid var(--line);border-radius:8px;display:flex;justify-content:center;align-items:center;padding:8px;min-width:0}
 .lp-zoom canvas{image-rendering:pixelated;width:100%;max-width:480px;height:auto;display:block}
 .lp-cap{grid-column:1/-1;font-size:13px;color:var(--muted);margin:0}
+.ink-name{width:100%;border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:3px 7px;font-weight:600;font-size:14px}
+.film-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.linkbtn.danger:hover{border-color:var(--warn);color:var(--warn)}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sub{display:flex;flex-direction:column;gap:5px;min-width:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -215,6 +220,26 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
           <input type="range" id="gcr" min="0" max="100" step="5">
           <span class="hint">Plus le noir remplace les gris, moins on dépose d'encre et plus les ombres restent neutres.</span>
         </div>
+        <div class="row" data-modes="sim">
+          <div class="row-head"><label for="angle">Angle de trame</label></div>
+          <div class="field"><select id="angle"><option value="15">15°</option><option value="22.5">22,5° (courant)</option><option value="25">25°</option><option value="45">45°</option></select></div>
+        </div>
+        <div class="row" data-modes="cmyk sim">
+          <div class="row-head"><label for="shape">Forme du point</label></div>
+          <div class="field"><select id="shape"><option value="round">Rond</option><option value="ellipse">Elliptique (saut plus doux vers 50 %)</option></select></div>
+        </div>
+        <div class="row" data-modes="cmyk sim">
+          <div class="row-head"><label for="gain">Engraissement à compenser</label><output id="gain-out" for="gain"></output></div>
+          <input type="range" id="gain" min="0" max="30" step="1">
+          <span class="hint">Imprimez un essai, mesurez la case 50 % de la gamme de contrôle et reportez l'écart ici : les films sont allégés d'autant.</span>
+        </div>
+        <div class="row" data-modes="cmyk sim">
+          <div class="duo">
+            <div class="sub"><div class="row-head"><label for="minDot">Point mini</label><output id="minDot-out" for="minDot"></output></div><input type="range" id="minDot" min="0" max="15" step="1"></div>
+            <div class="sub"><div class="row-head"><label for="maxDot">Point maxi</label><output id="maxDot-out" for="maxDot"></output></div><input type="range" id="maxDot" min="85" max="100" step="1"></div>
+          </div>
+          <span class="hint">Sous le point mini rien ne sort, au-dessus du point maxi l'aplat est plein. Réglez-les sur ce que votre émulsion et votre tamis tiennent.</span>
+        </div>
         <div class="row" data-modes="index">
           <div class="row-head"><label for="ppi">Taille des pixels carrés</label><output id="ppi-out" for="ppi"></output></div>
           <input type="range" id="ppi" min="100" max="300" step="25">
@@ -236,7 +261,16 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
         <div class="texname" id="texname"></div>
         <div class="row" style="margin-top:12px">
           <label class="check"><input type="checkbox" id="underbase"> <span>Sous-couche blanche, suivie d'un flash</span></label>
-          <span class="hint">Indispensable sur textile foncé : elle fait ressortir les couleurs. Elle est rétrécie (chokée) d'environ 0,2 mm pour ne pas déborder.</span>
+          <span class="hint">Indispensable sur textile foncé : elle fait ressortir les couleurs.</span>
+        </div>
+        <div class="row" data-modes="cmyk sim">
+          <div class="row-head"><label for="ubDensity">Densité de la sous-couche</label><output id="ubDensity-out" for="ubDensity"></output></div>
+          <input type="range" id="ubDensity" min="40" max="100" step="5">
+          <span class="hint">Pleine sous les encres claires, réduite sous les encres foncées : moins d'encre et un toucher plus souple.</span>
+        </div>
+        <div class="row">
+          <div class="row-head"><label for="choke">Rétrécissement (choke)</label></div>
+          <div class="field"><select id="choke"><option value="0">Aucun</option><option value="0.1">0,1 mm</option><option value="0.2">0,2 mm</option><option value="0.3">0,3 mm</option><option value="0.5">0,5 mm</option></select></div>
         </div>
       </section>
 
@@ -248,8 +282,14 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
         </div>
         <div class="row">
           <div class="row-head"><label for="dpi">Résolution des films</label></div>
-          <div class="field"><select id="dpi"><option value="150">150 dpi (brouillon)</option><option value="200">200 dpi</option><option value="300">300 dpi (standard)</option><option value="360">360 dpi</option></select></div>
+          <div class="field"><select id="dpi"><option value="150">150 dpi (brouillon)</option><option value="200">200 dpi</option><option value="300">300 dpi (aplats)</option><option value="360">360 dpi</option><option value="600">600 dpi (films tramés, conseillé)</option><option value="720">720 dpi (trame fine)</option></select></div>
           <span class="hint mono" id="film-size"></span>
+        </div>
+        <div class="row">
+          <label class="check"><input type="checkbox" id="wedge"> <span>Gamme de contrôle 5–95 % dans la marge des films tramés</span></label>
+        </div>
+        <div class="row">
+          <label class="check"><input type="checkbox" id="mirror"> <span>Films en miroir (lecture inversée)</span></label>
         </div>
       </section>
     </aside>
@@ -271,7 +311,11 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
       <p class="msg" id="msg" role="status"></p>
       <div class="films-title">
         <h2>Films, dans l'ordre d'impression</h2>
-        <span class="hint">Cliquez sur une pastille de couleur pour changer l'encre.</span>
+        <div class="film-tools">
+          <span class="hint" id="films-hint">Cliquez sur une pastille de couleur pour changer l'encre.</span>
+          <button class="linkbtn" type="button" id="add-ink">+ Ajouter une encre</button>
+          <input class="vh" type="color" id="add-ink-color" value="#2a7de1" tabindex="-1" aria-hidden="true">
+        </div>
       </div>
       <ol class="films" id="films"></ol>
     </section>
@@ -312,7 +356,7 @@ const TEXTILES = [
 const MODES = {
   spot:{label:"Tons directs", desc:"Une encre opaque, mélangée à l'avance, par couleur. Les aplats sont nets, sans trame.", pour:"logos, texte, illustrations à plat", textile:"tous", ecrans:"1 à 6", kMin:2, kMax:8, kLabel:"Nombre de couleurs"},
   cmyk:{label:"Quadrichromie CMJN", desc:"Quatre encres translucides tramées (cyan, magenta, jaune, noir) qui se mélangent à l'œil.", pour:"photos et dégradés", textile:"blanc ou très clair", ecrans:"4 (+ sous-couche sur foncé)"},
-  sim:{label:"Quadri simulée", desc:"Des encres opaques choisies dans l'image, toutes tramées au même angle, posées sur une sous-couche blanche.", pour:"photos et illustrations détaillées", textile:"foncé surtout", ecrans:"6 à 12", kMin:3, kMax:10, kLabel:"Nombre d'encres"},
+  sim:{label:"Quadri simulée", desc:"Des encres opaques tirées de l'image, que vous pouvez fixer, changer ou compléter. Chaque point est reproduit par 3 encres au plus, tramées au même angle sur une sous-couche blanche.", pour:"photos et illustrations détaillées", textile:"foncé surtout", ecrans:"6 à 12", kMin:3, kMax:12, kLabel:"Nombre d'encres"},
   index:{label:"Couleurs indexées", desc:"Un nombre limité de couleurs imprimées en pixels carrés de taille fixe, répartis par diffusion d'erreur.", pour:"images détaillées, rendu doux", textile:"clair ou foncé", ecrans:"4 à 12", kMin:3, kMax:12, kLabel:"Nombre de couleurs"},
 };
 const MESH = [34,43,48,55,61,68,77,90,100,120,140,150];
@@ -336,8 +380,18 @@ const S = {
   mode:"sim", k:{spot:4, sim:6, index:8}, lpi:{cmyk:55, sim:50}, gcr:60, ppi:150,
   clean:true, absorb:true, removeBg:true,
   textile:"#1c1c1f", textileName:"Noir", underbase:true,
-  widthCm:25, dpi:300, view:"print", srcName:"exemple-badge"
+  widthCm:25, dpi:600, view:"print", srcName:"exemple-badge",
+  simAngle:22.5, dotShape:"round", gain:20, minDot:5, maxDot:95, ubDensity:85, chokeMm:0.2, mirror:false, wedge:true,
+  simInks:[],   // encres fixées par l'utilisateur, gardées d'une image à l'autre
+  simExcluded:[] // couleurs retirées pour l'image en cours
 };
+const INK_KEY="atelier-separation-encres";
+try {
+  const v=JSON.parse(localStorage.getItem(INK_KEY)||"[]");
+  if (Array.isArray(v)) S.simInks=v.filter(i=>i && Array.isArray(i.rgb) && i.rgb.length===3).slice(0,12)
+    .map(i=>{ const rgb=i.rgb.map(n=>Math.max(0,Math.min(255,n|0))); return {rgb, name:String(i.name||colorName(rgb)).slice(0,40)}; });
+} catch(e){}
+function saveInks(){ try { localStorage.setItem(INK_KEY, JSON.stringify(S.simInks)); } catch(e){} }
 let SRC = null;   // canvas source
 let AN = null;    // résultat de séparation
 let busy = false;
@@ -418,20 +472,25 @@ function sampleImage(W,H){
   return {W,H,N,data,alpha,lab,bgRemoved};
 }
 
-function kmeans(img,k,seed){
-  const {N,lab,alpha,data}=img;
+function kmeans(img,k,seed,fixed=[]){
+  // k-moyennes dans Lab ; les couleurs "fixed" restent en place (encres fixées, textile)
+  const {N,lab,alpha,data}=img, nf=fixed.length;
   const idx=[]; for (let i=0;i<N;i++) if(alpha[i]) idx.push(i);
-  if (!idx.length) return [];
+  if (!idx.length) return fixed.map(f=>({rgb:f.rgb.slice(), lab:f.lab, count:0, ref:f.ref}));
   const rng=mulberry32(seed), M=Math.min(idx.length,14000), samp=new Int32Array(M);
   for (let j=0;j<M;j++) samp[j]=idx[Math.floor(rng()*idx.length)];
-  k=Math.min(k,M);
+  k=Math.max(nf,Math.min(k,M+nf));
   const C=new Float32Array(k*3), D=new Float32Array(M).fill(Infinity);
-  let p0=samp[Math.floor(rng()*M)]*3; C[0]=lab[p0]; C[1]=lab[p0+1]; C[2]=lab[p0+2];
-  for (let c=1;c<k;c++){
-    let sum=0; const o=(c-1)*3;
-    for (let j=0;j<M;j++){ const p=samp[j]*3; const dd=(lab[p]-C[o])**2+(lab[p+1]-C[o+1])**2+(lab[p+2]-C[o+2])**2; if(dd<D[j]) D[j]=dd; sum+=D[j]; }
+  fixed.forEach((f,i)=>{ C[i*3]=f.lab[0]; C[i*3+1]=f.lab[1]; C[i*3+2]=f.lab[2]; });
+  const upd=c=>{ const o=c*3; for (let j=0;j<M;j++){ const p=samp[j]*3; const dd=(lab[p]-C[o])**2+(lab[p+1]-C[o+1])**2+(lab[p+2]-C[o+2])**2; if(dd<D[j]) D[j]=dd; } };
+  let n0=nf;
+  if (!n0){ const p=samp[Math.floor(rng()*M)]*3; C[0]=lab[p]; C[1]=lab[p+1]; C[2]=lab[p+2]; n0=1; }
+  for (let c=0;c<n0;c++) upd(c);
+  for (let c=n0;c<k;c++){
+    let sum=0; for (let j=0;j<M;j++) sum+=D[j];
+    if (!(sum>0)){ k=c; break; }
     let r=rng()*sum, pick=M-1; for (let j=0;j<M;j++){ r-=D[j]; if(r<=0){ pick=j; break; } }
-    const p=samp[pick]*3; C[c*3]=lab[p]; C[c*3+1]=lab[p+1]; C[c*3+2]=lab[p+2];
+    const p=samp[pick]*3; C[c*3]=lab[p]; C[c*3+1]=lab[p+1]; C[c*3+2]=lab[p+2]; upd(c);
   }
   const asg=new Int32Array(M);
   for (let it=0;it<16;it++){
@@ -441,14 +500,17 @@ function kmeans(img,k,seed){
       for (let c=0;c<k;c++){ const o=c*3; const dd=(lab[p]-C[o])**2+(lab[p+1]-C[o+1])**2+(lab[p+2]-C[o+2])**2; if(dd<bd){bd=dd;best=c;} }
       asg[j]=best; cnt[best]++; sums[best*3]+=lab[p]; sums[best*3+1]+=lab[p+1]; sums[best*3+2]+=lab[p+2];
     }
-    for (let c=0;c<k;c++) if(cnt[c]){ C[c*3]=sums[c*3]/cnt[c]; C[c*3+1]=sums[c*3+1]/cnt[c]; C[c*3+2]=sums[c*3+2]/cnt[c]; }
+    for (let c=nf;c<k;c++) if(cnt[c]){ C[c*3]=sums[c*3]/cnt[c]; C[c*3+1]=sums[c*3+1]/cnt[c]; C[c*3+2]=sums[c*3+2]/cnt[c]; }
   }
   const rs=new Float64Array(k*3), cnt=new Int32Array(k);
   for (let j=0;j<M;j++){ const c=asg[j], p=samp[j]*4; cnt[c]++; rs[c*3]+=data[p]; rs[c*3+1]+=data[p+1]; rs[c*3+2]+=data[p+2]; }
   const out=[];
-  for (let c=0;c<k;c++) if(cnt[c]>M*0.002){
-    const rgb=[rs[c*3]/cnt[c], rs[c*3+1]/cnt[c], rs[c*3+2]/cnt[c]].map(Math.round);
-    out.push({rgb, lab:labOf(rgb), count:cnt[c]});
+  for (let c=0;c<k;c++){
+    if (c<nf){ out.push({rgb:fixed[c].rgb.slice(), lab:fixed[c].lab, count:cnt[c], ref:fixed[c].ref}); continue; }
+    if (cnt[c]>M*0.002){
+      const rgb=[rs[c*3]/cnt[c], rs[c*3+1]/cnt[c], rs[c*3+2]/cnt[c]].map(Math.round);
+      out.push({rgb, lab:labOf(rgb), count:cnt[c], ref:-2});
+    }
   }
   return out;
 }
@@ -457,7 +519,7 @@ function flatLab(list){ const f=new Float32Array(list.length*3); list.forEach((c
 function nearest(lab,p,P,n){ let best=0,bd=Infinity; for(let c=0;c<n;c++){ const o=c*3; const dd=(lab[p]-P[o])**2+(lab[p+1]-P[o+1])**2+(lab[p+2]-P[o+2])**2; if(dd<bd){bd=dd;best=c;} } return best; }
 
 function mkLayer(rgb,kind,cov,extra={}){
-  return Object.assign({rgb:rgb.slice(), name:colorName(rgb), kind, cov, angle:0, lpi:0, blend:"opaque", visible:true, flash:false, isUnderbase:false}, extra);
+  return Object.assign({rgb:rgb.slice(), name:colorName(rgb), kind, cov, angle:0, lpi:0, blend:"opaque", visible:true, flash:false, isUnderbase:false, lockRef:-1}, extra);
 }
 
 /* ---------- Les 4 styles ---------- */
@@ -507,34 +569,70 @@ function buildCmyk(img){
   return {layers, absorbed:[]};
 }
 
+// Mélange non négatif d'au plus 3 encres (a, b, c : les plus proches) qui reproduit au mieux le pixel, dans Lab.
+const W3=new Float64Array(3);
+function mix3(lab,p,C,a,b,c,ea){
+  W3[0]=1; W3[1]=0; W3[2]=0; let best=ea;
+  const px=lab[p], py=lab[p+1], pz=lab[p+2];
+  const seg=(i,j,si,sj)=>{
+    if (i<0||j<0) return;
+    const ox=C[i*3], oy=C[i*3+1], oz=C[i*3+2], ux=C[j*3]-ox, uy=C[j*3+1]-oy, uz=C[j*3+2]-oz, d=ux*ux+uy*uy+uz*uz;
+    if (!d) return;
+    const t=((px-ox)*ux+(py-oy)*uy+(pz-oz)*uz)/d; if (t<=0||t>=1) return;
+    const rx=px-ox-t*ux, ry=py-oy-t*uy, rz=pz-oz-t*uz, e=rx*rx+ry*ry+rz*rz;
+    if (e<best){ best=e; W3[0]=0; W3[1]=0; W3[2]=0; W3[si]=1-t; W3[sj]=t; }
+  };
+  seg(a,b,0,1); seg(a,c,0,2); seg(b,c,1,2);
+  if (a>=0 && b>=0 && c>=0){
+    const ox=C[a*3], oy=C[a*3+1], oz=C[a*3+2];
+    const ux=C[b*3]-ox, uy=C[b*3+1]-oy, uz=C[b*3+2]-oz, vx=C[c*3]-ox, vy=C[c*3+1]-oy, vz=C[c*3+2]-oz, qx=px-ox, qy=py-oy, qz=pz-oz;
+    const d11=ux*ux+uy*uy+uz*uz, d12=ux*vx+uy*vy+uz*vz, d22=vx*vx+vy*vy+vz*vz, q1=qx*ux+qy*uy+qz*uz, q2=qx*vx+qy*vy+qz*vz, det=d11*d22-d12*d12;
+    if (det>1e-6){
+      const u=(d22*q1-d12*q2)/det, v=(d11*q2-d12*q1)/det;
+      if (u>0 && v>0 && u+v<1){
+        const rx=qx-u*ux-v*vx, ry=qy-u*uy-v*vy, rz=qz-u*uz-v*vz, e=rx*rx+ry*ry+rz*rz;
+        if (e<best-1e-9){ W3[0]=1-u-v; W3[1]=u; W3[2]=v; }
+      }
+    }
+  }
+  return W3;
+}
+
 function buildSim(img,texLab,tex){
-  const {N,lab,alpha}=img;
-  const pal0=kmeans(img,S.k.sim,23);
-  const absorbed=pal0.filter(p=>S.absorb && d2(p.lab,texLab)<18*18);
-  const pal=pal0.filter(p=>!absorbed.includes(p)), k=pal.length;
-  const cand=flatLab([...pal.map(p=>p.lab), texLab]), n=k+1;  // le textile est une "couleur" sans encre
-  const covs=pal.map(()=>new Uint8Array(N));
+  const {N,lab,alpha}=img, useTex=S.absorb;
+  const fixed=S.simInks.map((ink,i)=>({lab:labOf(ink.rgb), rgb:ink.rgb, ref:i}));
+  if (useTex) fixed.push({lab:texLab, rgb:tex, ref:-1});   // le textile compte comme une couleur, sans encre
+  // une couleur retirée garde sa place dans le calcul pour qu'aucune encre automatique ne la recrée, puis elle est écartée
+  S.simExcluded.forEach(rgb=>fixed.push({lab:labOf(rgb), rgb, ref:-3}));
+  const pal=kmeans(img, Math.max(S.k.sim,S.simInks.length)+fixed.length-S.simInks.length, 23, fixed);
+  const inks=pal.filter(p=>p.ref>=0 || p.ref===-2), k=inks.length;
+  const cand=flatLab([...inks.map(p=>p.lab), ...(useTex?[texLab]:[])]), n=cand.length/3;
+  const covs=inks.map(()=>new Uint8Array(N));
   for (let i=0;i<N;i++){
     if(!alpha[i]) continue; const p=i*3;
-    let b1=0,b2=1,d1=Infinity,dd2=Infinity;
-    for (let c=0;c<n;c++){ const o=c*3; const dd=(lab[p]-cand[o])**2+(lab[p+1]-cand[o+1])**2+(lab[p+2]-cand[o+2])**2;
-      if(dd<d1){ dd2=d1; b2=b1; d1=dd; b1=c; } else if(dd<dd2){ dd2=dd; b2=c; } }
-    if (n<2){ if(b1<k) covs[b1][i]=255; continue; }
-    const a=b1*3, b=b2*3;
-    const ab0=cand[b]-cand[a], ab1=cand[b+1]-cand[a+1], ab2=cand[b+2]-cand[a+2];
-    const den=ab0*ab0+ab1*ab1+ab2*ab2;
-    let t= den>0 ? ((lab[p]-cand[a])*ab0+(lab[p+1]-cand[a+1])*ab1+(lab[p+2]-cand[a+2])*ab2)/den : 0;
-    t=Math.max(0,Math.min(0.5,t)); // b1 est le plus proche : sa part reste majoritaire
-    if (b1<k) covs[b1][i]=Math.round((1-t)*255);
-    if (b2<k) covs[b2][i]=Math.round(t*255);
+    let i1=-1,i2=-1,i3=-1,e1=Infinity,e2=Infinity,e3=Infinity;
+    for (let c=0;c<n;c++){
+      const o=c*3, dd=(lab[p]-cand[o])**2+(lab[p+1]-cand[o+1])**2+(lab[p+2]-cand[o+2])**2;
+      if (dd<e1){ i3=i2; e3=e2; i2=i1; e2=e1; i1=c; e1=dd; }
+      else if (dd<e2){ i3=i2; e3=e2; i2=c; e2=dd; }
+      else if (dd<e3){ i3=c; e3=dd; }
+    }
+    const w=mix3(lab,p,cand,i1,i2,i3,e1);
+    if (i1>=0 && i1<k) covs[i1][i]=Math.round(w[0]*255);
+    if (i2>=0 && i2<k) covs[i2][i]=Math.round(w[1]*255);
+    if (i3>=0 && i3<k) covs[i3][i]=Math.round(w[2]*255);
   }
   const lpi=S.lpi.sim;
-  let layers=pal.map((p,c)=>mkLayer(p.rgb,"halftone",covs[c],{lpi,angle:22.5}));
-  const whites=layers.filter(l=>l.name==="Blanc"), others=layers.filter(l=>l.name!=="Blanc");
+  const layers=inks.map((p,c)=>{
+    const L=mkLayer(p.rgb,"halftone",covs[c],{lpi, angle:S.simAngle, blend:"mix", lockRef:p.ref>=0?p.ref:-1});
+    if (p.ref>=0) L.name=S.simInks[p.ref].name;
+    return L;
+  });
+  const isW=L=>colorName(L.rgb)==="Blanc";
+  const whites=layers.filter(isW), others=layers.filter(l=>!isW(l));
   others.sort((a,b)=>lum(b.rgb)-lum(a.rgb));
-  whites.forEach(l=>l.name="Blanc de rehaut");
-  layers=[...others,...whites];
-  return {layers, absorbed:absorbed.map(p=>p.rgb)};
+  whites.forEach(l=>{ if(l.lockRef<0) l.name="Blanc de rehaut"; });
+  return {layers:[...others,...whites], absorbed:[]};
 }
 
 function buildIndex(img,texLab,tex){
@@ -568,23 +666,28 @@ function buildIndex(img,texLab,tex){
   return {layers, absorbed:absorbed.map(p=>p.rgb)};
 }
 
+function minFilter(a,W,H,r){
+  if (r<=0) return a;
+  const t=new Uint8Array(a.length), o=new Uint8Array(a.length);
+  for (let y=0;y<H;y++){ const b=y*W; for (let x=0;x<W;x++){ let m=255; for (let d=-r;d<=r;d++){ const xx=x+d, v= xx<0||xx>=W ? 0 : a[b+xx]; if(v<m){ m=v; if(!m) break; } } t[b+x]=m; } }
+  for (let y=0;y<H;y++) for (let x=0;x<W;x++){ let m=255; for (let d=-r;d<=r;d++){ const yy=y+d, v= yy<0||yy>=H ? 0 : t[yy*W+x]; if(v<m){ m=v; if(!m) break; } } o[y*W+x]=m; }
+  return o;
+}
 function buildUnderbase(img,layers,mode){
-  const {W,H,N,alpha}=img, u=new Uint8Array(N);
+  const {W,H,N,alpha}=img, u=new Uint8Array(N), dens=S.ubDensity/100, binary= mode==="spot"||mode==="index";
+  // part de blanc sous chaque encre : 100 % sous les claires, jusqu'à 20 % sous les très foncées
+  const f=layers.map(L=>{ const l=labOf(L.rgb)[0]; return Math.max(0.2,Math.min(1,0.2+(l-20)/50)); });
   for (let i=0;i<N;i++){
     if(!alpha[i]) continue;
-    if (mode==="cmyk"){ let prod=1; for (const L of layers) prod*=1-L.cov[i]/255; u[i]=Math.round((1-prod)*255); }
-    else { let s=0; for (const L of layers) s+=L.cov[i]; u[i]=Math.min(255,s); }
+    if (binary){ for (const L of layers) if(L.cov[i]>=128){ u[i]=255; break; } }
+    else if (mode==="cmyk"){ let prod=1; for (const L of layers) prod*=1-L.cov[i]/255; u[i]=Math.round((1-prod)*dens*255); }
+    else { let s=0; for (let j=0;j<layers.length;j++) s+=layers[j].cov[i]*f[j]; u[i]=Math.min(255,Math.round(s*dens)); }
   }
-  const ch=new Uint8Array(N);  // choke : filtre minimum 3×3
-  for (let y=0;y<H;y++) for (let x=0;x<W;x++){
-    let m=255;
-    for (let dy=-1;dy<=1 && m;dy++){ const yy=y+dy; if(yy<0||yy>=H){m=0;break;}
-      for (let dx=-1;dx<=1;dx++){ const xx=x+dx; if(xx<0||xx>=W){m=0;break;} const v=u[yy*W+xx]; if(v<m) m=v; } }
-    ch[y*W+x]=m;
-  }
+  const r=Math.round(S.chokeMm/(S.widthCm*10/W));
+  const ch=minFilter(u,W,H,r);
   const kind = mode==="spot" ? "solid" : mode==="index" ? "index" : "halftone";
   const lpi = mode==="cmyk" ? S.lpi.cmyk : S.lpi.sim;
-  return mkLayer([255,255,255],kind,ch,{name:"Sous-couche blanche", isUnderbase:true, flash:true, lpi, angle: mode==="cmyk" ? 37.5 : 22.5});
+  return mkLayer([255,255,255],kind,ch,{name:"Sous-couche blanche", isUnderbase:true, flash:true, lpi, angle: mode==="cmyk" ? 37.5 : S.simAngle});
 }
 
 /* ---------- Analyse ---------- */
@@ -619,18 +722,28 @@ function analyze(){
 /* ---------- Aperçu ---------- */
 function composite(){
   const {W,H,alpha,layers}=AN, N=W*H, out=new ImageData(W,H), o=out.data, tex=hex2rgb(S.textile);
-  const vis=layers.filter(l=>l.visible).map(l=>({cov:l.cov, mul:l.blend==="multiply", r:l.rgb[0], g:l.rgb[1], b:l.rgb[2], fr:1-l.rgb[0]/255, fg:1-l.rgb[1]/255, fb:1-l.rgb[2]/255}));
+  const vis=layers.filter(l=>l.visible).map(l=>({cov:l.cov, mul:l.blend==="multiply", mix:l.blend==="mix", r:l.rgb[0], g:l.rgb[1], b:l.rgb[2], fr:1-l.rgb[0]/255, fg:1-l.rgb[1]/255, fb:1-l.rgb[2]/255}));
+  const seq=vis.filter(l=>!l.mix), mix=vis.filter(l=>l.mix);
   for (let i=0;i<N;i++){
     let r=tex[0], g=tex[1], b=tex[2];
-    if (alpha[i]) for (const L of vis){
-      const c=L.cov[i]; if(!c) continue; const a=c/255;
-      if (L.mul){ r*=1-a*L.fr; g*=1-a*L.fg; b*=1-a*L.fb; }
-      else { r+=(L.r-r)*a; g+=(L.g-g)*a; b+=(L.b-b)*a; }
+    if (alpha[i]){
+      for (const L of seq){
+        const c=L.cov[i]; if(!c) continue; const a=c/255;
+        if (L.mul){ r*=1-a*L.fr; g*=1-a*L.fg; b*=1-a*L.fb; }
+        else { r+=(L.r-r)*a; g+=(L.g-g)*a; b+=(L.b-b)*a; }
+      }
+      if (mix.length){  // encres de quadri simulée : mélange optique des points
+        let s=0, mr=0, mg=0, mb=0;
+        for (const L of mix){ const c=L.cov[i]; if(!c) continue; const a=c/255; s+=a; mr+=a*L.r; mg+=a*L.g; mb+=a*L.b; }
+        if (s>1){ r=mr/s; g=mg/s; b=mb/s; }
+        else if (s>0){ r=r*(1-s)+mr; g=g*(1-s)+mg; b=b*(1-s)+mb; }
+      }
     }
     const p=i*4; o[p]=r; o[p+1]=g; o[p+2]=b; o[p+3]=255;
   }
   return out;
 }
+
 function drawPreview(){
   const cv=$("#preview"), x=cv.getContext("2d");
   $("#stage").style.setProperty("--textile",S.textile);
@@ -660,33 +773,58 @@ function bil(a,W,H,u,v){
   const t=a[i0+x0]+(a[i0+x1]-a[i0+x0])*fx, b=a[i1+x0]+(a[i1+x1]-a[i1+x0])*fx;
   return t+(b-t)*fy;
 }
-// Remplit dst (RVBA, largeur w) avec le film : noir = encre, blanc = film transparent.
-function renderRegion(L,P,x0,y0,w,h,dst,rowOff){
-  const {W,H}=AN, cov=L.cov, sx=W/P.filmW, sy=H/P.filmH, half=L.kind==="halftone", PI=Math.PI;
-  let cs=0, sn=0, inv=1;
-  if (half){ const a=L.angle*PI/180; cs=Math.cos(a); sn=Math.sin(a); inv=L.lpi/P.dpi; }
+// Compensation de l'engraissement : le point imprimé vaut t + 4G·t(1−t) ; on sort la valeur qui donnera t une fois imprimée.
+function comp(t,G){ if (G<=0) return t; const b=1+4*G; return (b-Math.sqrt(Math.max(0,b*b-16*G*t)))/(8*G); }
+function screenOf(L,P){
+  const a=L.angle*Math.PI/180;
+  return {cs:Math.cos(a), sn:Math.sin(a), inv:L.lpi/P.dpi, G:S.gain/100, tmin:S.minDot/100, tmax:S.maxDot/100, ell:S.dotShape==="ellipse"};
+}
+function dotInk(t,fx,fy,s){
+  t=comp(t,s.G);
+  if (t<s.tmin) return false;
+  if (t>s.tmax) return true;
+  const xr=(fx*s.cs+fy*s.sn)*s.inv, yr=(fy*s.cs-fx*s.sn)*s.inv, nx=Math.PI*(2*(xr-Math.floor(xr))-1), ny=Math.PI*(2*(yr-Math.floor(yr))-1);
+  const T= s.ell ? 0.5-(0.62*Math.cos(nx)+0.38*Math.cos(ny))/2 : 0.5-0.25*(Math.cos(nx)+Math.cos(ny));
+  return t>T;
+}
+// Écrit la zone (x0, y0, w, h) du film dans dst (RVBA, largeur dstW) à partir de (dx, dy) : noir = encre.
+function renderRegion(L,P,x0,y0,w,h,dst,dstW,dx,dy){
+  const {W,H}=AN, cov=L.cov, sx=W/P.filmW, sy=H/P.filmH, half=L.kind==="halftone", s=half?screenOf(L,P):null;
   for (let yy=0;yy<h;yy++){
     const fy=y0+yy, v=(fy+0.5)*sy-0.5, iy=Math.min(H-1,Math.floor((fy+0.5)*sy));
-    let o=(rowOff+yy)*w*4;
+    let o=((dy+yy)*dstW+dx)*4;
     for (let xx=0;xx<w;xx++,o+=4){
-      const fx=x0+xx; let ink=false;
+      const fx=x0+xx; let ink;
       if (L.kind==="index"){ const ix=Math.min(W-1,Math.floor((fx+0.5)*sx)); ink=cov[iy*W+ix]>=128; }
-      else {
-        const c=bil(cov,W,H,(fx+0.5)*sx-0.5,v);
-        if (!half) ink=c>=128;
-        else { const t=c/255;
-          if (t<0.04) ink=false; else if (t>0.96) ink=true;
-          else { const xr=(fx*cs+fy*sn)*inv, yr=(fy*cs-fx*sn)*inv, nx=2*(xr-Math.floor(xr))-1, ny=2*(yr-Math.floor(yr))-1;
-            ink = t > 0.5-0.25*(Math.cos(PI*nx)+Math.cos(PI*ny)); } }
-      }
+      else { const c=bil(cov,W,H,(fx+0.5)*sx-0.5,v); ink= half ? (c>0 && dotInk(c/255,fx,fy,s)) : c>=128; }
       const g=ink?0:255; dst[o]=g; dst[o+1]=g; dst[o+2]=g; dst[o+3]=255;
     }
   }
 }
+const WEDGE=[5,10,20,30,40,50,60,70,80,90,95];
+// Gamme de contrôle tramée dans la marge du haut, avec la même trame et la même compensation que le film.
+function renderWedge(L,P,dst,cw,m){
+  if (L.kind!=="halftone") return null;
+  const arm=Math.round(0.45/2.54*S.dpi), avail=cw/2-arm*1.5-m;
+  const sz=Math.floor(Math.min(0.6/2.54*S.dpi, avail/WEDGE.length)), y0=Math.round(0.2/2.54*S.dpi);
+  if (sz<8) return null;
+  const s=screenOf(L,P);
+  WEDGE.forEach((pc,k)=>{
+    const x0=m+k*sz;
+    for (let y=y0;y<y0+sz;y++) for (let x=x0;x<x0+sz;x++){
+      if (dotInk(pc/100,x-m,y-m,s)){ const o=(y*cw+x)*4; dst[o]=0; dst[o+1]=0; dst[o+2]=0; }
+    }
+  });
+  return {x:m, y:y0, sz};
+}
+function flipH(d,w,h){
+  for (let y=0;y<h;y++){ let a=y*w*4, b=a+(w-1)*4; while(a<b){ for (let c=0;c<4;c++){ const t=d[a+c]; d[a+c]=d[b+c]; d[b+c]=t; } a+=4; b-=4; } }
+}
+
 function kindLabel(L){
   if (L.kind==="solid") return "Aplat";
   if (L.kind==="index") return `Pixels ${S.ppi} ppi`;
-  return `${L.lpi} lpi · ${fmt(L.angle)}°`;
+  return `${L.lpi} lpi · ${fmt(L.angle)}°${S.dotShape==="ellipse"?" · ellipt.":""}`;
 }
 const nearestMesh = v => MESH.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?b:a);
 function meshFor(L){
@@ -707,7 +845,7 @@ function renderControls(){
   [["Pour",M.pour],["Textile",M.textile],["Écrans",M.ecrans]].forEach(([a,b])=>{ const dt=document.createElement("dt"); dt.textContent=a; const dd=document.createElement("dd"); dd.textContent=b; dl.append(dt,dd); });
   info.append(dl);
   document.querySelectorAll("[data-modes]").forEach(r=>{ r.hidden=!r.dataset.modes.split(" ").includes(S.mode); });
-  if (M.kMin){ const k=$("#k"); k.min=M.kMin; k.max=M.kMax; k.value=S.k[S.mode]; $("#k-out").textContent=S.k[S.mode]; $("#k-label").textContent=M.kLabel; }
+  if (M.kMin){ const k=$("#k"); const mn= S.mode==="sim" ? Math.max(M.kMin,S.simInks.length) : M.kMin; if(S.k[S.mode]<mn) S.k[S.mode]=mn; k.min=mn; k.max=M.kMax; k.value=S.k[S.mode]; $("#k-out").textContent=S.k[S.mode]; $("#k-label").textContent=M.kLabel; }
   if (S.mode==="cmyk"||S.mode==="sim"){
     const l=S.lpi[S.mode]; $("#lpi").value=l; $("#lpi-out").textContent=l+" lpi";
     $("#lpi-hint").textContent=`Règle d'atelier : tamis ≈ 4 à 5 × la linéature, soit ${nearestMesh(l*4/2.54)} à ${nearestMesh(l*5/2.54)} fils/cm (${l*4} à ${l*5} fils/pouce).`;
@@ -716,6 +854,14 @@ function renderControls(){
   $("#ppi").value=S.ppi; $("#ppi-out").textContent=`${S.ppi} ppi · ${fmt(25.4/S.ppi,2)} mm`;
   $("#clean").checked=S.clean; $("#absorb").checked=S.absorb; $("#removeBg").checked=S.removeBg; $("#underbase").checked=S.underbase;
   $("#width").value=S.widthCm; $("#dpi").value=String(S.dpi);
+  $("#angle").value=String(S.simAngle); $("#shape").value=S.dotShape;
+  $("#gain").value=S.gain; $("#gain-out").textContent=`+${S.gain} % (50 → ${50+S.gain} %)`;
+  $("#minDot").value=S.minDot; $("#minDot-out").textContent=S.minDot+" %";
+  $("#maxDot").value=S.maxDot; $("#maxDot-out").textContent=S.maxDot+" %";
+  $("#ubDensity").value=S.ubDensity; $("#ubDensity-out").textContent=S.ubDensity+" %";
+  $("#choke").value=String(S.chokeMm); $("#mirror").checked=S.mirror; $("#wedge").checked=S.wedge;
+  $("#add-ink").hidden= S.mode!=="sim";
+  $("#films-hint").textContent= S.mode==="sim" ? "Changez une encre ou fixez-la : la séparation est recalculée avec vos encres." : "Cliquez sur une pastille de couleur pour changer l'encre.";
   document.querySelectorAll(".tex").forEach(b=>b.setAttribute("aria-checked", String(b.dataset.hex===S.textile)));
   $("#texname").innerHTML=""; const sp=document.createElement("span"); sp.textContent=`${S.textileName} `; const m=document.createElement("span"); m.className="mono"; m.style.color="var(--muted)"; m.textContent=S.textile.toUpperCase(); $("#texname").append(sp,m);
   $("#v-print").setAttribute("aria-pressed",String(S.view==="print")); $("#v-orig").setAttribute("aria-pressed",String(S.view==="orig"));
@@ -730,7 +876,8 @@ function renderInfo(){
   $("#film-size").textContent=`Image ${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm · film ${fmt(F.fw)} × ${fmt(F.fh)} cm avec repères · à imprimer sur ${F.label}`;
   const st=$("#stats"); st.textContent="";
   st.append(chip("Écrans",String(L.length)), chip("Flash",String(flashes)), chip("Image",`${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm`), chip("Film",F.label));
-  if (S.mode==="cmyk"||S.mode==="sim") st.append(chip("Trame",`${S.lpi[S.mode]} lpi`));
+  if (S.mode==="cmyk"||S.mode==="sim") st.append(chip("Trame",`${S.lpi[S.mode]} lpi`), chip("Engraissement compensé",`+${S.gain} %`));
+  if (S.mode==="sim" && S.simInks.length) st.append(chip("Encres fixées",String(S.simInks.length)));
   const w=$("#warns"); w.textContent="";
   const add=(html,cls="warn")=>{ const d=document.createElement("div"); d.className=cls; d.innerHTML=html; w.append(d); };
   const dark=lum(hex2rgb(S.textile))<0.18;
@@ -740,6 +887,14 @@ function renderInfo(){
   if (S.mode==="spot" && L.length>6) add(`<strong>${L.length} écrans en tons directs.</strong> Au-delà de 6, le calage devient long et coûteux. Réduisez le nombre de couleurs si possible.`);
   if (L.length>8) add(`Vérifiez que votre carrousel a au moins ${L.length} stations, plus une pour le flash.`);
   if ((S.mode==="cmyk"||S.mode==="sim") && S.dpi/S.lpi[S.mode]<4) add("<strong>Trame trop fine pour la résolution choisie.</strong> Montez la résolution des films ou baissez la linéature.");
+  else if ((S.mode==="cmyk"||S.mode==="sim") && S.dpi/S.lpi[S.mode]<10) add(`<strong>Points mal formés à ${S.dpi} dpi.</strong> Une cellule ne fait que ${fmt(S.dpi/S.lpi[S.mode],1)} px : sortez les films à 600 dpi ou plus pour des points bien ronds.`);
+  if (S.mode==="sim" && S.simExcluded.length){
+    const d=document.createElement("div"); d.className="note absorbed"; d.append(`Couleurs retirées pour cette image (${S.simExcluded.length}) : `);
+    S.simExcluded.forEach(c=>{ const dot=document.createElement("i"); dot.className="dot"; dot.style.background=rgb2hex(c); dot.title=rgb2hex(c).toUpperCase(); d.append(dot); });
+    const bt=document.createElement("button"); bt.type="button"; bt.className="linkbtn"; bt.textContent="Rétablir";
+    bt.addEventListener("click",()=>{ S.k.sim=Math.min(MODES.sim.kMax, S.k.sim+S.simExcluded.length); S.simExcluded=[]; scheduleAnalyze(); });
+    d.append(" ",bt); w.append(d);
+  }
   if (AN.bgRemoved) add("Le fond uni de l'image a été retiré : à ces endroits, c'est le textile qui apparaît.","note");
   if (AN.absorbed.length){
     const d=document.createElement("div"); d.className="note absorbed"; d.append("Couleur remplacée par le textile (aucun écran) : ");
@@ -749,9 +904,23 @@ function renderInfo(){
   $("#status").textContent=`${L.length} films calculés en ${fmt(AN.ms/1000,1)} s`;
 }
 
+function lockInk(L,rgb){
+  if (L.lockRef>=0) S.simInks[L.lockRef].rgb=rgb.slice();
+  else { S.simInks.push({rgb:rgb.slice(), name:L.name}); L.lockRef=S.simInks.length-1; }
+  if (S.simInks.length>S.k.sim) S.k.sim=Math.min(12,S.simInks.length);
+  saveInks();
+}
+function unlockInk(L){
+  if (L.lockRef<0) return;
+  const ref=L.lockRef; S.simInks.splice(ref,1);
+  AN.layers.forEach(o=>{ if(o.lockRef>ref) o.lockRef--; });
+  L.lockRef=-1; saveInks();
+}
 function renderFilms(){
   const ol=$("#films"); ol.textContent="";
+  const simMode=AN.mode==="sim";
   AN.layers.forEach((L,i)=>{
+    const editable=simMode && !L.isUnderbase, locked=L.lockRef>=0;
     const li=document.createElement("li"); li.className="film"+(L.visible?"":" off");
     const th=document.createElement("div"); th.className="film-thumb"; th.append(thumb(L,260));
     const ord=document.createElement("span"); ord.className="order"; ord.textContent=String(i+1).padStart(2,"0"); th.append(ord);
@@ -761,19 +930,41 @@ function renderFilms(){
     const sw=document.createElement("label"); sw.className="swatch"; sw.style.background=rgb2hex(L.rgb); sw.title="Changer la couleur de l'encre";
     const ci=document.createElement("input"); ci.type="color"; ci.value=rgb2hex(L.rgb); ci.id="ink-"+i; ci.setAttribute("aria-label","Couleur de l'encre : "+L.name);
     sw.append(ci);
-    const nm=document.createElement("div"); const st=document.createElement("strong"); st.textContent=L.name; const hx=document.createElement("span"); hx.className="mono"; hx.textContent=rgb2hex(L.rgb).toUpperCase(); nm.append(st,hx);
+    const nm=document.createElement("div"); nm.style.flex="1";
+    const hx=document.createElement("span"); hx.className="mono"; hx.textContent=rgb2hex(L.rgb).toUpperCase()+(locked?" · fixée":"");
+    if (editable && locked){
+      const ni=document.createElement("input"); ni.type="text"; ni.className="ink-name"; ni.id="name-"+i; ni.maxLength=40; ni.value=L.name; ni.setAttribute("aria-label","Nom de l'encre");
+      ni.addEventListener("change",()=>{ const v=ni.value.trim()||colorName(L.rgb); ni.value=v; L.name=v; if(L.lockRef>=0){ S.simInks[L.lockRef].name=v; saveInks(); } });
+      nm.append(ni,hx);
+    } else { const st=document.createElement("strong"); st.textContent=L.name; nm.append(st,hx); }
     head.append(sw,nm);
-    ci.addEventListener("input",()=>{ L.rgb=hex2rgb(ci.value); sw.style.background=ci.value; hx.textContent=ci.value.toUpperCase(); schedulePreview(); });
+    ci.addEventListener("input",()=>{ sw.style.background=ci.value; if(!editable){ L.rgb=hex2rgb(ci.value); hx.textContent=ci.value.toUpperCase(); schedulePreview(); } });
+    if (editable) ci.addEventListener("change",()=>{ lockInk(L,hex2rgb(ci.value)); say(`Encre fixée : ${L.name} ${ci.value.toUpperCase()}. Séparation recalculée avec vos encres.`); scheduleAnalyze(); });
     const dl=document.createElement("dl");
     [["Film",kindLabel(L)],["Couverture",fmt(L.coverage*100,0)+" %"],["Tamis",meshFor(L)]].forEach(([a,b])=>{ const dt=document.createElement("dt"); dt.textContent=a; const dd=document.createElement("dd"); dd.textContent=b; dl.append(dt,dd); });
+    body.append(head,dl);
+    if (editable){
+      const tools=document.createElement("div"); tools.className="film-actions";
+      const lk=document.createElement("label"); lk.className="check"; const lc=document.createElement("input"); lc.type="checkbox"; lc.id="lock-"+i; lc.checked=locked; lk.append(lc," Encre fixée");
+      lc.addEventListener("change",()=>{ if(lc.checked) lockInk(L,L.rgb); else unlockInk(L); renderFilms(); renderInfo(); renderControls(); });
+      const rm=document.createElement("button"); rm.type="button"; rm.className="linkbtn danger"; rm.textContent="Retirer";
+      rm.addEventListener("click",()=>{
+        const wasLocked=L.lockRef>=0; unlockInk(L);
+        if (!wasLocked) S.simExcluded.push(L.rgb.slice());
+        S.k.sim=Math.max(MODES.sim.kMin, S.k.sim-1);
+        say(`Encre retirée : ${L.name}. Séparation recalculée sans elle.`); scheduleAnalyze();
+      });
+      tools.append(lk,rm); body.append(tools);
+    }
     const act=document.createElement("div"); act.className="film-actions";
     const lab=document.createElement("label"); lab.className="check"; const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=L.visible; cb.id="vis-"+i; lab.append(cb," Afficher");
     cb.addEventListener("change",()=>{ L.visible=cb.checked; li.classList.toggle("off",!L.visible); drawPreview(); });
     const bt=document.createElement("button"); bt.type="button"; bt.className="linkbtn"; bt.textContent="Voir le film"; bt.addEventListener("click",()=>openLoupe(i));
-    act.append(lab,bt);
-    body.append(head,dl,act); li.append(th,body); ol.append(li);
+    act.append(lab,bt); body.append(act);
+    li.append(th,body); ol.append(li);
   });
 }
+
 function renderAll(){ renderControls(); renderInfo(); drawPreview(); renderFilms(); }
 
 let tA=0, tP=0;
@@ -801,9 +992,9 @@ function drawLoupe(){
   const x0=Math.max(0,Math.min(P.filmW-size,Math.round(LP.u*P.filmW-size/2))), y0=Math.max(0,Math.min(P.filmH-size,Math.round(LP.v*P.filmH-size/2)));
   const k=t.width/P.filmW; x.strokeStyle="#2f3dc2"; x.lineWidth=Math.max(2,t.width/160); x.strokeRect(x0*k,y0*k,size*k,size*k);
   const zc=$("#lp-zoom-c"); zc.width=size; zc.height=size;
-  const zx=zc.getContext("2d"), id=zx.createImageData(size,size); renderRegion(L,P,x0,y0,size,size,id.data,0); zx.putImageData(id,0,0);
+  const zx=zc.getContext("2d"), id=zx.createImageData(size,size); renderRegion(L,P,x0,y0,size,size,id.data,size,0,0); zx.putImageData(id,0,0);
   let cap=`Zone réelle de 2 × 2 cm à ${S.dpi} dpi, agrandie. `;
-  if (L.kind==="halftone") cap+=`Trame ${L.lpi} lpi à ${fmt(L.angle)}° : une cellule mesure ${fmt(S.dpi/L.lpi,1)} px. Les points sous 4 % sont supprimés et ceux au-dessus de 96 % bouchés, car l'écran ne les tiendrait pas.`;
+  if (L.kind==="halftone") cap+=`Trame ${L.lpi} lpi à ${fmt(L.angle)}°, point ${S.dotShape==="ellipse"?"elliptique":"rond"} : une cellule mesure ${fmt(S.dpi/L.lpi,1)} px. Engraissement compensé de ${S.gain} % : un 50 % sort à ${fmt(comp(0.5,S.gain/100)*100,0)} % sur le film. Points sous ${S.minDot} % supprimés, au-dessus de ${S.maxDot} % bouchés.`;
   else if (L.kind==="index") cap+=`Pixels carrés de ${fmt(25.4/S.ppi,2)} mm (${S.ppi} ppi), soit ${fmt(S.dpi/S.ppi,1)} px de film chacun.`;
   else cap+="Aplat plein : les contours sont lissés à partir de l'image source.";
   $("#lp-cap").textContent=cap;
@@ -825,15 +1016,23 @@ const slug = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replac
 const tick = () => new Promise(r=>setTimeout(r,0));
 const toBlob = cv => new Promise((res,rej)=>cv.toBlob(b=> b?res(b):rej(new Error("toBlob")),"image/png"));
 
-function drawMarks(x,cw,chh,m,L,i,P){
+function drawMarks(x,cw,chh,m,L,i,P,wg){
   const lw=Math.max(2,Math.round(S.dpi/150)), r=Math.round(0.28/2.54*S.dpi), arm=Math.round(0.45/2.54*S.dpi);
+  x.save();
+  if (S.mirror){ x.translate(cw,0); x.scale(-1,1); }   // texte lu à l'envers, comme le reste du film
   x.strokeStyle="#000"; x.fillStyle="#000"; x.lineWidth=lw;
   const cross=(cx,cy)=>{ x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.moveTo(cx-arm,cy); x.lineTo(cx+arm,cy); x.moveTo(cx,cy-arm); x.lineTo(cx,cy+arm); x.stroke(); };
   cross(cw/2,m/2); cross(cw/2,chh-m/2); cross(m/2,chh/2); cross(cw-m/2,chh/2);
   const fs=Math.round(0.28/2.54*S.dpi);
   x.font=`500 ${fs}px "IBM Plex Mono", ui-monospace, monospace`; x.textBaseline="middle";
-  const txt=`${String(i+1).padStart(2,"0")} ${L.name} · ${rgb2hex(L.rgb).toUpperCase()} · ${kindLabel(L)} · ${fmt(S.widthCm)} cm @ ${S.dpi} dpi`;
+  const txt=`${String(i+1).padStart(2,"0")} ${L.name} · ${rgb2hex(L.rgb).toUpperCase()} · ${kindLabel(L)} · ${fmt(S.widthCm)} cm @ ${S.dpi} dpi${S.mirror?" · miroir":""}`;
   x.fillText(txt, m, chh-m/2, Math.max(50, cw/2-m-arm*1.5));
+  if (wg){
+    const fs2=Math.max(9,Math.round(0.17/2.54*S.dpi));
+    x.font=`500 ${fs2}px "IBM Plex Mono", ui-monospace, monospace`; x.textAlign="center"; x.textBaseline="top";
+    WEDGE.forEach((pc,k)=>x.fillText(String(pc), wg.x+k*wg.sz+wg.sz/2, wg.y+wg.sz+Math.round(0.06/2.54*S.dpi)));
+  }
+  x.restore();
 }
 
 function fiche(P){
@@ -845,13 +1044,18 @@ function fiche(P){
   const F=filmFormat(S.widthCm,P.heightCm);
   lines.push(`Films          : ${P.filmW} × ${P.filmH} px à ${S.dpi} dpi (+ marges de 1,6 cm avec repères)`);
   lines.push(`Support        : film transparent ${F.label} (chaque film mesure ${fmt(F.fw)} × ${fmt(F.fh)} cm), imprimé à 100 %`);
-  if (S.mode==="cmyk"||S.mode==="sim") lines.push(`Trame          : ${S.lpi[S.mode]} lpi, point rond`);
+  if (S.mode==="cmyk"||S.mode==="sim"){
+    lines.push(`Trame          : ${S.lpi[S.mode]} lpi${S.mode==="sim"?` à ${fmt(S.simAngle)}°`:""}, point ${S.dotShape==="ellipse"?"elliptique":"rond"}, mini ${S.minDot} %, maxi ${S.maxDot} %`);
+    lines.push(`Engraissement  : +${S.gain} % compensé (un 50 % sort à ${fmt(comp(0.5,S.gain/100)*100,0)} % sur le film)`);
+  }
+  if (S.underbase) lines.push(`Sous-couche    : ${S.mode==="cmyk"||S.mode==="sim" ? `densité ${S.ubDensity} %, ` : ""}rétrécie de ${fmt(S.chokeMm)} mm`);
+  if (S.mirror) lines.push("Orientation    : films en miroir");
   if (S.mode==="index") lines.push(`Pixels carrés  : ${S.ppi} ppi (${fmt(25.4/S.ppi,2)} mm)`);
   lines.push(`Textile        : ${S.textileName} (${S.textile.toUpperCase()})`);
   lines.push(`Écrans         : ${AN.layers.length}   Flash : ${AN.layers.filter(l=>l.flash).length}`,"");
   lines.push("ORDRE D'IMPRESSION");
   AN.layers.forEach((L,i)=>{
-    lines.push(`${String(i+1).padStart(2,"0")}. ${L.name.padEnd(22)} ${rgb2hex(L.rgb).toUpperCase()}  ${kindLabel(L).padEnd(16)} couverture ${fmt(L.coverage*100,0).padStart(3)} %  tamis ${meshFor(L)}${L.flash?"  → FLASH":""}`);
+    lines.push(`${String(i+1).padStart(2,"0")}. ${L.name.padEnd(22)} ${rgb2hex(L.rgb).toUpperCase()}  ${kindLabel(L).padEnd(16)} couverture ${fmt(L.coverage*100,0).padStart(3)} %  tamis ${meshFor(L)}${L.lockRef>=0?"  (encre fixée)":""}${L.flash?"  → FLASH":""}`);
   });
   if (AN.absorbed.length) lines.push("", "Couleurs rendues par le textile (sans écran) : "+AN.absorbed.map(c=>colorName(c)+" "+rgb2hex(c).toUpperCase()).join(", "));
   lines.push("","CONSEILS");
@@ -859,7 +1063,8 @@ function fiche(P){
   lines.push("- Calez chaque écran sur les 4 repères de repérage avant de tirer.");
   if (S.mode==="cmyk") lines.push("- Angles décalés de 7,5° par rapport aux angles offset pour limiter le moiré avec le tissage du tamis.");
   if (S.mode==="sim"||S.mode==="cmyk") lines.push("- Tamis conseillé : environ 4 à 5 fois la linéature (en fils/pouce). Tension élevée et racle dure pour garder les points.");
-  if (S.underbase) lines.push("- Flashez la sous-couche (séchage de surface) avant les couleurs. Elle est rétrécie d'environ 0,2 mm.");
+  if (S.underbase) lines.push("- Flashez la sous-couche (séchage de surface) avant les couleurs.");
+  if (S.wedge && (S.mode==="cmyk"||S.mode==="sim")) lines.push("- Gamme de contrôle 5 à 95 % en haut à gauche de chaque film tramé : mesurez la case 50 % sur le tirage d'essai et ajustez l'engraissement.");
   lines.push("- Les couleurs affichées sont des approximations écran : choisissez vos encres sur un nuancier.");
   return lines.join("\n");
 }
@@ -888,13 +1093,15 @@ async function exportZip(){
     for (let i=0;i<Ls.length;i++){
       const L=Ls[i]; pt.textContent=`Film ${i+1} sur ${Ls.length} : ${L.name}`;
       const cw=P.filmW+2*m, chh=P.filmH+2*m, cv=document.createElement("canvas"); cv.width=cw; cv.height=chh;
-      const x=cv.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,cw,chh);
-      const id=x.createImageData(P.filmW,P.filmH), step=Math.max(16,Math.floor(1.5e6/P.filmW));
+      const x=cv.getContext("2d"), id=x.createImageData(cw,chh); id.data.fill(255);
+      const step=Math.max(16,Math.floor(1.5e6/P.filmW));
       for (let y=0;y<P.filmH;y+=step){
-        const h=Math.min(step,P.filmH-y); renderRegion(L,P,0,y,P.filmW,h,id.data,y);
+        const h=Math.min(step,P.filmH-y); renderRegion(L,P,0,y,P.filmW,h,id.data,cw,m,m+y);
         done+=h; pb.style.width=(done/total*92).toFixed(1)+"%"; await tick();
       }
-      x.putImageData(id,m,m); drawMarks(x,cw,chh,m,L,i,P);
+      const wg= S.wedge ? renderWedge(L,P,id.data,cw,m) : null;
+      if (S.mirror) flipH(id.data,cw,chh);
+      x.putImageData(id,0,0); drawMarks(x,cw,chh,m,L,i,P,wg);
       const bytes=withDpi(new Uint8Array(await (await toBlob(cv)).arrayBuffer()),S.dpi);
       zip.file(`${String(i+1).padStart(2,"0")}_${slug(L.name)}.png`, bytes);
       cv.width=cv.height=0;
@@ -927,7 +1134,7 @@ function setSource(img,name){
   const max=2400, f=Math.min(1,max/Math.max(img.width,img.height));
   const c=document.createElement("canvas"); c.width=Math.max(1,Math.round(img.width*f)); c.height=Math.max(1,Math.round(img.height*f));
   c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-  SRC=c; S.srcName=name; analyze();
+  SRC=c; S.srcName=name; S.simExcluded=[]; analyze();
 }
 function loadFile(file){
   if (!file || !/^image\//.test(file.type)){ say("Ce fichier n'est pas une image. Choisissez un PNG, un JPG ou un SVG.",true); return; }
@@ -982,6 +1189,22 @@ $("#ppi").addEventListener("input",e=>{ S.ppi=+e.target.value; renderControls();
 ["clean","absorb","removeBg","underbase"].forEach(id=>$("#"+id).addEventListener("change",e=>{ S[id]=e.target.checked; scheduleAnalyze(); }));
 $("#width").addEventListener("change",e=>{ const v=parseFloat(String(e.target.value).replace(",",".")); if(!(v>=4&&v<=60)){ e.target.value=S.widthCm; say("La largeur doit être comprise entre 4 et 60 cm.",true); return; } S.widthCm=v; say(""); if(S.mode==="index") scheduleAnalyze(); else renderInfo(); });
 $("#dpi").addEventListener("change",e=>{ S.dpi=+e.target.value; renderInfo(); });
+function refreshFilmOnly(){ if(AN){ renderInfo(); renderFilms(); } const d=$("#loupe"); if(d.open) drawLoupe(); }
+$("#angle").addEventListener("change",e=>{ S.simAngle=+e.target.value; scheduleAnalyze(); });
+$("#shape").addEventListener("change",e=>{ S.dotShape=e.target.value; refreshFilmOnly(); });
+["gain","minDot","maxDot"].forEach(id=>$("#"+id).addEventListener("input",e=>{ S[id]=+e.target.value; renderControls(); clearTimeout(tP); tP=setTimeout(refreshFilmOnly,120); }));
+$("#ubDensity").addEventListener("input",e=>{ S.ubDensity=+e.target.value; $("#ubDensity-out").textContent=S.ubDensity+" %"; scheduleAnalyze(); });
+$("#choke").addEventListener("change",e=>{ S.chokeMm=+e.target.value; scheduleAnalyze(); });
+$("#mirror").addEventListener("change",e=>{ S.mirror=e.target.checked; });
+$("#wedge").addEventListener("change",e=>{ S.wedge=e.target.checked; });
+$("#add-ink").addEventListener("click",()=>$("#add-ink-color").click());
+$("#add-ink-color").addEventListener("change",e=>{
+  if (S.simInks.length>=12){ say("12 encres fixées au maximum. Retirez-en une avant d'en ajouter.",true); return; }
+  const rgb=hex2rgb(e.target.value); S.simInks.push({rgb, name:colorName(rgb)});
+  S.k.sim=Math.min(12,Math.max(S.k.sim+1,S.simInks.length)); saveInks();
+  say(`Encre ajoutée et fixée : ${colorName(rgb)} ${e.target.value.toUpperCase()}. Elle sera gardée pour vos prochaines images.`);
+  scheduleAnalyze();
+});
 $("#v-print").addEventListener("click",()=>{ S.view="print"; renderControls(); drawPreview(); });
 $("#v-orig").addEventListener("click",()=>{ S.view="orig"; renderControls(); drawPreview(); });
 $("#pick").addEventListener("click",()=>$("#file").click());
