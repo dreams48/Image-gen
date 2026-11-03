@@ -250,10 +250,10 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
           <div class="row-head"><label for="ppi">Taille des pixels carrés</label><output id="ppi-out" for="ppi"></output></div>
           <input type="range" id="ppi" min="100" max="300" step="25">
         </div>
-        <div class="row" data-modes="sim">
+        <div class="row" data-modes="sim cmyk">
           <label class="check"><input type="checkbox" id="hl"> <span>Calque de rehaut (highlight) : un blanc dédié, imprimé en dernier</span></label>
         </div>
-        <div class="row" data-modes="sim">
+        <div class="row" data-modes="sim cmyk">
           <div class="duo">
             <div class="sub"><div class="row-head"><label for="hlStrength">Force du rehaut</label><output id="hlStrength-out" for="hlStrength"></output></div><input type="range" id="hlStrength" min="0" max="100" step="5"></div>
             <div class="sub"><div class="row-head"><label for="hlStart">À partir de</label><output id="hlStart-out" for="hlStart"></output></div><input type="range" id="hlStart" min="50" max="95" step="5"></div>
@@ -581,7 +581,8 @@ function buildSpot(img,texLab){
   return {layers, absorbed:pal.filter((p,c)=>absorbed[c]).map(p=>p.rgb)};
 }
 
-function buildCmyk(img){
+function buildCmyk(img,tex,texLab){
+  if (S.underbase && texLab[0]<50) return buildCmykDark(img,tex,texLab);
   const {N,data,alpha}=img, g=S.gcr/100;
   const C=new Uint8Array(N), M=new Uint8Array(N), Y=new Uint8Array(N), K=new Uint8Array(N);
   for (let i=0;i<N;i++){
@@ -628,6 +629,38 @@ function mix3(lab,p,C,a,b,c,ea){
     }
   }
   return W3;
+}
+
+// CMJN sur textile foncé : la sous-couche porte la clarté (valeur max des canaux), les encres C, M, J
+// ne portent que la couleur, et le noir du textile remplace l'encre noire.
+function buildCmykDark(img,tex,texLab){
+  const {N,data,alpha,lab}=img, vt=Math.max(tex[0],tex[1],tex[2])/255;
+  const C=new Uint8Array(N), M=new Uint8Array(N), Y=new Uint8Array(N), U=new Uint8Array(N);
+  for (let i=0;i<N;i++){
+    if(!alpha[i]) continue; const p=i*4, r=data[p], g=data[p+1], b=data[p+2], v=Math.max(r,g,b);
+    let u=(v/255-vt)/(1-vt); u= u<0 ? 0 : u>1 ? 1 : u;
+    U[i]=Math.round(u*255);
+    if (v<1) continue;
+    const k=Math.min(1,u*2.5);   // pas d'encre de couleur là où le textile reste à nu
+    C[i]=Math.round((1-r/v)*k*255); M[i]=Math.round((1-g/v)*k*255); Y[i]=Math.round((1-b/v)*k*255);
+  }
+  const lpi=S.lpi.cmyk, base={kind:"halftone", lpi, blend:"multiply"};
+  const layers=[
+    mkLayer([255,242,0],"halftone",Y,{...base,name:"Jaune",angle:7.5}),
+    mkLayer([236,0,140],"halftone",M,{...base,name:"Magenta",angle:52.5}),
+    mkLayer([0,174,239],"halftone",C,{...base,name:"Cyan",angle:22.5}),
+  ];
+  if (S.hl){  // blancs purs : clairs et peu saturés
+    const hc=new Uint8Array(N), st=S.hlStart, mult=0.4+1.2*S.hlStrength/100;
+    for (let i=0;i<N;i++){
+      if(!alpha[i]) continue; const q=i*3;
+      let t=(lab[q]-st)/(100-st); t= t<=0 ? 0 : t>=1 ? 1 : t*t*(3-2*t);
+      const ch=Math.sqrt(lab[q+1]*lab[q+1]+lab[q+2]*lab[q+2]), w=Math.max(0,1-ch/35);
+      hc[i]=Math.min(255,Math.round(t*w*mult*255));
+    }
+    layers.push(mkLayer([255,255,255],"halftone",hc,{name:"Blanc de rehaut (highlight)", lpi, angle:82.5, blend:"top", isHighlight:true}));
+  }
+  return {layers, absorbed:[], ubCov:U, cmykDark:true};
 }
 
 function buildSim(img,texLab,tex){
@@ -755,12 +788,13 @@ function minFilter(a,W,H,r){
   for (let y=0;y<H;y++) for (let x=0;x<W;x++){ let m=255; for (let d=-r;d<=r;d++){ const yy=y+d, v= yy<0||yy>=H ? 0 : t[yy*W+x]; if(v<m){ m=v; if(!m) break; } } o[y*W+x]=m; }
   return o;
 }
-function buildUnderbase(img,layers,mode){
+function buildUnderbase(img,layers,mode,ubCov){
   const {W,H,N,alpha}=img, u=new Uint8Array(N), dens=S.ubDensity/100, binary= mode==="spot"||mode==="index";
   // part de blanc sous chaque encre : 100 % sous les claires, jusqu'à 20 % sous les très foncées
   const f=layers.map(L=>{ const l=labOf(L.rgb)[0]; return Math.max(0.2,Math.min(1,0.2+(l-20)/50)); });
   for (let i=0;i<N;i++){
     if(!alpha[i]) continue;
+    if (ubCov){ u[i]=Math.round(ubCov[i]*dens); continue; }
     if (binary){ for (const L of layers) if(L.cov[i]>=128){ u[i]=255; break; } }
     else if (mode==="cmyk"){ let prod=1; for (const L of layers) prod*=1-L.cov[i]/255; u[i]=Math.round((1-prod)*dens*255); }
     else { let s=0; for (let j=0;j<layers.length;j++) s+=layers[j].cov[i]*f[j]; u[i]=Math.min(255,Math.round(s*dens)); }
@@ -790,17 +824,17 @@ function analyze(){
   const img=sampleImage(W,H), tex=hex2rgb(S.textile), texLab=labOf(tex);
   let res;
   if (S.mode==="spot") res=buildSpot(img,texLab);
-  else if (S.mode==="cmyk") res=buildCmyk(img);
+  else if (S.mode==="cmyk") res=buildCmyk(img,tex,texLab);
   else if (S.mode==="sim") res=buildSim(img,texLab,tex);
   else if (S.mode==="duo") res=buildDuo(img,tex,texLab);
   else res=buildIndex(img,texLab,tex);
   const layers=res.layers;
-  if (S.underbase && layers.length) layers.unshift(buildUnderbase(img,layers,S.mode));
+  if (S.underbase && layers.length) layers.unshift(buildUnderbase(img,layers,S.mode,res.ubCov));
   let opaque=0; for (let i=0;i<img.N;i++) opaque+=img.alpha[i];
   for (const L of layers){ let s=0; for (let i=0;i<img.N;i++) s+=L.cov[i]; L.coverage= opaque ? s/(255*opaque) : 0; }
   const seen={};
   for (const L of layers){ seen[L.name]=(seen[L.name]||0)+1; if(seen[L.name]>1) L.name+=" "+seen[L.name]; }
-  AN={W,H,alpha:img.alpha,layers,mode:S.mode,bgRemoved:img.bgRemoved,absorbed:res.absorbed,duoDark:res.duoDark,opaque,ms:performance.now()-t0};
+  AN={W,H,alpha:img.alpha,layers,mode:S.mode,bgRemoved:img.bgRemoved,absorbed:res.absorbed,duoDark:res.duoDark,cmykDark:res.cmykDark,opaque,ms:performance.now()-t0};
   renderAll();
 }
 
@@ -991,6 +1025,10 @@ function renderInfo(){
     bt.addEventListener("click",()=>{ S.k.sim=Math.min(MODES.sim.kMax, S.k.sim+S.simExcluded.length); S.simExcluded=[]; scheduleAnalyze(); });
     d.append(" ",bt); w.append(d);
   }
+  const empty=L.filter(l=>!l.isUnderbase && l.coverage<0.01);
+  if (empty.length) add(`<strong>Film presque vide :</strong> ${empty.map(l=>l.name).join(", ")} (moins de 1 % de couverture). Il est quand même exporté, mais vous pouvez ne pas l'insoler : un écran de moins.`);
+  if (AN.cmykDark) add("CMJN sur textile foncé : la sous-couche blanche porte la clarté de l'image, le cyan, le magenta et le jaune portent la couleur, et le noir du textile remplace l'encre noire (un écran de moins). Le rehaut renforce les blancs purs.","note");
+  if (S.mode==="cmyk" && !AN.cmykDark && S.underbase) add("Rehaut disponible sur textile foncé uniquement.","note");
   if (S.mode==="duo"){
     const tl=labOf(hex2rgb(S.textile))[0];
     if (tl>25 && tl<80) add("<strong>Textile ni noir ni blanc.</strong> Les demi-tons 2 calques sont prévus pour du noir (ou très foncé) ou du blanc (ou très clair) : sur ce textile, le contraste sera faible.");
@@ -1150,7 +1188,8 @@ function fiche(P){
     lines.push(`Engraissement  : +${S.gain} % compensé (un 50 % sort à ${fmt(comp(0.5,S.gain/100)*100,0)} % sur le film)`);
   }
   if (S.mode==="duo") lines.push(`Demi-tons      : contraste ${S.duoContrast}, luminosité ${S.duoBright}, gris L* ${S.duoGrey}, netteté ${S.duoSharp} %, angles ${fmt(S.simAngle)}° et ${fmt((S.simAngle+30)%90)}°`);
-  if (S.mode==="sim" && S.hl) lines.push(`Rehaut         : force ${S.hlStrength} %, à partir de L* ${S.hlStart}, imprimé en dernier (blanc très couvrant)`);
+  if (AN.cmykDark) lines.push("CMJN foncé     : sous-couche = clarté de l'image, encres C M J = couleur, noir du textile à la place de l'encre noire");
+  if ((S.mode==="sim" || AN.cmykDark) && S.hl) lines.push(`Rehaut         : force ${S.hlStrength} %, à partir de L* ${S.hlStart}, imprimé en dernier (blanc très couvrant)`);
   if (S.underbase) lines.push(`Sous-couche    : ${HT(S.mode) ? `densité ${S.ubDensity} %, ` : ""}rétrécie de ${fmt(S.chokeMm)} mm`);
   if (S.mirror) lines.push("Orientation    : films en miroir");
   if (S.mode==="index") lines.push(`Pixels carrés  : ${S.ppi} ppi (${fmt(25.4/S.ppi,2)} mm)`);
