@@ -925,17 +925,17 @@ const WEDGE=[5,10,20,30,40,50,60,70,80,90,95];
 // Gamme de contrôle tramée dans la marge du haut, avec la même trame et la même compensation que le film.
 function renderWedge(L,P,dst,cw,m){
   if (L.kind!=="halftone") return null;
-  const arm=Math.round(0.45/2.54*S.dpi), avail=cw/2-arm*1.5-m;
+  const arm=Math.round(0.45/2.54*S.dpi), gx=m+Math.round(0.35/2.54*S.dpi), avail=cw/2-arm*1.5-gx;
   const sz=Math.floor(Math.min(0.6/2.54*S.dpi, avail/WEDGE.length)), y0=Math.round(0.2/2.54*S.dpi);
   if (sz<8) return null;
   const s=screenOf(L,P);
   WEDGE.forEach((pc,k)=>{
-    const x0=m+k*sz;
+    const x0=gx+k*sz;
     for (let y=y0;y<y0+sz;y++) for (let x=x0;x<x0+sz;x++){
       if (dotInk(pc/100,x-m,y-m,s)){ const o=(y*cw+x)*4; dst[o]=0; dst[o+1]=0; dst[o+2]=0; }
     }
   });
-  return {x:m, y:y0, sz};
+  return {x:gx, y:y0, sz};
 }
 function flipH(d,w,h){
   for (let y=0;y<h;y++){ let a=y*w*4, b=a+(w-1)*4; while(a<b){ for (let c=0;c<4;c++){ const t=d[a+c]; d[a+c]=d[b+c]; d[b+c]=t; } a+=4; b-=4; } }
@@ -1162,10 +1162,25 @@ function drawMarks(x,cw,chh,m,L,i,P,wg){
   x.strokeStyle="#000"; x.fillStyle="#000"; x.lineWidth=lw;
   const cross=(cx,cy)=>{ x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.moveTo(cx-arm,cy); x.lineTo(cx+arm,cy); x.moveTo(cx,cy-arm); x.lineTo(cx,cy+arm); x.stroke(); };
   cross(cw/2,m/2); cross(cw/2,chh-m/2); cross(m/2,chh/2); cross(cw-m/2,chh/2);
+  // traits de coupe aux angles de l'image : 0,2 mm de blanc puis 0,9 cm de trait, dans la marge
+  const cm=v=>Math.round(v/2.54*S.dpi), gap=cm(0.2), len=cm(0.9), x0=m, y0=m, x1=cw-m, y1=chh-m;
+  x.beginPath();
+  [[x0,y0,-1,-1],[x1,y0,1,-1],[x0,y1,-1,1],[x1,y1,1,1]].forEach(([cx,cy,sx,sy])=>{
+    x.moveTo(cx+sx*gap,cy); x.lineTo(cx+sx*(gap+len),cy);   // horizontal, vers l'extérieur
+    x.moveTo(cx,cy+sy*gap); x.lineTo(cx,cy+sy*(gap+len));   // vertical, vers l'extérieur
+  });
+  // repères d'axe : un trait au milieu de chaque bord de l'image, pour centrer le visuel sur le textile
+  const tick=cm(0.3);
+  x.moveTo(cw/2,y0-gap); x.lineTo(cw/2,y0-gap-tick); x.moveTo(cw/2,y1+gap); x.lineTo(cw/2,y1+gap+tick);
+  x.moveTo(x0-gap,chh/2); x.lineTo(x0-gap-tick,chh/2); x.moveTo(x1+gap,chh/2); x.lineTo(x1+gap+tick,chh/2);
+  x.stroke();
+  const fsA=Math.max(9,cm(0.16));
+  x.font=`600 ${fsA}px "IBM Plex Mono", ui-monospace, monospace`; x.textBaseline="middle"; x.textAlign="left";
+  x.fillText("AXE", cw/2+cm(0.12), y0-gap-tick/2);
   const fs=Math.round(0.28/2.54*S.dpi);
   x.font=`500 ${fs}px "IBM Plex Mono", ui-monospace, monospace`; x.textBaseline="middle";
   const txt=`${String(i+1).padStart(2,"0")} ${L.name} · ${rgb2hex(L.rgb).toUpperCase()} · ${kindLabel(L)} · ${fmt(S.widthCm)} cm @ ${S.dpi} dpi${S.mirror?" · miroir":""}`;
-  x.fillText(txt, m, chh-m/2, Math.max(50, cw/2-m-arm*1.5));
+  x.fillText(txt, m+cm(0.35), chh-m/2, Math.max(50, cw/2-m-cm(0.35)-arm*1.5));
   if (wg){
     const fs2=Math.max(9,Math.round(0.17/2.54*S.dpi));
     x.font=`500 ${fs2}px "IBM Plex Mono", ui-monospace, monospace`; x.textAlign="center"; x.textBaseline="top";
@@ -1202,7 +1217,8 @@ function fiche(P){
   if (AN.absorbed.length) lines.push("", "Couleurs rendues par le textile (sans écran) : "+AN.absorbed.map(c=>colorName(c)+" "+rgb2hex(c).toUpperCase()).join(", "));
   lines.push("","CONSEILS");
   lines.push("- Imprimez les films à 100 %, sans mise à l'échelle, sur film transparent, encre noire bien couvrante.");
-  lines.push("- Calez chaque écran sur les 4 repères de repérage avant de tirer.");
+  lines.push("- Calez chaque écran sur les 4 croix de repérage avant de tirer.");
+  lines.push("- Traits de coupe aux 4 angles de l'image ; les traits « AXE » au milieu de chaque bord donnent le centre du visuel pour le placer sur le textile.");
   if (S.mode==="cmyk") lines.push("- Angles décalés de 7,5° par rapport aux angles offset pour limiter le moiré avec le tissage du tamis.");
   if (S.mode==="sim"||S.mode==="cmyk") lines.push("- Tamis conseillé : environ 4 à 5 fois la linéature (en fils/pouce). Tension élevée et racle dure pour garder les points.");
   if (S.underbase) lines.push("- Flashez la sous-couche (séchage de surface) avant les couleurs.");

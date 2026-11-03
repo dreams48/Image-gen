@@ -149,7 +149,7 @@ Réglages pour la production (sortie des films sans RIP) :
 Options communes : couleur du textile (la couleur la plus proche du textile peut être remplacée par le textile, ce qui économise un écran), sous-couche blanche rétrécie d'environ 0,2 mm avec flash sur textile foncé, retrait automatique d'un fond uni, largeur imprimée et résolution des films (150 à 360 dpi). La loupe montre une zone réelle de 2 × 2 cm du film, avec ses points de trame.
 
 L'export ZIP contient :
-- un PNG noir sur blanc par écran, numéroté dans l'ordre d'impression, avec la résolution inscrite dans le fichier (chunk pHYs), quatre repères de calage et une légende (couleur, trame, format) ;
+- un PNG noir sur blanc par écran, numéroté dans l'ordre d'impression, avec la résolution inscrite dans le fichier (chunk pHYs), quatre croix de calage, des traits de coupe aux angles de l'image, des repères d'axe au milieu de chaque bord (pour centrer le visuel sur le textile) et une légende (couleur, trame, format) ;
 - `apercu-impression.png`, le rendu simulé sur le textile ;
 - `fiche-impression.txt` : ordre d'impression, couleurs, couverture, tamis conseillé (fils/cm) et conseils.
 
