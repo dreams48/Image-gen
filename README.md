@@ -134,6 +134,7 @@ Le schéma final montre les 4D en boucle. La page fonctionne en clair et en somb
 | Tons directs | Réduit l'image à 2–8 couleurs (k-moyennes en Lab), nettoie les petits îlots | Aplats aux contours lissés |
 | Quadrichromie CMJN | Conversion CMJN avec remplacement par le noir (GCR) réglable | Trame ronde, angles 7,5° / 52,5° / 22,5° / 82,5° (décalés de 7,5° contre le moiré avec le tamis) |
 | Quadri simulée | 3–12 encres opaques tirées de l'image ; chaque point est reproduit par le mélange d'au plus 3 encres (ou du textile) le plus proche dans Lab | Trame ronde ou elliptique (15°, 22,5°, 25° ou 45°), blanc de rehaut imprimé en dernier |
+| Demi-tons 2 calques | Image en niveaux de gris (contraste, luminosité, netteté réglables) répartie sur une rampe textile → gris → encre du dessus | Deux trames décalées de 30° : gris + blanc sur textile foncé, gris + noir sur textile clair, sans sous-couche |
 | Couleurs indexées | 3–12 couleurs, diffusion d'erreur (Floyd–Steinberg serpentin) | Pixels carrés de 100 à 300 ppi |
 
 La taille de l'image fait référence : l'appli en déduit le format de film à utiliser (A4, A3 ou A3+, en portrait ou en paysage, sinon un rouleau), marges de 1,6 cm comprises. Le format apparaît sous les réglages, dans l'aperçu et dans la fiche d'impression.
@@ -141,6 +142,7 @@ La taille de l'image fait référence : l'appli en déduit le format de film à 
 Réglages pour la production (sortie des films sans RIP) :
 - **Encres de quadri simulée** : la palette proposée se modifie. On peut fixer une encre (elle reste d'une image à l'autre, dans le navigateur), la renommer, changer sa couleur, en ajouter ou en retirer (une couleur retirée n'est plus recréée pour cette image).
 - **Trame** : compensation de l'engraissement (modèle t + 4G·t(1−t), réglé par l'écart mesuré à 50 %), point mini et maxi, point rond ou elliptique.
+- **Calque de rehaut (highlight)** en quadri simulée : un blanc dédié, imprimé en dernier, tiré du poids du blanc dans le mélange et de la clarté au-dessus d'un seuil (L*), avec une force réglable. Aucune encre automatique ne double le blanc quand il est actif.
 - **Sous-couche** : pleine sous les encres claires, réduite jusqu'à 20 % sous les foncées, densité globale réglable et rétrécissement de 0 à 0,5 mm.
 - **Films** : 600 dpi par défaut (cellule de 12 px à 50 lpi, pour des points ronds), 720 dpi possible ; gamme de contrôle 5–95 % dans la marge de chaque film tramé ; films en miroir en option.
 

@@ -37,6 +37,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
 .app{max-width:1440px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px}
 h1,h2,h3{text-wrap:balance;margin:0}
@@ -160,6 +161,7 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
 .linkbtn.danger:hover{border-color:var(--warn);color:var(--warn)}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .sub{display:flex;flex-direction:column;gap:5px;min-width:0}
+.mode-wide{grid-column:1/-1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -200,6 +202,10 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
             <svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><g fill="#2f3dc2"><rect x="0" y="0" width="6" height="6"/><rect x="12" y="0" width="6" height="6"/><rect x="6" y="6" width="6" height="6"/><rect x="24" y="6" width="6" height="6"/><rect x="0" y="12" width="6" height="6"/><rect x="18" y="12" width="6" height="6"/><rect x="36" y="0" width="6" height="6"/></g><g fill="#f2b51d"><rect x="6" y="0" width="6" height="6"/><rect x="18" y="0" width="6" height="6"/><rect x="12" y="12" width="6" height="6"/><rect x="30" y="12" width="6" height="6"/><rect x="36" y="6" width="6" height="6"/></g><g fill="currentColor"><rect x="24" y="0" width="6" height="6"/><rect x="12" y="6" width="6" height="6"/><rect x="30" y="0" width="6" height="6"/><rect x="6" y="12" width="6" height="6"/><rect x="24" y="12" width="6" height="6"/></g></svg>
             <b>Couleurs indexées</b><span>Pixels carrés, rendu doux</span>
           </button>
+          <button class="mode mode-wide" type="button" role="radio" data-mode="duo" aria-checked="false">
+            <svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><rect width="44" height="18" rx="3" fill="#1c1c1f"/><g fill="#8d8d8f"><circle cx="5" cy="5" r="2.6"/><circle cx="5" cy="13" r="2.6"/><circle cx="13" cy="9" r="2.3"/><circle cx="21" cy="5" r="1.8"/><circle cx="21" cy="13" r="1.8"/></g><g fill="#fff"><circle cx="29" cy="9" r="2"/><circle cx="35" cy="5" r="2.6"/><circle cx="35" cy="13" r="2.6"/><circle cx="41" cy="9" r="3"/></g></svg>
+            <b>Demi-tons 2 calques</b><span>Gris + blanc sur noir, gris + noir sur blanc : rendu premium</span>
+          </button>
         </div>
         <div class="modeinfo" id="modeinfo"></div>
       </section>
@@ -210,7 +216,7 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
           <div class="row-head"><label for="k" id="k-label">Nombre de couleurs</label><output id="k-out" for="k"></output></div>
           <input type="range" id="k" min="2" max="8" step="1">
         </div>
-        <div class="row" data-modes="cmyk sim">
+        <div class="row" data-modes="cmyk sim duo">
           <div class="row-head"><label for="lpi">Linéature de trame</label><output id="lpi-out" for="lpi"></output></div>
           <input type="range" id="lpi" min="30" max="85" step="5">
           <span class="hint" id="lpi-hint"></span>
@@ -220,20 +226,20 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
           <input type="range" id="gcr" min="0" max="100" step="5">
           <span class="hint">Plus le noir remplace les gris, moins on dépose d'encre et plus les ombres restent neutres.</span>
         </div>
-        <div class="row" data-modes="sim">
+        <div class="row" data-modes="sim duo">
           <div class="row-head"><label for="angle">Angle de trame</label></div>
           <div class="field"><select id="angle"><option value="15">15°</option><option value="22.5">22,5° (courant)</option><option value="25">25°</option><option value="45">45°</option></select></div>
         </div>
-        <div class="row" data-modes="cmyk sim">
+        <div class="row" data-modes="cmyk sim duo">
           <div class="row-head"><label for="shape">Forme du point</label></div>
           <div class="field"><select id="shape"><option value="round">Rond</option><option value="ellipse">Elliptique (saut plus doux vers 50 %)</option></select></div>
         </div>
-        <div class="row" data-modes="cmyk sim">
+        <div class="row" data-modes="cmyk sim duo">
           <div class="row-head"><label for="gain">Engraissement à compenser</label><output id="gain-out" for="gain"></output></div>
           <input type="range" id="gain" min="0" max="30" step="1">
           <span class="hint">Imprimez un essai, mesurez la case 50 % de la gamme de contrôle et reportez l'écart ici : les films sont allégés d'autant.</span>
         </div>
-        <div class="row" data-modes="cmyk sim">
+        <div class="row" data-modes="cmyk sim duo">
           <div class="duo">
             <div class="sub"><div class="row-head"><label for="minDot">Point mini</label><output id="minDot-out" for="minDot"></output></div><input type="range" id="minDot" min="0" max="15" step="1"></div>
             <div class="sub"><div class="row-head"><label for="maxDot">Point maxi</label><output id="maxDot-out" for="maxDot"></output></div><input type="range" id="maxDot" min="85" max="100" step="1"></div>
@@ -244,13 +250,36 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
           <div class="row-head"><label for="ppi">Taille des pixels carrés</label><output id="ppi-out" for="ppi"></output></div>
           <input type="range" id="ppi" min="100" max="300" step="25">
         </div>
+        <div class="row" data-modes="sim">
+          <label class="check"><input type="checkbox" id="hl"> <span>Calque de rehaut (highlight) : un blanc dédié, imprimé en dernier</span></label>
+        </div>
+        <div class="row" data-modes="sim">
+          <div class="duo">
+            <div class="sub"><div class="row-head"><label for="hlStrength">Force du rehaut</label><output id="hlStrength-out" for="hlStrength"></output></div><input type="range" id="hlStrength" min="0" max="100" step="5"></div>
+            <div class="sub"><div class="row-head"><label for="hlStart">À partir de</label><output id="hlStart-out" for="hlStart"></output></div><input type="range" id="hlStart" min="50" max="95" step="5"></div>
+          </div>
+          <span class="hint">Le rehaut renforce les blancs et les hautes lumières au-dessus de la clarté choisie (L*). Tirez-le avec un blanc très couvrant, sur un tamis un peu plus ouvert.</span>
+        </div>
+        <div class="row" data-modes="duo">
+          <div class="duo">
+            <div class="sub"><div class="row-head"><label for="duoContrast">Contraste</label><output id="duoContrast-out" for="duoContrast"></output></div><input type="range" id="duoContrast" min="-50" max="60" step="5"></div>
+            <div class="sub"><div class="row-head"><label for="duoBright">Luminosité</label><output id="duoBright-out" for="duoBright"></output></div><input type="range" id="duoBright" min="-30" max="30" step="5"></div>
+          </div>
+        </div>
+        <div class="row" data-modes="duo">
+          <div class="duo">
+            <div class="sub"><div class="row-head"><label for="duoGrey">Gris (clarté L*)</label><output id="duoGrey-out" for="duoGrey"></output></div><input type="range" id="duoGrey" min="25" max="75" step="5"></div>
+            <div class="sub"><div class="row-head"><label for="duoSharp">Netteté</label><output id="duoSharp-out" for="duoSharp"></output></div><input type="range" id="duoSharp" min="0" max="100" step="10"></div>
+          </div>
+          <span class="hint" id="duo-hint"></span>
+        </div>
         <div class="row" data-modes="spot">
           <label class="check"><input type="checkbox" id="clean"> <span>Nettoyer les petits îlots de couleur</span></label>
         </div>
         <div class="row" data-modes="spot sim index">
           <label class="check"><input type="checkbox" id="absorb"> <span>Laisser le textile remplacer la couleur la plus proche (un écran de moins)</span></label>
         </div>
-        <div class="row" data-modes="spot cmyk sim index">
+        <div class="row" data-modes="spot cmyk sim index duo">
           <label class="check"><input type="checkbox" id="removeBg"> <span>Retirer le fond uni de l'image</span></label>
         </div>
       </section>
@@ -259,7 +288,7 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
         <h2 class="eyebrow" id="tex-label">Textile</h2>
         <div class="textiles" role="radiogroup" aria-labelledby="tex-label" id="textiles"></div>
         <div class="texname" id="texname"></div>
-        <div class="row" style="margin-top:12px">
+        <div class="row" style="margin-top:12px" data-modes="spot cmyk sim index">
           <label class="check"><input type="checkbox" id="underbase"> <span>Sous-couche blanche, suivie d'un flash</span></label>
           <span class="hint">Indispensable sur textile foncé : elle fait ressortir les couleurs.</span>
         </div>
@@ -268,7 +297,7 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
           <input type="range" id="ubDensity" min="40" max="100" step="5">
           <span class="hint">Pleine sous les encres claires, réduite sous les encres foncées : moins d'encre et un toucher plus souple.</span>
         </div>
-        <div class="row">
+        <div class="row" data-modes="spot cmyk sim index">
           <div class="row-head"><label for="choke">Rétrécissement (choke)</label></div>
           <div class="field"><select id="choke"><option value="0">Aucun</option><option value="0.1">0,1 mm</option><option value="0.2">0,2 mm</option><option value="0.3">0,3 mm</option><option value="0.5">0,5 mm</option></select></div>
         </div>
@@ -357,6 +386,7 @@ const MODES = {
   spot:{label:"Tons directs", desc:"Une encre opaque, mélangée à l'avance, par couleur. Les aplats sont nets, sans trame.", pour:"logos, texte, illustrations à plat", textile:"tous", ecrans:"1 à 6", kMin:2, kMax:8, kLabel:"Nombre de couleurs"},
   cmyk:{label:"Quadrichromie CMJN", desc:"Quatre encres translucides tramées (cyan, magenta, jaune, noir) qui se mélangent à l'œil.", pour:"photos et dégradés", textile:"blanc ou très clair", ecrans:"4 (+ sous-couche sur foncé)"},
   sim:{label:"Quadri simulée", desc:"Des encres opaques tirées de l'image, que vous pouvez fixer, changer ou compléter. Chaque point est reproduit par 3 encres au plus, tramées au même angle sur une sous-couche blanche.", pour:"photos et illustrations détaillées", textile:"foncé surtout", ecrans:"6 à 12", kMin:3, kMax:12, kLabel:"Nombre d'encres"},
+  duo:{label:"Demi-tons 2 calques", desc:"L'image passée en niveaux de gris puis rendue par deux trames décalées de 30° : un gris pour les tons moyens et un blanc pour les hautes lumières sur textile foncé, un gris et un noir pour les ombres sur textile clair. Sans sous-couche : toucher léger, rendu premium.", pour:"photos, portraits, rendu vintage ou premium", textile:"noir ou blanc", ecrans:"2"},
   index:{label:"Couleurs indexées", desc:"Un nombre limité de couleurs imprimées en pixels carrés de taille fixe, répartis par diffusion d'erreur.", pour:"images détaillées, rendu doux", textile:"clair ou foncé", ecrans:"4 à 12", kMin:3, kMax:12, kLabel:"Nombre de couleurs"},
 };
 const MESH = [34,43,48,55,61,68,77,90,100,120,140,150];
@@ -377,13 +407,15 @@ function filmFormat(widthCm,heightCm){
 }
 
 const S = {
-  mode:"sim", k:{spot:4, sim:6, index:8}, lpi:{cmyk:55, sim:50}, gcr:60, ppi:150,
+  mode:"sim", k:{spot:4, sim:6, index:8}, lpi:{cmyk:55, sim:50, duo:45}, gcr:60, ppi:150,
   clean:true, absorb:true, removeBg:true,
   textile:"#1c1c1f", textileName:"Noir", underbase:true,
   widthCm:25, dpi:600, view:"print", srcName:"exemple-badge",
   simAngle:22.5, dotShape:"round", gain:20, minDot:5, maxDot:95, ubDensity:85, chokeMm:0.2, mirror:false, wedge:true,
   simInks:[],   // encres fixées par l'utilisateur, gardées d'une image à l'autre
-  simExcluded:[] // couleurs retirées pour l'image en cours
+  simExcluded:[], // couleurs retirées pour l'image en cours
+  hl:true, hlStrength:60, hlStart:70,                      // calque de rehaut (quadri simulée)
+  duoContrast:10, duoBright:0, duoGrey:50, duoSharp:40     // demi-tons 2 calques
 };
 const INK_KEY="atelier-separation-encres";
 try {
@@ -604,9 +636,13 @@ function buildSim(img,texLab,tex){
   if (useTex) fixed.push({lab:texLab, rgb:tex, ref:-1});   // le textile compte comme une couleur, sans encre
   // une couleur retirée garde sa place dans le calcul pour qu'aucune encre automatique ne la recrée, puis elle est écartée
   S.simExcluded.forEach(rgb=>fixed.push({lab:labOf(rgb), rgb, ref:-3}));
+  // avec le rehaut, le blanc a son propre calque : aucune encre automatique ne doit le doubler
+  const WHITE=[255,255,255], whiteLab=labOf(WHITE);
+  if (S.hl) fixed.push({lab:whiteLab, rgb:WHITE, ref:-4});
   const pal=kmeans(img, Math.max(S.k.sim,S.simInks.length)+fixed.length-S.simInks.length, 23, fixed);
   const inks=pal.filter(p=>p.ref>=0 || p.ref===-2), k=inks.length;
-  const cand=flatLab([...inks.map(p=>p.lab), ...(useTex?[texLab]:[])]), n=cand.length/3;
+  const cand=flatLab([...inks.map(p=>p.lab), ...(useTex?[texLab]:[]), ...(S.hl?[whiteLab]:[])]), n=cand.length/3;
+  const wIdx= S.hl ? n-1 : -1, hw= S.hl ? new Uint8Array(N) : null;
   const covs=inks.map(()=>new Uint8Array(N));
   for (let i=0;i<N;i++){
     if(!alpha[i]) continue; const p=i*3;
@@ -621,6 +657,7 @@ function buildSim(img,texLab,tex){
     if (i1>=0 && i1<k) covs[i1][i]=Math.round(w[0]*255);
     if (i2>=0 && i2<k) covs[i2][i]=Math.round(w[1]*255);
     if (i3>=0 && i3<k) covs[i3][i]=Math.round(w[2]*255);
+    if (hw){ hw[i]=Math.round(255*(i1===wIdx?w[0]:i2===wIdx?w[1]:i3===wIdx?w[2]:0)); }
   }
   const lpi=S.lpi.sim;
   const layers=inks.map((p,c)=>{
@@ -632,7 +669,52 @@ function buildSim(img,texLab,tex){
   const whites=layers.filter(isW), others=layers.filter(l=>!isW(l));
   others.sort((a,b)=>lum(b.rgb)-lum(a.rgb));
   whites.forEach(l=>{ if(l.lockRef<0) l.name="Blanc de rehaut"; });
-  return {layers:[...others,...whites], absorbed:[]};
+  const out=[...others,...whites];
+  if (S.hl){
+    const hc=new Uint8Array(N), st=S.hlStart, mult=0.4+1.2*S.hlStrength/100;
+    for (let i=0;i<N;i++){
+      if(!alpha[i]) continue;
+      let t=(lab[i*3]-st)/(100-st); t= t<=0 ? 0 : t>=1 ? 1 : t*t*(3-2*t);
+      hc[i]=Math.min(255,Math.round(Math.max(hw[i]/255,t)*mult*255));
+    }
+    out.push(mkLayer(WHITE,"halftone",hc,{name:"Blanc de rehaut (highlight)", lpi, angle:S.simAngle, blend:"top", isHighlight:true}));
+  }
+  return {layers:out, absorbed:[]};
+}
+
+function greyOfL(L){ // gris neutre de clarté L* donnée
+  const fy=(L+16)/116, Y= fy>0.206893 ? fy*fy*fy : (fy-16/116)/7.787;
+  const v= Y<=0.0031308 ? 12.92*Y : 1.055*Math.pow(Y,1/2.4)-0.055, c=Math.round(Math.max(0,Math.min(1,v))*255);
+  return [c,c,c];
+}
+function buildDuo(img,tex,texLab){
+  const {W,H,N,lab,alpha}=img, dark=texLab[0]<50;
+  const y=new Float32Array(N), c=S.duoContrast/100, b=S.duoBright/100;
+  for (let i=0;i<N;i++){ let v=lab[i*3]/100+b; v=(v-0.5)*(1+c)+0.5; y[i]= v<0?0: v>1?1: v; }
+  if (S.duoSharp>0){  // accentuation (masque flou) pour garder le détail dans la trame
+    const a=S.duoSharp/100*1.5, bl=new Float32Array(N);
+    for (let yy=0;yy<H;yy++) for (let x=0;x<W;x++){
+      let s=0,n=0; for (let dy=-2;dy<=2;dy++){ const r=yy+dy; if(r<0||r>=H) continue; for (let dx=-2;dx<=2;dx++){ const q=x+dx; if(q<0||q>=W) continue; s+=y[r*W+q]; n++; } }
+      bl[yy*W+x]=s/n;
+    }
+    for (let i=0;i<N;i++){ const v=y[i]+a*(y[i]-bl[i]); y[i]= v<0?0: v>1?1: v; }
+  }
+  const base=texLab[0]/100, mid=S.duoGrey/100, top= dark ? 1 : 0.1;
+  const grey=greyOfL(S.duoGrey), topRgb= dark ? [255,255,255] : [26,26,28];
+  const cg=new Uint8Array(N), ct=new Uint8Array(N);
+  for (let i=0;i<N;i++){
+    if(!alpha[i]) continue; const v=y[i];
+    // rampe textile → gris → encre du dessus, dans le sens de la clarté
+    const toMid=(v-base)/(mid-base), toTop=(v-mid)/(top-mid);
+    if (toMid<=1){ cg[i]=Math.round(Math.max(0,toMid)*255); }
+    else { const t=Math.min(1,toTop); ct[i]=Math.round(t*255); cg[i]=Math.round((1-t)*255); }
+  }
+  const lpi=S.lpi.duo, a0=S.simAngle;
+  const layers=[
+    mkLayer(grey,"halftone",cg,{name:"Gris (tons moyens)", lpi, angle:a0, blend:"mix"}),
+    mkLayer(topRgb,"halftone",ct,{name: dark ? "Blanc (hautes lumières)" : "Noir (ombres)", lpi, angle:(a0+30)%90, blend:"mix"}),
+  ];
+  return {layers, absorbed:[], duoDark:dark};
 }
 
 function buildIndex(img,texLab,tex){
@@ -708,22 +790,23 @@ function analyze(){
   if (S.mode==="spot") res=buildSpot(img,texLab);
   else if (S.mode==="cmyk") res=buildCmyk(img);
   else if (S.mode==="sim") res=buildSim(img,texLab,tex);
+  else if (S.mode==="duo") res=buildDuo(img,tex,texLab);
   else res=buildIndex(img,texLab,tex);
   const layers=res.layers;
-  if (S.underbase && layers.length) layers.unshift(buildUnderbase(img,layers,S.mode));
+  if (S.underbase && S.mode!=="duo" && layers.length) layers.unshift(buildUnderbase(img,layers,S.mode));
   let opaque=0; for (let i=0;i<img.N;i++) opaque+=img.alpha[i];
   for (const L of layers){ let s=0; for (let i=0;i<img.N;i++) s+=L.cov[i]; L.coverage= opaque ? s/(255*opaque) : 0; }
   const seen={};
   for (const L of layers){ seen[L.name]=(seen[L.name]||0)+1; if(seen[L.name]>1) L.name+=" "+seen[L.name]; }
-  AN={W,H,alpha:img.alpha,layers,mode:S.mode,bgRemoved:img.bgRemoved,absorbed:res.absorbed,opaque,ms:performance.now()-t0};
+  AN={W,H,alpha:img.alpha,layers,mode:S.mode,bgRemoved:img.bgRemoved,absorbed:res.absorbed,duoDark:res.duoDark,opaque,ms:performance.now()-t0};
   renderAll();
 }
 
 /* ---------- Aperçu ---------- */
 function composite(){
   const {W,H,alpha,layers}=AN, N=W*H, out=new ImageData(W,H), o=out.data, tex=hex2rgb(S.textile);
-  const vis=layers.filter(l=>l.visible).map(l=>({cov:l.cov, mul:l.blend==="multiply", mix:l.blend==="mix", r:l.rgb[0], g:l.rgb[1], b:l.rgb[2], fr:1-l.rgb[0]/255, fg:1-l.rgb[1]/255, fb:1-l.rgb[2]/255}));
-  const seq=vis.filter(l=>!l.mix), mix=vis.filter(l=>l.mix);
+  const vis=layers.filter(l=>l.visible).map(l=>({cov:l.cov, mul:l.blend==="multiply", mix:l.blend==="mix", top:l.blend==="top", r:l.rgb[0], g:l.rgb[1], b:l.rgb[2], fr:1-l.rgb[0]/255, fg:1-l.rgb[1]/255, fb:1-l.rgb[2]/255}));
+  const seq=vis.filter(l=>!l.mix && !l.top), mix=vis.filter(l=>l.mix), topL=vis.filter(l=>l.top);
   for (let i=0;i<N;i++){
     let r=tex[0], g=tex[1], b=tex[2];
     if (alpha[i]){
@@ -738,6 +821,7 @@ function composite(){
         if (s>1){ r=mr/s; g=mg/s; b=mb/s; }
         else if (s>0){ r=r*(1-s)+mr; g=g*(1-s)+mg; b=b*(1-s)+mb; }
       }
+      for (const L of topL){ const c=L.cov[i]; if(!c) continue; const a=c/255; r+=(L.r-r)*a; g+=(L.g-g)*a; b+=(L.b-b)*a; }
     }
     const p=i*4; o[p]=r; o[p+1]=g; o[p+2]=b; o[p+3]=255;
   }
@@ -826,11 +910,13 @@ function kindLabel(L){
   if (L.kind==="index") return `Pixels ${S.ppi} ppi`;
   return `${L.lpi} lpi · ${fmt(L.angle)}°${S.dotShape==="ellipse"?" · ellipt.":""}`;
 }
+const HT = m => m==="cmyk"||m==="sim"||m==="duo";   // styles à films tramés
 const nearestMesh = v => MESH.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?b:a);
 function meshFor(L){
   if (L.kind==="solid") return L.isUnderbase ? "43 à 55 fils/cm" : "55 à 77 fils/cm";
   if (L.kind==="index") return L.isUnderbase ? "55 à 77 fils/cm" : "90 à 120 fils/cm";
   if (L.isUnderbase) return `${nearestMesh(L.lpi*2.5/2.54)} à ${nearestMesh(L.lpi*3.5/2.54)} fils/cm`;
+  if (L.isHighlight) return `${nearestMesh(L.lpi*3.5/2.54)} à ${nearestMesh(L.lpi*4/2.54)} fils/cm`;
   const lo=nearestMesh(L.lpi*4/2.54), hi=nearestMesh(L.lpi*5/2.54);
   return lo===hi ? `${lo} fils/cm` : `${lo} à ${hi} fils/cm`;
 }
@@ -846,7 +932,7 @@ function renderControls(){
   info.append(dl);
   document.querySelectorAll("[data-modes]").forEach(r=>{ r.hidden=!r.dataset.modes.split(" ").includes(S.mode); });
   if (M.kMin){ const k=$("#k"); const mn= S.mode==="sim" ? Math.max(M.kMin,S.simInks.length) : M.kMin; if(S.k[S.mode]<mn) S.k[S.mode]=mn; k.min=mn; k.max=M.kMax; k.value=S.k[S.mode]; $("#k-out").textContent=S.k[S.mode]; $("#k-label").textContent=M.kLabel; }
-  if (S.mode==="cmyk"||S.mode==="sim"){
+  if (HT(S.mode)){
     const l=S.lpi[S.mode]; $("#lpi").value=l; $("#lpi-out").textContent=l+" lpi";
     $("#lpi-hint").textContent=`Règle d'atelier : tamis ≈ 4 à 5 × la linéature, soit ${nearestMesh(l*4/2.54)} à ${nearestMesh(l*5/2.54)} fils/cm (${l*4} à ${l*5} fils/pouce).`;
   }
@@ -859,6 +945,14 @@ function renderControls(){
   $("#minDot").value=S.minDot; $("#minDot-out").textContent=S.minDot+" %";
   $("#maxDot").value=S.maxDot; $("#maxDot-out").textContent=S.maxDot+" %";
   $("#ubDensity").value=S.ubDensity; $("#ubDensity-out").textContent=S.ubDensity+" %";
+  $("#hl").checked=S.hl; $("#hlStrength").value=S.hlStrength; $("#hlStrength-out").textContent=S.hlStrength+" %";
+  $("#hlStart").value=S.hlStart; $("#hlStart-out").textContent="L* "+S.hlStart;
+  $("#duoContrast").value=S.duoContrast; $("#duoContrast-out").textContent=(S.duoContrast>0?"+":"")+S.duoContrast;
+  $("#duoBright").value=S.duoBright; $("#duoBright-out").textContent=(S.duoBright>0?"+":"")+S.duoBright;
+  $("#duoGrey").value=S.duoGrey; $("#duoGrey-out").textContent="L* "+S.duoGrey;
+  $("#duoSharp").value=S.duoSharp; $("#duoSharp-out").textContent=S.duoSharp+" %";
+  const dk=labOf(hex2rgb(S.textile))[0]<50;
+  $("#duo-hint").textContent= dk ? "Textile foncé : gris pour les tons moyens, blanc pour les hautes lumières. Un gris plus clair éclaircit l'ensemble." : "Textile clair : gris pour les tons moyens, noir pour les ombres. Un gris plus foncé assombrit l'ensemble.";
   $("#choke").value=String(S.chokeMm); $("#mirror").checked=S.mirror; $("#wedge").checked=S.wedge;
   $("#add-ink").hidden= S.mode!=="sim";
   $("#films-hint").textContent= S.mode==="sim" ? "Changez une encre ou fixez-la : la séparation est recalculée avec vos encres." : "Cliquez sur une pastille de couleur pour changer l'encre.";
@@ -876,7 +970,7 @@ function renderInfo(){
   $("#film-size").textContent=`Image ${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm · film ${fmt(F.fw)} × ${fmt(F.fh)} cm avec repères · à imprimer sur ${F.label}`;
   const st=$("#stats"); st.textContent="";
   st.append(chip("Écrans",String(L.length)), chip("Flash",String(flashes)), chip("Image",`${fmt(S.widthCm)} × ${fmt(P.heightCm)} cm`), chip("Film",F.label));
-  if (S.mode==="cmyk"||S.mode==="sim") st.append(chip("Trame",`${S.lpi[S.mode]} lpi`), chip("Engraissement compensé",`+${S.gain} %`));
+  if (HT(S.mode)) st.append(chip("Trame",`${S.lpi[S.mode]} lpi`), chip("Engraissement compensé",`+${S.gain} %`));
   if (S.mode==="sim" && S.simInks.length) st.append(chip("Encres fixées",String(S.simInks.length)));
   const w=$("#warns"); w.textContent="";
   const add=(html,cls="warn")=>{ const d=document.createElement("div"); d.className=cls; d.innerHTML=html; w.append(d); };
@@ -886,14 +980,19 @@ function renderInfo(){
   if (dark && !S.underbase && S.mode!=="cmyk") add("<strong>Pas de sous-couche.</strong> Sur textile foncé, les couleurs claires vont paraître ternes sans sous-couche blanche.");
   if (S.mode==="spot" && L.length>6) add(`<strong>${L.length} écrans en tons directs.</strong> Au-delà de 6, le calage devient long et coûteux. Réduisez le nombre de couleurs si possible.`);
   if (L.length>8) add(`Vérifiez que votre carrousel a au moins ${L.length} stations, plus une pour le flash.`);
-  if ((S.mode==="cmyk"||S.mode==="sim") && S.dpi/S.lpi[S.mode]<4) add("<strong>Trame trop fine pour la résolution choisie.</strong> Montez la résolution des films ou baissez la linéature.");
-  else if ((S.mode==="cmyk"||S.mode==="sim") && S.dpi/S.lpi[S.mode]<10) add(`<strong>Points mal formés à ${S.dpi} dpi.</strong> Une cellule ne fait que ${fmt(S.dpi/S.lpi[S.mode],1)} px : sortez les films à 600 dpi ou plus pour des points bien ronds.`);
+  if ((HT(S.mode)) && S.dpi/S.lpi[S.mode]<4) add("<strong>Trame trop fine pour la résolution choisie.</strong> Montez la résolution des films ou baissez la linéature.");
+  else if ((HT(S.mode)) && S.dpi/S.lpi[S.mode]<10) add(`<strong>Points mal formés à ${S.dpi} dpi.</strong> Une cellule ne fait que ${fmt(S.dpi/S.lpi[S.mode],1)} px : sortez les films à 600 dpi ou plus pour des points bien ronds.`);
   if (S.mode==="sim" && S.simExcluded.length){
     const d=document.createElement("div"); d.className="note absorbed"; d.append(`Couleurs retirées pour cette image (${S.simExcluded.length}) : `);
     S.simExcluded.forEach(c=>{ const dot=document.createElement("i"); dot.className="dot"; dot.style.background=rgb2hex(c); dot.title=rgb2hex(c).toUpperCase(); d.append(dot); });
     const bt=document.createElement("button"); bt.type="button"; bt.className="linkbtn"; bt.textContent="Rétablir";
     bt.addEventListener("click",()=>{ S.k.sim=Math.min(MODES.sim.kMax, S.k.sim+S.simExcluded.length); S.simExcluded=[]; scheduleAnalyze(); });
     d.append(" ",bt); w.append(d);
+  }
+  if (S.mode==="duo"){
+    const tl=labOf(hex2rgb(S.textile))[0];
+    if (tl>25 && tl<80) add("<strong>Textile ni noir ni blanc.</strong> Les demi-tons 2 calques sont prévus pour du noir (ou très foncé) ou du blanc (ou très clair) : sur ce textile, le contraste sera faible.");
+    else add(AN.duoDark ? "Demi-tons sur textile foncé : le textile fait les noirs, le gris les tons moyens, le blanc les hautes lumières. Pas de sous-couche ni de flash obligatoire." : "Demi-tons sur textile clair : le textile fait les blancs, le gris les tons moyens, le noir les ombres.","note");
   }
   if (AN.bgRemoved) add("Le fond uni de l'image a été retiré : à ces endroits, c'est le textile qui apparaît.","note");
   if (AN.absorbed.length){
@@ -920,7 +1019,7 @@ function renderFilms(){
   const ol=$("#films"); ol.textContent="";
   const simMode=AN.mode==="sim";
   AN.layers.forEach((L,i)=>{
-    const editable=simMode && !L.isUnderbase, locked=L.lockRef>=0;
+    const editable=simMode && !L.isUnderbase && !L.isHighlight, locked=L.lockRef>=0;
     const li=document.createElement("li"); li.className="film"+(L.visible?"":" off");
     const th=document.createElement("div"); th.className="film-thumb"; th.append(thumb(L,260));
     const ord=document.createElement("span"); ord.className="order"; ord.textContent=String(i+1).padStart(2,"0"); th.append(ord);
@@ -1044,11 +1143,13 @@ function fiche(P){
   const F=filmFormat(S.widthCm,P.heightCm);
   lines.push(`Films          : ${P.filmW} × ${P.filmH} px à ${S.dpi} dpi (+ marges de 1,6 cm avec repères)`);
   lines.push(`Support        : film transparent ${F.label} (chaque film mesure ${fmt(F.fw)} × ${fmt(F.fh)} cm), imprimé à 100 %`);
-  if (S.mode==="cmyk"||S.mode==="sim"){
+  if (HT(S.mode)){
     lines.push(`Trame          : ${S.lpi[S.mode]} lpi${S.mode==="sim"?` à ${fmt(S.simAngle)}°`:""}, point ${S.dotShape==="ellipse"?"elliptique":"rond"}, mini ${S.minDot} %, maxi ${S.maxDot} %`);
     lines.push(`Engraissement  : +${S.gain} % compensé (un 50 % sort à ${fmt(comp(0.5,S.gain/100)*100,0)} % sur le film)`);
   }
-  if (S.underbase) lines.push(`Sous-couche    : ${S.mode==="cmyk"||S.mode==="sim" ? `densité ${S.ubDensity} %, ` : ""}rétrécie de ${fmt(S.chokeMm)} mm`);
+  if (S.mode==="duo") lines.push(`Demi-tons      : contraste ${S.duoContrast}, luminosité ${S.duoBright}, gris L* ${S.duoGrey}, netteté ${S.duoSharp} %, angles ${fmt(S.simAngle)}° et ${fmt((S.simAngle+30)%90)}°`);
+  if (S.mode==="sim" && S.hl) lines.push(`Rehaut         : force ${S.hlStrength} %, à partir de L* ${S.hlStart}, imprimé en dernier (blanc très couvrant)`);
+  if (S.underbase && S.mode!=="duo") lines.push(`Sous-couche    : ${HT(S.mode) ? `densité ${S.ubDensity} %, ` : ""}rétrécie de ${fmt(S.chokeMm)} mm`);
   if (S.mirror) lines.push("Orientation    : films en miroir");
   if (S.mode==="index") lines.push(`Pixels carrés  : ${S.ppi} ppi (${fmt(25.4/S.ppi,2)} mm)`);
   lines.push(`Textile        : ${S.textileName} (${S.textile.toUpperCase()})`);
@@ -1063,8 +1164,8 @@ function fiche(P){
   lines.push("- Calez chaque écran sur les 4 repères de repérage avant de tirer.");
   if (S.mode==="cmyk") lines.push("- Angles décalés de 7,5° par rapport aux angles offset pour limiter le moiré avec le tissage du tamis.");
   if (S.mode==="sim"||S.mode==="cmyk") lines.push("- Tamis conseillé : environ 4 à 5 fois la linéature (en fils/pouce). Tension élevée et racle dure pour garder les points.");
-  if (S.underbase) lines.push("- Flashez la sous-couche (séchage de surface) avant les couleurs.");
-  if (S.wedge && (S.mode==="cmyk"||S.mode==="sim")) lines.push("- Gamme de contrôle 5 à 95 % en haut à gauche de chaque film tramé : mesurez la case 50 % sur le tirage d'essai et ajustez l'engraissement.");
+  if (S.underbase && S.mode!=="duo") lines.push("- Flashez la sous-couche (séchage de surface) avant les couleurs.");
+  if (S.wedge && (HT(S.mode))) lines.push("- Gamme de contrôle 5 à 95 % en haut à gauche de chaque film tramé : mesurez la case 50 % sur le tirage d'essai et ajustez l'engraissement.");
   lines.push("- Les couleurs affichées sont des approximations écran : choisissez vos encres sur un nuancier.");
   return lines.join("\n");
 }
@@ -1194,6 +1295,8 @@ $("#angle").addEventListener("change",e=>{ S.simAngle=+e.target.value; scheduleA
 $("#shape").addEventListener("change",e=>{ S.dotShape=e.target.value; refreshFilmOnly(); });
 ["gain","minDot","maxDot"].forEach(id=>$("#"+id).addEventListener("input",e=>{ S[id]=+e.target.value; renderControls(); clearTimeout(tP); tP=setTimeout(refreshFilmOnly,120); }));
 $("#ubDensity").addEventListener("input",e=>{ S.ubDensity=+e.target.value; $("#ubDensity-out").textContent=S.ubDensity+" %"; scheduleAnalyze(); });
+$("#hl").addEventListener("change",e=>{ S.hl=e.target.checked; scheduleAnalyze(); });
+["hlStrength","hlStart","duoContrast","duoBright","duoGrey","duoSharp"].forEach(id=>$("#"+id).addEventListener("input",e=>{ S[id]=+e.target.value; renderControls(); scheduleAnalyze(); }));
 $("#choke").addEventListener("change",e=>{ S.chokeMm=+e.target.value; scheduleAnalyze(); });
 $("#mirror").addEventListener("change",e=>{ S.mirror=e.target.checked; });
 $("#wedge").addEventListener("change",e=>{ S.wedge=e.target.checked; });
