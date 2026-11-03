@@ -318,6 +318,9 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
           <label class="check"><input type="checkbox" id="wedge"> <span>Gamme de contrôle 5–95 % dans la marge des films tramés</span></label>
         </div>
         <div class="row">
+          <label class="check"><input type="checkbox" id="transparent"> <span>Fond transparent (encre noire seule, sans fond blanc)</span></label>
+        </div>
+        <div class="row">
           <label class="check"><input type="checkbox" id="mirror"> <span>Films en miroir (lecture inversée)</span></label>
         </div>
       </section>
@@ -411,7 +414,7 @@ const S = {
   clean:true, absorb:true, removeBg:true,
   textile:"#1c1c1f", textileName:"Noir", underbase:true,
   widthCm:25, dpi:600, view:"print", srcName:"exemple-badge",
-  simAngle:22.5, dotShape:"round", gain:20, minDot:5, maxDot:95, ubDensity:85, chokeMm:0.2, mirror:false, wedge:true,
+  simAngle:22.5, dotShape:"round", gain:20, minDot:5, maxDot:95, ubDensity:85, chokeMm:0.2, mirror:false, wedge:true, transparent:true,
   simInks:[],   // encres fixées par l'utilisateur, gardées d'une image à l'autre
   simExcluded:[], // couleurs retirées pour l'image en cours
   hl:true, hlStrength:60, hlStart:70,                      // calque de rehaut (quadri simulée)
@@ -989,7 +992,7 @@ function renderControls(){
   $("#duoSharp").value=S.duoSharp; $("#duoSharp-out").textContent=S.duoSharp+" %";
   const dk=labOf(hex2rgb(S.textile))[0]<50;
   $("#duo-hint").textContent= dk ? "Textile foncé : gris pour les tons moyens, blanc pour les hautes lumières. Un gris plus clair éclaircit l'ensemble." : "Textile clair : gris pour les tons moyens, noir pour les ombres. Un gris plus foncé assombrit l'ensemble.";
-  $("#choke").value=String(S.chokeMm); $("#mirror").checked=S.mirror; $("#wedge").checked=S.wedge;
+  $("#choke").value=String(S.chokeMm); $("#mirror").checked=S.mirror; $("#transparent").checked=S.transparent; $("#wedge").checked=S.wedge;
   $("#add-ink").hidden= S.mode!=="sim";
   $("#films-hint").textContent= S.mode==="sim" ? "Changez une encre ou fixez-la : la séparation est recalculée avec vos encres." : "Cliquez sur une pastille de couleur pour changer l'encre.";
   document.querySelectorAll(".tex").forEach(b=>b.setAttribute("aria-checked", String(b.dataset.hex===S.textile)));
@@ -1207,6 +1210,7 @@ function fiche(P){
   if ((S.mode==="sim" || AN.cmykDark) && S.hl) lines.push(`Rehaut         : force ${S.hlStrength} %, à partir de L* ${S.hlStart}, imprimé en dernier (blanc très couvrant)`);
   if (S.underbase) lines.push(`Sous-couche    : ${HT(S.mode) ? `densité ${S.ubDensity} %, ` : ""}rétrécie de ${fmt(S.chokeMm)} mm`);
   if (S.mirror) lines.push("Orientation    : films en miroir");
+  lines.push(`Fichiers       : PNG ${S.transparent ? "à fond transparent (encre noire seule)" : "noir sur fond blanc"}, résolution inscrite dans le fichier`);
   if (S.mode==="index") lines.push(`Pixels carrés  : ${S.ppi} ppi (${fmt(25.4/S.ppi,2)} mm)`);
   lines.push(`Textile        : ${S.textileName} (${S.textile.toUpperCase()})`);
   lines.push(`Écrans         : ${AN.layers.length}   Flash : ${AN.layers.filter(l=>l.flash).length}`,"");
@@ -1259,6 +1263,7 @@ async function exportZip(){
       }
       const wg= S.wedge ? renderWedge(L,P,id.data,cw,m) : null;
       if (S.mirror) flipH(id.data,cw,chh);
+      if (S.transparent){ const d=id.data; for (let q=0;q<d.length;q+=4) if (d[q]===255){ d[q]=0; d[q+1]=0; d[q+2]=0; d[q+3]=0; } }
       x.putImageData(id,0,0); drawMarks(x,cw,chh,m,L,i,P,wg);
       const bytes=withDpi(new Uint8Array(await (await toBlob(cv)).arrayBuffer()),S.dpi);
       zip.file(`${String(i+1).padStart(2,"0")}_${slug(L.name)}.png`, bytes);
@@ -1356,6 +1361,7 @@ $("#hl").addEventListener("change",e=>{ S.hl=e.target.checked; scheduleAnalyze()
 ["hlStrength","hlStart","duoContrast","duoBright","duoGrey","duoSharp"].forEach(id=>$("#"+id).addEventListener("input",e=>{ S[id]=+e.target.value; renderControls(); scheduleAnalyze(); }));
 $("#choke").addEventListener("change",e=>{ S.chokeMm=+e.target.value; scheduleAnalyze(); });
 $("#mirror").addEventListener("change",e=>{ S.mirror=e.target.checked; });
+$("#transparent").addEventListener("change",e=>{ S.transparent=e.target.checked; });
 $("#wedge").addEventListener("change",e=>{ S.wedge=e.target.checked; });
 $("#add-ink").addEventListener("click",()=>$("#add-ink-color").click());
 $("#add-ink-color").addEventListener("change",e=>{
