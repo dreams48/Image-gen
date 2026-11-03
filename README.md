@@ -134,7 +134,7 @@ Le schéma final montre les 4D en boucle. La page fonctionne en clair et en somb
 | Tons directs | Réduit l'image à 2–8 couleurs (k-moyennes en Lab), nettoie les petits îlots | Aplats aux contours lissés |
 | Quadrichromie CMJN | Conversion CMJN avec remplacement par le noir (GCR) réglable | Trame ronde, angles 7,5° / 52,5° / 22,5° / 82,5° (décalés de 7,5° contre le moiré avec le tamis) |
 | Quadri simulée | 3–12 encres opaques tirées de l'image ; chaque point est reproduit par le mélange d'au plus 3 encres (ou du textile) le plus proche dans Lab | Trame ronde ou elliptique (15°, 22,5°, 25° ou 45°), blanc de rehaut imprimé en dernier |
-| Demi-tons 2 calques | Image en niveaux de gris (contraste, luminosité, netteté réglables) répartie sur une rampe textile → gris → encre du dessus | Deux trames décalées de 30° : gris + blanc sur textile foncé, gris + noir sur textile clair, sans sous-couche |
+| Demi-tons 2 calques | Image en niveaux de gris (contraste, luminosité, netteté réglables) répartie sur une rampe textile → gris → encre du dessus | Deux trames décalées de 30° : gris + blanc sur textile foncé (avec sous-couche blanche tramée à 37,5° en option), gris + noir sur textile clair |
 | Couleurs indexées | 3–12 couleurs, diffusion d'erreur (Floyd–Steinberg serpentin) | Pixels carrés de 100 à 300 ppi |
 
 La taille de l'image fait référence : l'appli en déduit le format de film à utiliser (A4, A3 ou A3+, en portrait ou en paysage, sinon un rouleau), marges de 1,6 cm comprises. Le format apparaît sous les réglages, dans l'aperçu et dans la fiche d'impression.

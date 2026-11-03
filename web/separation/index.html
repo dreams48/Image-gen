@@ -288,16 +288,16 @@ dialog::backdrop{background:rgba(10,12,18,.55)}
         <h2 class="eyebrow" id="tex-label">Textile</h2>
         <div class="textiles" role="radiogroup" aria-labelledby="tex-label" id="textiles"></div>
         <div class="texname" id="texname"></div>
-        <div class="row" style="margin-top:12px" data-modes="spot cmyk sim index">
+        <div class="row" style="margin-top:12px" data-modes="spot cmyk sim index duo">
           <label class="check"><input type="checkbox" id="underbase"> <span>Sous-couche blanche, suivie d'un flash</span></label>
           <span class="hint">Indispensable sur textile foncé : elle fait ressortir les couleurs.</span>
         </div>
-        <div class="row" data-modes="cmyk sim">
+        <div class="row" data-modes="cmyk sim duo">
           <div class="row-head"><label for="ubDensity">Densité de la sous-couche</label><output id="ubDensity-out" for="ubDensity"></output></div>
           <input type="range" id="ubDensity" min="40" max="100" step="5">
           <span class="hint">Pleine sous les encres claires, réduite sous les encres foncées : moins d'encre et un toucher plus souple.</span>
         </div>
-        <div class="row" data-modes="spot cmyk sim index">
+        <div class="row" data-modes="spot cmyk sim index duo">
           <div class="row-head"><label for="choke">Rétrécissement (choke)</label></div>
           <div class="field"><select id="choke"><option value="0">Aucun</option><option value="0.1">0,1 mm</option><option value="0.2">0,2 mm</option><option value="0.3">0,3 mm</option><option value="0.5">0,5 mm</option></select></div>
         </div>
@@ -386,7 +386,7 @@ const MODES = {
   spot:{label:"Tons directs", desc:"Une encre opaque, mélangée à l'avance, par couleur. Les aplats sont nets, sans trame.", pour:"logos, texte, illustrations à plat", textile:"tous", ecrans:"1 à 6", kMin:2, kMax:8, kLabel:"Nombre de couleurs"},
   cmyk:{label:"Quadrichromie CMJN", desc:"Quatre encres translucides tramées (cyan, magenta, jaune, noir) qui se mélangent à l'œil.", pour:"photos et dégradés", textile:"blanc ou très clair", ecrans:"4 (+ sous-couche sur foncé)"},
   sim:{label:"Quadri simulée", desc:"Des encres opaques tirées de l'image, que vous pouvez fixer, changer ou compléter. Chaque point est reproduit par 3 encres au plus, tramées au même angle sur une sous-couche blanche.", pour:"photos et illustrations détaillées", textile:"foncé surtout", ecrans:"6 à 12", kMin:3, kMax:12, kLabel:"Nombre d'encres"},
-  duo:{label:"Demi-tons 2 calques", desc:"L'image passée en niveaux de gris puis rendue par deux trames décalées de 30° : un gris pour les tons moyens et un blanc pour les hautes lumières sur textile foncé, un gris et un noir pour les ombres sur textile clair. Sans sous-couche : toucher léger, rendu premium.", pour:"photos, portraits, rendu vintage ou premium", textile:"noir ou blanc", ecrans:"2"},
+  duo:{label:"Demi-tons 2 calques", desc:"L'image passée en niveaux de gris puis rendue par deux trames décalées de 30° : un gris pour les tons moyens et un blanc pour les hautes lumières sur textile foncé, un gris et un noir pour les ombres sur textile clair. Sur textile foncé, une sous-couche blanche tramée peut passer dessous pour des gris et des blancs plus lumineux.", pour:"photos, portraits, rendu vintage ou premium", textile:"noir ou blanc", ecrans:"2"},
   index:{label:"Couleurs indexées", desc:"Un nombre limité de couleurs imprimées en pixels carrés de taille fixe, répartis par diffusion d'erreur.", pour:"images détaillées, rendu doux", textile:"clair ou foncé", ecrans:"4 à 12", kMin:3, kMax:12, kLabel:"Nombre de couleurs"},
 };
 const MESH = [34,43,48,55,61,68,77,90,100,120,140,150];
@@ -768,8 +768,10 @@ function buildUnderbase(img,layers,mode){
   const r=Math.round(S.chokeMm/(S.widthCm*10/W));
   const ch=minFilter(u,W,H,r);
   const kind = mode==="spot" ? "solid" : mode==="index" ? "index" : "halftone";
-  const lpi = mode==="cmyk" ? S.lpi.cmyk : S.lpi.sim;
-  return mkLayer([255,255,255],kind,ch,{name:"Sous-couche blanche", isUnderbase:true, flash:true, lpi, angle: mode==="cmyk" ? 37.5 : S.simAngle});
+  const lpi = mode==="cmyk" ? S.lpi.cmyk : mode==="duo" ? S.lpi.duo : S.lpi.sim;
+  // en demi-tons 2 calques, la sous-couche prend un angle entre les deux trames (écart de 15°) pour limiter le moiré
+  const angle = mode==="cmyk" ? 37.5 : mode==="duo" ? (S.simAngle+15)%90 : S.simAngle;
+  return mkLayer([255,255,255],kind,ch,{name:"Sous-couche blanche", isUnderbase:true, flash:true, lpi, angle});
 }
 
 /* ---------- Analyse ---------- */
@@ -793,7 +795,7 @@ function analyze(){
   else if (S.mode==="duo") res=buildDuo(img,tex,texLab);
   else res=buildIndex(img,texLab,tex);
   const layers=res.layers;
-  if (S.underbase && S.mode!=="duo" && layers.length) layers.unshift(buildUnderbase(img,layers,S.mode));
+  if (S.underbase && layers.length) layers.unshift(buildUnderbase(img,layers,S.mode));
   let opaque=0; for (let i=0;i<img.N;i++) opaque+=img.alpha[i];
   for (const L of layers){ let s=0; for (let i=0;i<img.N;i++) s+=L.cov[i]; L.coverage= opaque ? s/(255*opaque) : 0; }
   const seen={};
@@ -992,7 +994,7 @@ function renderInfo(){
   if (S.mode==="duo"){
     const tl=labOf(hex2rgb(S.textile))[0];
     if (tl>25 && tl<80) add("<strong>Textile ni noir ni blanc.</strong> Les demi-tons 2 calques sont prévus pour du noir (ou très foncé) ou du blanc (ou très clair) : sur ce textile, le contraste sera faible.");
-    else add(AN.duoDark ? "Demi-tons sur textile foncé : le textile fait les noirs, le gris les tons moyens, le blanc les hautes lumières. Pas de sous-couche ni de flash obligatoire." : "Demi-tons sur textile clair : le textile fait les blancs, le gris les tons moyens, le noir les ombres.","note");
+    else add(AN.duoDark ? (S.underbase ? "Demi-tons sur textile foncé : sous-couche blanche tramée et flash, puis le gris pour les tons moyens et le blanc pour les hautes lumières. Le textile fait les noirs." : "Demi-tons sur textile foncé, sans sous-couche : toucher plus souple, mais gris et blancs moins lumineux.") : "Demi-tons sur textile clair : le textile fait les blancs, le gris les tons moyens, le noir les ombres.","note");
   }
   if (AN.bgRemoved) add("Le fond uni de l'image a été retiré : à ces endroits, c'est le textile qui apparaît.","note");
   if (AN.absorbed.length){
@@ -1149,7 +1151,7 @@ function fiche(P){
   }
   if (S.mode==="duo") lines.push(`Demi-tons      : contraste ${S.duoContrast}, luminosité ${S.duoBright}, gris L* ${S.duoGrey}, netteté ${S.duoSharp} %, angles ${fmt(S.simAngle)}° et ${fmt((S.simAngle+30)%90)}°`);
   if (S.mode==="sim" && S.hl) lines.push(`Rehaut         : force ${S.hlStrength} %, à partir de L* ${S.hlStart}, imprimé en dernier (blanc très couvrant)`);
-  if (S.underbase && S.mode!=="duo") lines.push(`Sous-couche    : ${HT(S.mode) ? `densité ${S.ubDensity} %, ` : ""}rétrécie de ${fmt(S.chokeMm)} mm`);
+  if (S.underbase) lines.push(`Sous-couche    : ${HT(S.mode) ? `densité ${S.ubDensity} %, ` : ""}rétrécie de ${fmt(S.chokeMm)} mm`);
   if (S.mirror) lines.push("Orientation    : films en miroir");
   if (S.mode==="index") lines.push(`Pixels carrés  : ${S.ppi} ppi (${fmt(25.4/S.ppi,2)} mm)`);
   lines.push(`Textile        : ${S.textileName} (${S.textile.toUpperCase()})`);
@@ -1164,7 +1166,7 @@ function fiche(P){
   lines.push("- Calez chaque écran sur les 4 repères de repérage avant de tirer.");
   if (S.mode==="cmyk") lines.push("- Angles décalés de 7,5° par rapport aux angles offset pour limiter le moiré avec le tissage du tamis.");
   if (S.mode==="sim"||S.mode==="cmyk") lines.push("- Tamis conseillé : environ 4 à 5 fois la linéature (en fils/pouce). Tension élevée et racle dure pour garder les points.");
-  if (S.underbase && S.mode!=="duo") lines.push("- Flashez la sous-couche (séchage de surface) avant les couleurs.");
+  if (S.underbase) lines.push("- Flashez la sous-couche (séchage de surface) avant les couleurs.");
   if (S.wedge && (HT(S.mode))) lines.push("- Gamme de contrôle 5 à 95 % en haut à gauche de chaque film tramé : mesurez la case 50 % sur le tirage d'essai et ajustez l'engraissement.");
   lines.push("- Les couleurs affichées sont des approximations écran : choisissez vos encres sur un nuancier.");
   return lines.join("\n");
