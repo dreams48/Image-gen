@@ -146,3 +146,17 @@ L'export ZIP contient :
 - `fiche-impression.txt` : ordre d'impression, couleurs, couverture, tamis conseillé (fils/cm) et conseils.
 
 Tout le calcul se fait dans le navigateur ; seul JSZip (`jszip@3.10.1`, cdnjs) est chargé de l'extérieur. Publiée comme artifact claude.ai, la page enregistre le ZIP via la capacité `downloads` ; ouverte en fichier local, elle le télécharge directement.
+
+## Atelier Halftone DTF
+
+`web/halftone-dtf/index.html` est une application web qui transforme un visuel en points de trame (halftone) pour l'impression DTF, sur t-shirt noir ou blanc. On charge une image (bouton, glisser-déposer ou coller), on choisit la couleur du t-shirt, et on exporte un PNG prêt pour le RIP.
+
+- **T-shirt noir** : les zones sombres deviennent transparentes et le noir du textile les remplace. **T-shirt blanc** : même principe avec les zones claires.
+- **Trame** : point rond, ellipse, carré, losange ou ligne ; linéature de 15 à 65 lpi ; angle réglable ; taille de point minimale en mm (les points trop petits pour tenir au transfert sont supprimés).
+- **Tons** : seuil d'effacement, seuil des aplats conservés, densité des points.
+- **Couleur des points** : couleurs de l'image (ravivées, la luminosité passant dans la taille du point) ou une seule couleur.
+- **Dégradés** : vers le bas, vers le haut, depuis le centre, ou contours usés.
+- **Fond** : suppression d'un fond uni détecté sur les bords, éventuellement aussi à l'intérieur du motif.
+- **Loupe** : zone réelle de 2 × 2 cm du fichier exporté.
+
+Le PNG exporté ne contient que des pixels pleins ou transparents (pas de semi-transparence qui laisserait un voile de blanc), à 300 ou 360 dpi, résolution inscrite dans le fichier (chunk pHYs), recadré sur le motif. Tout le calcul se fait dans le navigateur, sans bibliothèque externe. Publiée comme artifact claude.ai, la page enregistre le PNG via la capacité `downloads`.

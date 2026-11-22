@@ -1,0 +1,786 @@
+<title>Atelier Halftone DTF</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : une presse à transfert. Réglages à gauche, plateau « t-shirt » au centre, loupe 2 × 2 cm et bilan d'encre à droite. */
+:root{
+  --bg:#edf1f3;
+  --surface:#fbfcfd;
+  --ink:#14191d;
+  --muted:#56626b;
+  --line:#d3dbe0;
+  --accent:#0b7ea6;        /* cyan d'encre DTF */
+  --accent-ink:#ffffff;
+  --accent-soft:#dcedf4;
+  --warn:#8a4b00;
+  --warn-soft:#f8eddb;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1417; --surface:#171e22; --ink:#e6edf1; --muted:#97a5ae; --line:#2a353c;
+    --accent:#5cc6ec; --accent-ink:#052230; --accent-soft:#16323e; --warn:#f0b65f; --warn-soft:#352812;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1417; --surface:#171e22; --ink:#e6edf1; --muted:#97a5ae; --line:#2a353c;
+  --accent:#5cc6ec; --accent-ink:#052230; --accent-soft:#16323e; --warn:#f0b65f; --warn-soft:#352812;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.app{max-width:1480px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px}
+h1,h2,h3{text-wrap:balance;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+.top{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.brand{display:flex;gap:14px;align-items:center;min-width:0}
+.brand canvas{flex:none;width:46px;height:46px;border-radius:10px}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(19px,2.3vw,26px);letter-spacing:-.01em;line-height:1.1}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:14px}
+.top-actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 16px;font-weight:700;cursor:pointer;line-height:1.2}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.bench{display:grid;grid-template-columns:minmax(280px,330px) minmax(0,1fr) minmax(250px,300px);gap:22px;align-items:start}
+@media (max-width:1180px){.bench{grid-template-columns:minmax(280px,330px) minmax(0,1fr)}.side{grid-column:1 / -1}}
+@media (max-width:860px){.bench{grid-template-columns:minmax(0,1fr)}}
+.panel{display:flex;flex-direction:column;gap:20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.shirts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.shirt{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:transparent;border-radius:9px;padding:9px 10px;cursor:pointer;text-align:left}
+.shirt svg{flex:none}
+.shirt b{display:block;font-size:14px;line-height:1.2}
+.shirt span{font-size:12px;color:var(--muted)}
+.shirt[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.chipbtn{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600;cursor:pointer}
+.chipbtn:hover{border-color:var(--accent);color:var(--accent)}
+.shapes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.shape{display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid var(--line);background:transparent;border-radius:8px;padding:7px 2px;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--muted);min-width:0}
+.shape canvas{width:30px;height:30px}
+.shape[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);box-shadow:inset 0 0 0 1px var(--accent)}
+.row{display:flex;flex-direction:column;gap:4px}
+.row + .row{margin-top:13px}
+.row-head{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;font-weight:700}
+.row-head output{font-family:var(--f-mono);font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+.hint{font-size:12px;color:var(--muted);line-height:1.4}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;cursor:pointer}
+.check input{margin-top:3px;accent-color:var(--accent)}
+.field{display:flex;gap:8px;align-items:center}
+.field input[type=number],.field select{width:100%;border:1px solid var(--line);border-radius:7px;background:var(--bg);padding:7px 9px}
+.field input[type=color]{width:40px;height:34px;border:1px solid var(--line);border-radius:7px;padding:2px;background:var(--bg);cursor:pointer;flex:none}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface);flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:999px;padding:6px 12px;font-size:13.5px;font-weight:700;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+
+.stage-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.stage-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.status{font-size:13px;color:var(--muted)}
+.stage{position:relative;border-radius:var(--r);display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vw,44px);min-height:300px;overflow:hidden;border:1px solid var(--line);cursor:crosshair}
+.stage.black{background:#121213}
+.stage.white{background:#f6f5f1}
+.stage.checker{background-color:#fff;background-image:linear-gradient(45deg,#d8d8d8 25%,transparent 25%),linear-gradient(-45deg,#d8d8d8 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d8d8d8 75%),linear-gradient(-45deg,transparent 75%,#d8d8d8 75%);background-size:18px 18px;background-position:0 0,0 9px,9px -9px,-9px 0}
+.stage.black::after,.stage.white::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.14;mix-blend-mode:soft-light;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.55) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(0,0,0,.55) 0 1px,transparent 1px 3px)}
+.stage canvas{display:block;max-width:100%;max-height:min(66vh,720px);width:auto;height:auto;position:relative;z-index:0}
+.stage.drag{outline:3px dashed var(--accent);outline-offset:-8px}
+.marker{position:absolute;z-index:2;border:2px solid var(--accent);border-radius:3px;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.6)}
+.drop-hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:#fff;background:rgba(0,0,0,.5);padding:3px 9px;border-radius:999px;z-index:3}
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;gap:6px;align-items:baseline;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:13px}
+.chip b{font-family:var(--f-mono);font-weight:500;font-variant-numeric:tabular-nums}
+.warns{display:flex;flex-direction:column;gap:8px}
+.warn{border-radius:8px;padding:9px 12px;font-size:13.5px;background:var(--warn-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent)}
+.warn strong{color:var(--warn)}
+.msg{font-size:13.5px;min-height:1.4em}
+.msg.err{color:var(--warn);font-weight:600}
+.progress{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.loupe{border-radius:9px;overflow:hidden;border:1px solid var(--line);aspect-ratio:1/1;max-width:100%}
+.loupe canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+.loupe.black{background:#121213}.loupe.white{background:#f6f5f1}
+.loupe.checker{background-color:#fff;background-image:linear-gradient(45deg,#d8d8d8 25%,transparent 25%),linear-gradient(-45deg,#d8d8d8 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d8d8d8 75%),linear-gradient(-45deg,transparent 75%,#d8d8d8 75%);background-size:18px 18px;background-position:0 0,0 9px,9px -9px,-9px 0}
+.side h2{font-family:var(--f-display);font-weight:700;font-size:15px}
+.tips{margin:0;padding-left:18px;font-size:13.5px;display:flex;flex-direction:column;gap:7px;color:var(--ink)}
+.tips li::marker{color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <canvas id="logo" width="92" height="92" aria-hidden="true"></canvas>
+      <div>
+        <h1>Atelier Halftone DTF</h1>
+        <p>Transforme un visuel en points de trame pour un transfert DTF léger, sur t-shirt noir ou blanc.</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <input type="file" id="file" accept="image/*" hidden>
+      <button class="btn" id="pick" type="button">Charger une image</button>
+      <button class="btn primary" id="export" type="button">Exporter le PNG</button>
+    </div>
+  </header>
+
+  <main class="bench">
+    <!-- Réglages -->
+    <section class="panel" aria-label="Réglages">
+      <div>
+        <div class="eyebrow">Couleur du t-shirt</div>
+        <div class="shirts" role="radiogroup" aria-label="Couleur du t-shirt">
+          <button class="shirt" type="button" role="radio" data-shirt="black" id="sh-black">
+            <svg width="30" height="28" viewBox="0 0 30 28" aria-hidden="true"><path d="M10 1 4 4 1 11l5 2v14h18V13l5-2-3-7-6-3c-1 3-3 4-5 4s-4-1-5-4Z" fill="#141414" stroke="#888" stroke-width="1"/></svg>
+            <div><b>Noir</b><span>noir → transparent</span></div>
+          </button>
+          <button class="shirt" type="button" role="radio" data-shirt="white" id="sh-white">
+            <svg width="30" height="28" viewBox="0 0 30 28" aria-hidden="true"><path d="M10 1 4 4 1 11l5 2v14h18V13l5-2-3-7-6-3c-1 3-3 4-5 4s-4-1-5-4Z" fill="#f6f5f1" stroke="#888" stroke-width="1"/></svg>
+            <div><b>Blanc</b><span>blanc → transparent</span></div>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="eyebrow">Préréglages</div>
+        <div class="presets">
+          <button class="chipbtn" type="button" data-preset="classic">Classique</button>
+          <button class="chipbtn" type="button" data-preset="vintage">Vintage gros points</button>
+          <button class="chipbtn" type="button" data-preset="fine">Fin et détaillé</button>
+          <button class="chipbtn" type="button" data-preset="fade">Fondu vers le bas</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="eyebrow">Forme du point</div>
+        <div class="shapes" role="radiogroup" aria-label="Forme du point" id="shapes"></div>
+      </div>
+
+      <div>
+        <div class="eyebrow">Trame</div>
+        <div class="row">
+          <div class="row-head"><label for="lpi">Linéature</label><output id="lpi-out"></output></div>
+          <input type="range" id="lpi" min="15" max="65" step="1">
+          <div class="hint">Nombre de lignes de points par pouce. 25–45 lpi est la zone sûre en DTF.</div>
+        </div>
+        <div class="row">
+          <div class="row-head"><label for="angle">Angle</label><output id="angle-out"></output></div>
+          <input type="range" id="angle" min="0" max="90" step="7.5">
+        </div>
+        <div class="row">
+          <div class="row-head"><label for="mindot">Point minimal</label><output id="mindot-out"></output></div>
+          <input type="range" id="mindot" min="0.10" max="0.60" step="0.05">
+          <div class="hint">Les points plus petits ne tiennent pas au transfert ni au lavage : ils sont supprimés.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="eyebrow">Tons</div>
+        <div class="row">
+          <div class="row-head"><label for="cut" id="cut-label">Effacement des noirs</label><output id="cut-out"></output></div>
+          <input type="range" id="cut" min="0" max="60" step="1">
+          <div class="hint" id="cut-hint"></div>
+        </div>
+        <div class="row">
+          <div class="row-head"><label for="solid">Aplats conservés au-dessus de</label><output id="solid-out"></output></div>
+          <input type="range" id="solid" min="60" max="100" step="1">
+        </div>
+        <div class="row">
+          <div class="row-head"><label for="density">Densité des points</label><output id="density-out"></output></div>
+          <input type="range" id="density" min="-50" max="50" step="5">
+        </div>
+      </div>
+
+      <div>
+        <div class="eyebrow">Couleur des points</div>
+        <div class="seg full" role="group" aria-label="Couleur des points">
+          <button type="button" id="c-orig">Couleurs de l'image</button>
+          <button type="button" id="c-solid">Une seule couleur</button>
+        </div>
+        <div class="row" id="solid-row" style="margin-top:10px">
+          <div class="field"><input type="color" id="solidcolor" aria-label="Couleur unique"><span class="hint">Une seule encre : tout le visuel devient des points de cette couleur.</span></div>
+        </div>
+        <label class="check" id="boost-row" style="margin-top:10px"><input type="checkbox" id="boost"><span>Raviver les couleurs<br><span class="hint">La luminosité passe dans la taille du point ; le point garde une couleur franche au lieu d'une teinte terne.</span></span></label>
+      </div>
+
+      <div>
+        <div class="eyebrow">Dégradé</div>
+        <div class="field"><select id="fade" aria-label="Type de dégradé">
+          <option value="none">Aucun</option>
+          <option value="bottom">Vers le bas</option>
+          <option value="top">Vers le haut</option>
+          <option value="radial">Depuis le centre</option>
+          <option value="edges">Contours usés</option>
+        </select></div>
+        <div class="row" id="fadeamt-row" style="margin-top:10px">
+          <div class="row-head"><label for="fadeamt">Longueur du dégradé</label><output id="fadeamt-out"></output></div>
+          <input type="range" id="fadeamt" min="10" max="90" step="5">
+        </div>
+      </div>
+
+      <div>
+        <div class="eyebrow">Fond et format</div>
+        <label class="check"><input type="checkbox" id="removebg"><span>Supprimer le fond uni<br><span class="hint" id="bg-info">Détecte la couleur des bords de l'image et la rend transparente.</span></span></label>
+        <label class="check" id="bgall-row" style="margin-top:8px"><input type="checkbox" id="bgall"><span>Aussi à l'intérieur du motif<br><span class="hint">Retire cette couleur partout, y compris dans les lettres (O, A, B) et les trous. Attention aux éléments du dessin de la même couleur.</span></span></label>
+        <div class="row" id="tol-row" style="margin-top:8px">
+          <div class="row-head"><label for="tol">Tolérance du fond</label><output id="tol-out"></output></div>
+          <input type="range" id="tol" min="2" max="40" step="1">
+        </div>
+        <div class="row" style="margin-top:14px">
+          <div class="row-head"><label for="width">Largeur imprimée (cm)</label></div>
+          <div class="field"><input type="number" id="width" min="4" max="45" step="0.5" inputmode="decimal"></div>
+        </div>
+        <div class="row">
+          <div class="row-head"><label for="dpi">Résolution du fichier</label></div>
+          <div class="field"><select id="dpi"><option value="300">300 dpi (standard DTF)</option><option value="360">360 dpi</option></select></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Plateau -->
+    <section class="stage-col" aria-label="Aperçu">
+      <div class="stage-bar">
+        <div class="seg" role="group" aria-label="Vue">
+          <button type="button" id="v-shirt">Sur le t-shirt</button>
+          <button type="button" id="v-alpha">Transparence</button>
+          <button type="button" id="v-orig">Original</button>
+        </div>
+        <span class="status" id="status"></span>
+      </div>
+      <div class="stage black" id="stage">
+        <canvas id="view" aria-label="Aperçu du transfert"></canvas>
+        <div class="marker" id="marker" hidden></div>
+        <span class="drop-hint">Glissez une image ici, ou collez-la (Ctrl+V). Cliquez pour placer la loupe.</span>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="warns" id="warns"></div>
+      <div class="progress" id="progress" hidden><span id="progress-text"></span><div class="bar"><i id="progress-bar"></i></div></div>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- Loupe et conseils -->
+    <aside class="side">
+      <div class="panel">
+        <div>
+          <h2>Loupe 2 × 2 cm</h2>
+          <p class="hint" id="loupe-cap" style="margin:4px 0 10px">Zone réelle du fichier exporté, agrandie.</p>
+          <div class="loupe black" id="loupe"><canvas id="loupe-c"></canvas></div>
+        </div>
+        <dl class="kv" id="kv"></dl>
+      </div>
+      <div class="panel">
+        <h2>Avant de presser</h2>
+        <ol class="tips">
+          <li>Importez le PNG tel quel dans votre RIP, à 100 % : la résolution est inscrite dans le fichier.</li>
+          <li>Désactivez le lissage ou le « choke » du blanc s'il ronge les petits points ; gardez le blanc à 100 % sous chaque point.</li>
+          <li>Le fichier ne contient que des pixels pleins ou transparents : aucun voile de blanc ne s'imprimera entre les points.</li>
+          <li>Faites un test sur une chute de tissu : la taille de point minimale dépend de votre film et de votre poudre.</li>
+        </ol>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+(()=>{
+"use strict";
+const $=s=>document.querySelector(s);
+const fmt=(n,d=1)=>Number(n).toLocaleString("fr-FR",{maximumFractionDigits:d,minimumFractionDigits:0});
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const tick=()=>new Promise(r=>setTimeout(r,0));
+
+/* ---------- État ---------- */
+const DEFAULTS={shirt:"black",shape:"round",lpi:35,angle:22.5,minDot:0.25,cut:12,solid:94,density:0,
+  colorMode:"orig",solidColor:{black:"#ffffff",white:"#111111"},boost:true,fade:"none",fadeAmt:40,removeBg:true,bgAll:false,tol:14,widthCm:28,dpi:300};
+const S=JSON.parse(JSON.stringify(DEFAULTS));
+S.view="shirt"; S.srcName="exemple";
+const PRESETS={
+  classic:{shape:"round",lpi:35,angle:22.5,minDot:0.25,cut:12,solid:94,density:0,fade:"none"},
+  vintage:{shape:"round",lpi:22,angle:45,minDot:0.35,cut:18,solid:90,density:10,fade:"edges",fadeAmt:45},
+  fine:{shape:"round",lpi:50,angle:22.5,minDot:0.20,cut:8,solid:96,density:0,fade:"none"},
+  fade:{shape:"round",lpi:32,angle:22.5,minDot:0.25,cut:12,solid:94,density:0,fade:"bottom",fadeAmt:50},
+};
+
+let SRC=null, ORIG_W=0, ORIG_H=0;
+let PX=null, SW=0, SH=0, ALPHA=null, BGINFO=null;  // source + fond
+let G=null;          // données prêtes à tramer : COV, COL, crop, Wfull, Hfull
+let LP={u:.4,v:.53};
+let busy=false, timer=0, IS_SAMPLE=false;
+
+/* ---------- Formes de point : tuile de seuils classés ---------- */
+const N=64;
+const SHAPES={
+  round:  {label:"Rond",    f:(u,v)=>Math.hypot(u,v)},
+  ellipse:{label:"Ellipse", f:(u,v)=>Math.hypot(u*0.72,v*1.3)},
+  square: {label:"Carré",   f:(u,v)=>Math.max(Math.abs(u),Math.abs(v))},
+  diamond:{label:"Losange", f:(u,v)=>Math.abs(u)+Math.abs(v)},
+  line:   {label:"Ligne",   f:(u,v)=>Math.abs(v)+1e-3*Math.abs(u)},
+};
+const TILES={};
+function tile(shape){
+  if (TILES[shape]) return TILES[shape];
+  const n=N*N, f=new Float64Array(n), idx=new Array(n), T=new Float32Array(n), fn=SHAPES[shape].f;
+  for (let j=0;j<N;j++) for (let i=0;i<N;i++){ const k=j*N+i; f[k]=fn((i+.5)/N-.5,(j+.5)/N-.5)+1e-7*((i*73+j*151)%97); idx[k]=k; }
+  idx.sort((a,b)=>f[a]-f[b]);
+  for (let r=0;r<n;r++) T[idx[r]]=(r+.5)/n;
+  return TILES[shape]=T;
+}
+
+/* ---------- Flou boîte séparable ---------- */
+function boxBlur(src,w,h,r,passes=2){
+  r=Math.round(r); if (r<1) return src;
+  let a=src, tmp=new Float32Array(w*h), out=new Float32Array(w*h);
+  const d=2*r+1;
+  for (let p=0;p<passes;p++){
+    for (let y=0;y<h;y++){ const o=y*w; let acc=0;
+      for (let x=-r;x<=r;x++) acc+=a[o+clamp(x,0,w-1)];
+      for (let x=0;x<w;x++){ tmp[o+x]=acc/d; acc+=a[o+Math.min(w-1,x+r+1)]-a[o+Math.max(0,x-r)]; } }
+    for (let x=0;x<w;x++){ let acc=0;
+      for (let y=-r;y<=r;y++) acc+=tmp[clamp(y,0,h-1)*w+x];
+      for (let y=0;y<h;y++){ out[y*w+x]=acc/d; acc+=tmp[Math.min(h-1,y+r+1)*w+x]-tmp[Math.max(0,y-r)*w+x]; } }
+    a=out; if (p<passes-1){ out=new Float32Array(w*h); }
+  }
+  return a;
+}
+
+/* ---------- Étape 1 : source et suppression du fond ---------- */
+function prepSource(){
+  SW=SRC.width; SH=SRC.height;
+  PX=SRC.getContext("2d",{willReadFrequently:true}).getImageData(0,0,SW,SH).data;
+  ALPHA=new Uint8Array(SW*SH);
+  for (let i=0;i<SW*SH;i++) ALPHA[i]=PX[i*4+3];
+  BGINFO=null;
+  if (!S.removeBg) return;
+  // Couleur dominante des bords (bords opaques uniquement)
+  const bins=new Map(); let total=0;
+  const visit=i=>{ if (PX[i*4+3]<128) return; total++; const key=(PX[i*4]>>4)<<8|(PX[i*4+1]>>4)<<4|(PX[i*4+2]>>4); bins.set(key,(bins.get(key)||0)+1); };
+  for (let x=0;x<SW;x++){ visit(x); visit((SH-1)*SW+x); }
+  for (let y=0;y<SH;y++){ visit(y*SW); visit(y*SW+SW-1); }
+  if (total < (SW+SH)) { BGINFO={kind:"alpha"}; return; }          // déjà détouré
+  let best=0,bk=0; bins.forEach((c,k)=>{ if(c>best){best=c;bk=k;} });
+  if (best/total<0.45){ BGINFO={kind:"none"}; return; }
+  // Moyenne exacte des pixels du bord dans ce bac
+  let sr=0,sg=0,sb=0,c=0;
+  const acc=i=>{ if (PX[i*4+3]<128) return; const key=(PX[i*4]>>4)<<8|(PX[i*4+1]>>4)<<4|(PX[i*4+2]>>4); if(key===bk){ sr+=PX[i*4]; sg+=PX[i*4+1]; sb+=PX[i*4+2]; c++; } };
+  for (let x=0;x<SW;x++){ acc(x); acc((SH-1)*SW+x); }
+  for (let y=0;y<SH;y++){ acc(y*SW); acc(y*SW+SW-1); }
+  const bg=[sr/c,sg/c,sb/c], tol=S.tol*4.42, tol2=tol*tol;
+  const near=i=>{ const dr=PX[i*4]-bg[0], dg=PX[i*4+1]-bg[1], db=PX[i*4+2]-bg[2]; return dr*dr+dg*dg+db*db<=tol2; };
+  const seen=new Uint8Array(SW*SH), stack=new Int32Array(SW*SH); let sp=0, removed=0;
+  const push=i=>{ if(!seen[i]){ seen[i]=1; if(ALPHA[i]>0 && near(i)) stack[sp++]=i; } };
+  if (S.bgAll){ for (let i=0;i<SW*SH;i++) push(i); }
+  else { for (let x=0;x<SW;x++){ push(x); push((SH-1)*SW+x); }
+    for (let y=0;y<SH;y++){ push(y*SW); push(y*SW+SW-1); } }
+  while (sp){ const i=stack[--sp]; ALPHA[i]=0; removed++; const x=i%SW, y=(i/SW)|0;
+    if(x>0) push(i-1); if(x<SW-1) push(i+1); if(y>0) push(i-SW); if(y<SH-1) push(i+SW); }
+  // Adoucit le liseré : les pixels voisins encore proches du fond perdent une partie de leur opacité
+  for (let i=0;i<SW*SH;i++){ if (!ALPHA[i]) continue; const x=i%SW, y=(i/SW)|0;
+    if ((x>0&&!ALPHA[i-1])||(x<SW-1&&!ALPHA[i+1])||(y>0&&!ALPHA[i-SW])||(y<SH-1&&!ALPHA[i+SW])){
+      const dr=PX[i*4]-bg[0], dg=PX[i*4+1]-bg[1], db=PX[i*4+2]-bg[2], d=Math.sqrt(dr*dr+dg*dg+db*db);
+      if (d<tol*2.2) ALPHA[i]=Math.round(ALPHA[i]*clamp((d-tol)/(tol*1.2),0,1)); } }
+  BGINFO={kind:"removed",rgb:bg.map(Math.round),share:removed/(SW*SH)};
+}
+
+/* ---------- Étape 2 : couverture d'encre (0 = t-shirt, 1 = encre pleine) ---------- */
+function buildCoverage(){
+  const n=SW*SH, raw=new Float32Array(n), COL=new Uint8ClampedArray(n*3);
+  const black=S.shirt==="black", lo=S.cut/100, hi=Math.max(lo+0.02,S.solid/100), gam=Math.pow(2,-S.density/50);
+  let minx=SW,miny=SH,maxx=-1,maxy=-1;
+  for (let i=0;i<n;i++){
+    const r=PX[i*4], g=PX[i*4+1], b=PX[i*4+2], a=ALPHA[i]/255;
+    const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+    // Sur noir, l'encre se mesure par la distance au noir ; sur blanc, par la distance au blanc.
+    const base=black ? mx/255 : 1-mn/255;
+    let t=(base-lo)/(hi-lo); t=t<=0?0:t>=1?1:Math.pow(t,gam); t*=a;
+    raw[i]=t;
+    if (t>0.02){ const x=i%SW, y=(i/SW)|0; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; }
+    let R=r,Gc=g,B=b;
+    if (S.boost){
+      if (black){ if (mx>8){ const k=255/mx; R=r*k; Gc=g*k; B=b*k; } else { R=Gc=B=255; } }
+      else { if (mn<247){ const k=255/(255-mn); R=255-(255-r)*k; Gc=255-(255-g)*k; B=255-(255-b)*k; } else { R=Gc=B=0; } }
+    }
+    COL[i*3]=R; COL[i*3+1]=Gc; COL[i*3+2]=B;
+  }
+  if (maxx<0){ minx=0; miny=0; maxx=SW-1; maxy=SH-1; }
+  const pad=Math.round(Math.max(SW,SH)*0.01);
+  const crop={x:Math.max(0,minx-pad),y:Math.max(0,miny-pad)}; crop.w=Math.min(SW,maxx+pad+1)-crop.x; crop.h=Math.min(SH,maxy+pad+1)-crop.y;
+  const Wfull=Math.round(S.widthCm/2.54*S.dpi), Hfull=Math.max(1,Math.round(Wfull*crop.h/crop.w));
+  let cov=raw;
+  // Dégradé
+  if (S.fade!=="none"){
+    const amt=S.fadeAmt/100; cov=new Float32Array(raw);
+    if (S.fade==="edges"){
+      const mask=new Float32Array(n); for(let i=0;i<n;i++) mask[i]=raw[i]>0.03?1:0;
+      const bl=boxBlur(mask,SW,SH,Math.max(crop.w,crop.h)*amt*0.06,3);
+      for (let i=0;i<n;i++){ if(!cov[i]) continue; const e=clamp((bl[i]-0.45)/0.5,0,1); cov[i]*=e*e*(3-2*e); }
+    } else {
+      const cx=crop.x+crop.w/2, cy=crop.y+crop.h/2, rad=Math.hypot(crop.w,crop.h)/2;
+      for (let y=0;y<SH;y++){ const yn=(y-crop.y)/crop.h;
+        for (let x=0;x<SW;x++){ const i=y*SW+x; if(!cov[i]) continue; let f;
+          if (S.fade==="bottom") f=(1-yn)/amt; else if (S.fade==="top") f=yn/amt;
+          else f=(1-Math.hypot(x-cx,y-cy)/rad)/amt;
+          f=clamp(f,0,1); cov[i]*=f; } }
+    }
+  }
+  // Lissage léger à l'échelle de la cellule, pour des points nets plutôt que des éclats
+  const cellSrc=(S.dpi/S.lpi)*crop.w/Wfull;
+  cov=boxBlur(cov,SW,SH,cellSrc*0.3,2);
+  G={COV:cov,COL,crop,Wfull,Hfull};
+}
+
+/* ---------- Étape 3 : tramage d'une zone ---------- */
+function renderRegion(W,H,x0,y0,w,h,out){
+  const {COV,COL,crop,Wfull}=G, T=tile(S.shape);
+  const k=Wfull/W, cell=S.dpi/S.lpi, th=S.angle*Math.PI/180, cs=Math.cos(th)/cell, sn=Math.sin(th)/cell;
+  const sxk=crop.w/W, syk=crop.h/H;
+  const cellMm=25.4/S.lpi, minCov=Math.PI*(S.minDot/2)**2/(cellMm*cellMm);
+  const solid=S.colorMode==="solid", sc=hex2rgb(S.solidColor[S.shirt]);
+  for (let y=y0;y<y0+h;y++){
+    const fy=(y+.5)*k; let sy=crop.y+(y+.5)*syk-.5; sy=clamp(sy,0,SH-1.001);
+    const iy=sy|0, ty=sy-iy, r0=iy*SW, r1=Math.min(SH-1,iy+1)*SW;
+    let o=((y-y0)*w)*4;
+    for (let x=x0;x<x0+w;x++,o+=4){
+      let sx=crop.x+(x+.5)*sxk-.5; sx=clamp(sx,0,SW-1.001);
+      const ix=sx|0, tx=sx-ix, ix1=Math.min(SW-1,ix+1);
+      const c0=COV[r0+ix]+(COV[r0+ix1]-COV[r0+ix])*tx, c1=COV[r1+ix]+(COV[r1+ix1]-COV[r1+ix])*tx;
+      let c=c0+(c1-c0)*ty;
+      if (c<minCov*0.5) c=0; else if (c<minCov) c=minCov;
+      if (c>1-minCov*0.5) c=1;
+      let on=false;
+      if (c>=1) on=true; else if (c>0){
+        const fx=(x+.5)*k, a=fx*cs+fy*sn, b=-fx*sn+fy*cs;
+        const ui=((a-Math.floor(a))*N)|0, vi=((b-Math.floor(b))*N)|0;
+        on=c>T[vi*N+ui];
+      }
+      if (solid){ out[o]=sc[0]; out[o+1]=sc[1]; out[o+2]=sc[2]; }
+      else { const p=((ty<.5?iy:Math.min(SH-1,iy+1))*SW+(tx<.5?ix:ix1))*3; out[o]=COL[p]; out[o+1]=COL[p+1]; out[o+2]=COL[p+2]; }
+      out[o+3]=on?255:0;
+    }
+  }
+}
+
+/* ---------- Aperçu ---------- */
+let PV=null; // {W,H,data,ink}
+function analyze(){
+  if (!SRC) return;
+  const t0=performance.now();
+  prepSource(); buildCoverage(); drawPreview();
+  $("#status").textContent=`Calculé en ${fmt((performance.now()-t0)/1000,1)} s`;
+}
+function scheduleAnalyze(){ clearTimeout(timer); $("#status").textContent="Calcul…"; timer=setTimeout(analyze,140); }
+function scheduleRender(){ clearTimeout(timer); $("#status").textContent="Calcul…"; timer=setTimeout(()=>{ buildCoverage(); drawPreview(); $("#status").textContent=""; },110); }
+
+function drawPreview(){
+  if (!G) return;
+  const cv=$("#view"), x=cv.getContext("2d");
+  const W=Math.min(G.Wfull,1500), H=Math.max(1,Math.round(W*G.Hfull/G.Wfull));
+  cv.width=W; cv.height=H;
+  if (S.view==="orig"){
+    const {crop}=G; x.clearRect(0,0,W,H); x.drawImage(SRC,crop.x,crop.y,crop.w,crop.h,0,0,W,H); PV=null;
+  } else {
+    const id=x.createImageData(W,H); renderRegion(W,H,0,0,W,H,id.data); x.putImageData(id,0,0);
+    let ink=0; for (let i=3;i<id.data.length;i+=4) if(id.data[i]) ink++;
+    PV={W,H,ink:ink/(W*H)};
+  }
+  const st=$("#stage"); st.className="stage "+(S.view==="alpha"?"checker":S.shirt);
+  $("#loupe").className="loupe "+(S.view==="alpha"?"checker":S.shirt);
+  renderStats(); renderWarns(); drawLoupe();
+}
+
+function renderStats(){
+  const {Wfull,Hfull}=G, wcm=S.widthCm, hcm=Hfull/S.dpi*2.54, cellMm=25.4/S.lpi;
+  const chips=[
+    ["Format",`${fmt(wcm)} × ${fmt(hcm)} cm`],
+    ["Fichier",`${Wfull} × ${Hfull} px`],
+    ["Cellule",`${fmt(cellMm,2)} mm`],
+  ];
+  if (PV) chips.push(["Encre",`${fmt(PV.ink*100,0)} % de la surface`]);
+  $("#stats").replaceChildren(...chips.map(([k,v])=>{ const s=document.createElement("span"); s.className="chip"; s.append(k+" "); const b=document.createElement("b"); b.textContent=v; s.append(b); return s; }));
+  const kv=[
+    ["Linéature",`${S.lpi} lpi à ${fmt(S.angle)}°`],
+    ["Point",SHAPES[S.shape].label.toLowerCase()],
+    ["Point minimal",`${fmt(S.minDot,2)} mm`],
+    ["Couverture mini",`${fmt(Math.min(100,Math.PI*(S.minDot/2)**2/(cellMm*cellMm)*100),0)} %`],
+    ["Résolution",`${S.dpi} dpi`],
+  ];
+  if (PV) kv.push(["Économie de blanc",`≈ ${fmt((1-PV.ink)*100,0)} %`]);
+  $("#kv").replaceChildren(...kv.flatMap(([k,v])=>{ const dt=document.createElement("dt"); dt.textContent=k; const dd=document.createElement("dd"); dd.textContent=v; return [dt,dd]; }));
+}
+
+function renderWarns(){
+  const w=[];
+  const effDpi=ORIG_W/(S.widthCm/2.54);
+  if (!IS_SAMPLE && effDpi<120) w.push(`<strong>Image peu définie.</strong> ${Math.round(effDpi)} dpi réels à ${fmt(S.widthCm)} cm de large. La trame masque une partie du flou, mais une image plus grande donnera des contours plus nets.`);
+  if (S.lpi>55) w.push(`<strong>Trame très fine.</strong> Au-delà de 55 lpi, les petits points risquent de ne pas accrocher la poudre ou de partir au lavage.`);
+  if (S.minDot<0.2) w.push(`<strong>Points minuscules.</strong> Sous 0,2 mm, la plupart des films DTF ne tiennent pas le point. Faites un essai avant une série.`);
+  if (S.colorMode==="solid"){ const c=hex2rgb(S.solidColor[S.shirt]), l=(c[0]+c[1]+c[2])/765;
+    if (S.shirt==="black"&&l<0.2) w.push(`<strong>Couleur trop sombre pour un t-shirt noir.</strong> Les points seront presque invisibles.`);
+    if (S.shirt==="white"&&l>0.85) w.push(`<strong>Couleur trop claire pour un t-shirt blanc.</strong> Les points seront presque invisibles.`); }
+  if (PV && PV.ink<0.03) w.push(`<strong>Presque rien ne sera imprimé.</strong> Baissez l'effacement ou augmentez la densité.`);
+  if (G.Wfull*G.Hfull>48e6) w.push(`<strong>Fichier très lourd.</strong> ${fmt(G.Wfull*G.Hfull/1e6,0)} mégapixels : l'export peut échouer. Réduisez la largeur ou passez à 300 dpi.`);
+  const box=$("#warns"); box.innerHTML=""; w.forEach(t=>{ const d=document.createElement("div"); d.className="warn"; d.innerHTML=t; box.append(d); });
+  const bi=$("#bg-info");
+  if (!S.removeBg) bi.textContent="Détecte la couleur des bords de l'image et la rend transparente.";
+  else if (!BGINFO||BGINFO.kind==="none") bi.textContent="Aucun fond uni détecté sur les bords : rien n'a été retiré.";
+  else if (BGINFO.kind==="alpha") bi.textContent="L'image est déjà détourée : sa transparence est conservée.";
+  else bi.textContent=`Fond ${rgb2hex(BGINFO.rgb).toUpperCase()} retiré (${fmt(BGINFO.share*100,0)} % de l'image).`;
+}
+
+function drawLoupe(){
+  if (!G) return;
+  const size=Math.round(2/2.54*S.dpi), lc=$("#loupe-c");
+  const s=Math.min(size,G.Wfull,G.Hfull);
+  const x0=clamp(Math.round(LP.u*G.Wfull-s/2),0,G.Wfull-s), y0=clamp(Math.round(LP.v*G.Hfull-s/2),0,G.Hfull-s);
+  lc.width=s; lc.height=s;
+  const x=lc.getContext("2d");
+  if (S.view==="orig"){ const {crop}=G, k=crop.w/G.Wfull; x.clearRect(0,0,s,s); x.drawImage(SRC,crop.x+x0*k,crop.y+y0*k,s*k,s*k,0,0,s,s); }
+  else { const id=x.createImageData(s,s); renderRegion(G.Wfull,G.Hfull,x0,y0,s,s,id.data); x.putImageData(id,0,0); }
+  // Repère sur l'aperçu
+  const cv=$("#view"), st=$("#stage"), r=cv.getBoundingClientRect(), sr=st.getBoundingClientRect(), m=$("#marker");
+  if (r.width>0){
+    const k=r.width/G.Wfull; m.hidden=false;
+    m.style.left=(r.left-sr.left+x0*k)+"px"; m.style.top=(r.top-sr.top+y0*k)+"px";
+    m.style.width=Math.max(6,s*k)+"px"; m.style.height=Math.max(6,s*k)+"px";
+  }
+  $("#loupe-cap").textContent=`Zone réelle de ${fmt(s/S.dpi*2.54)} × ${fmt(s/S.dpi*2.54)} cm à ${S.dpi} dpi, agrandie. Une cellule de trame mesure ${fmt(S.dpi/S.lpi,1)} px.`;
+}
+
+/* ---------- Export PNG ---------- */
+const CRC=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c= c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(b){ let c=0xFFFFFFFF; for (let i=0;i<b.length;i++) c=CRC[(c^b[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+// Inscrit la résolution (chunk pHYs) pour que le RIP imprime à la bonne taille.
+function withDpi(png,dpi){
+  for (let p=8;p<png.length-8;){ const len=(png[p]<<24|png[p+1]<<16|png[p+2]<<8|png[p+3])>>>0; const ty=String.fromCharCode(png[p+4],png[p+5],png[p+6],png[p+7]); if(ty==="pHYs") return png; if(ty==="IDAT"||ty==="IEND") break; p+=12+len; }
+  const ppm=Math.round(dpi/0.0254), ch=new Uint8Array(21), dv=new DataView(ch.buffer);
+  dv.setUint32(0,9); ch.set([112,72,89,115],4); dv.setUint32(8,ppm); dv.setUint32(12,ppm); ch[16]=1; dv.setUint32(17,crc32(ch.subarray(4,17)));
+  const out=new Uint8Array(png.length+21); out.set(png.subarray(0,33)); out.set(ch,33); out.set(png.subarray(33),54); return out;
+}
+const slug=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"visuel";
+const toBlob=cv=>new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error("toBlob")),"image/png"));
+
+async function saveFile(filename,blob){
+  if (window.claude && typeof window.claude.use==="function"){
+    const dl=await window.claude.use("downloads");
+    if (!dl) throw {code:"unavailable"};
+    return dl.save({filename,data:blob});
+  }
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=filename; document.body.append(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),8000);
+  return {status:"saved"};
+}
+function say(t,err=false){ const m=$("#msg"); m.textContent=t; m.classList.toggle("err",err); }
+
+async function exportPng(){
+  if (busy||!G) return;
+  busy=true; $("#export").disabled=true; say("");
+  const pr=$("#progress"), pt=$("#progress-text"), pb=$("#progress-bar"); pr.hidden=false;
+  try{
+    const {Wfull:W,Hfull:H}=G;
+    if (W*H>60e6) throw {code:"too_big"};
+    const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+    const x=cv.getContext("2d"), step=Math.max(16,Math.floor(1.2e6/W));
+    pt.textContent=`Tramage à ${S.dpi} dpi (${W} × ${H} px)…`;
+    for (let y=0;y<H;y+=step){
+      const h=Math.min(step,H-y), id=x.createImageData(W,h);
+      renderRegion(W,H,0,y,W,h,id.data); x.putImageData(id,0,y);
+      pb.style.width=((y+h)/H*90).toFixed(1)+"%"; await tick();
+    }
+    pt.textContent="Encodage du PNG…"; await tick();
+    const bytes=withDpi(new Uint8Array(await (await toBlob(cv)).arrayBuffer()),S.dpi);
+    cv.width=cv.height=0; pb.style.width="100%";
+    const name=`${slug(S.srcName)}_halftone_tshirt-${S.shirt==="black"?"noir":"blanc"}_${String(S.widthCm).replace(".",",")}cm_${S.dpi}dpi.png`;
+    const r=await saveFile(name,new Blob([bytes],{type:"image/png"}));
+    if (r && r.status==="saved") say(`PNG enregistré : ${name} (${fmt(bytes.length/1048576,1)} Mo).`);
+    else say("PNG transmis.");
+  } catch(e){
+    const code=e&&e.code;
+    if (code==="declined") say("Export annulé.");
+    else if (code==="too_big") say("L'image est trop grande pour être exportée d'un bloc. Réduisez la largeur imprimée.",true);
+    else if (code==="too_large") say("Le fichier est trop lourd pour cette vue. Réduisez la largeur imprimée.",true);
+    else if (code==="rate_limited") say("Une demande d'enregistrement est déjà ouverte. Répondez-y, puis réessayez.",true);
+    else if (code==="unavailable"||code==="not_granted"||code==="capability_disabled"||code==="capability_removed") say("Le téléchargement n'est pas disponible dans cette vue. Ouvrez la page sur claude.ai pour exporter.",true);
+    else say("L'export a échoué, sans doute par manque de mémoire. Réduisez la largeur imprimée et réessayez.",true);
+  } finally {
+    busy=false; $("#export").disabled=false; setTimeout(()=>{ pr.hidden=true; pb.style.width="0"; },700);
+  }
+}
+
+/* ---------- Couleurs ---------- */
+function hex2rgb(h){ h=h.replace("#",""); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+function rgb2hex(c){ return "#"+c.map(v=>Math.round(v).toString(16).padStart(2,"0")).join(""); }
+
+/* ---------- Interface ---------- */
+function buildShapes(){
+  const box=$("#shapes");
+  Object.entries(SHAPES).forEach(([key,s])=>{
+    const b=document.createElement("button"); b.type="button"; b.className="shape"; b.setAttribute("role","radio"); b.dataset.shape=key;
+    const c=document.createElement("canvas"); c.width=60; c.height=60; c.setAttribute("aria-hidden","true");
+    b.append(c, s.label); box.append(b);
+    b.addEventListener("click",()=>{ S.shape=key; renderControls(); scheduleRender(); });
+  });
+}
+function drawShapeIcons(){
+  const ink=getComputedStyle(document.documentElement).getPropertyValue("--ink").trim()||"#000";
+  document.querySelectorAll(".shape").forEach(b=>{
+    const c=b.querySelector("canvas"), x=c.getContext("2d"), T=tile(b.dataset.shape), id=x.createImageData(60,60), rgb=hex2rgb(ink.length===7?ink:"#14191d");
+    for (let y=0;y<60;y++) for (let xx=0;xx<60;xx++){
+      const cov=0.12+0.7*(xx/59), a=xx/20, bb=y/20, ui=((a-Math.floor(a))*N)|0, vi=((bb-Math.floor(bb))*N)|0, o=(y*60+xx)*4;
+      id.data[o]=rgb[0]; id.data[o+1]=rgb[1]; id.data[o+2]=rgb[2]; id.data[o+3]=cov>T[vi*N+ui]?255:0;
+    }
+    x.putImageData(id,0,0);
+  });
+}
+function drawLogo(){
+  const c=$("#logo"), x=c.getContext("2d"), s=92, cell=11.5;
+  x.fillStyle="#121213"; x.fillRect(0,0,s,s);
+  for (let j=-1;j<10;j++) for (let i=-1;i<10;i++){
+    const cx=(i+.5)*cell+(j%2?cell/2:0), cy=(j+.5)*cell*0.87, d=Math.hypot(cx-s*0.3,cy-s*0.3)/(s*1.0);
+    const r=cell*0.5*clamp(1-d,0,1)**0.8; if (r<0.6) continue;
+    x.fillStyle=`hsl(${190+d*130},85%,${58-d*8}%)`; x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.fill();
+  }
+}
+
+function renderControls(){
+  document.querySelectorAll(".shirt").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.shirt===S.shirt)));
+  document.querySelectorAll(".shape").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.shape===S.shape)));
+  $("#lpi").value=S.lpi; $("#lpi-out").textContent=`${S.lpi} lpi · ${fmt(25.4/S.lpi,2)} mm`;
+  $("#angle").value=S.angle; $("#angle-out").textContent=`${fmt(S.angle)}°`;
+  $("#mindot").value=S.minDot; $("#mindot-out").textContent=`${fmt(S.minDot,2)} mm`;
+  $("#cut").value=S.cut; $("#cut-out").textContent=`${S.cut} %`;
+  const black=S.shirt==="black";
+  $("#cut-label").textContent=black?"Effacement des noirs":"Effacement des blancs";
+  $("#cut-hint").textContent=black?"Les zones plus sombres que ce seuil disparaissent : le noir du t-shirt les remplace.":"Les zones plus claires que ce seuil disparaissent : le blanc du t-shirt les remplace.";
+  $("#solid").value=S.solid; $("#solid-out").textContent=`${S.solid} %`;
+  $("#density").value=S.density; $("#density-out").textContent=(S.density>0?"+":"")+S.density;
+  $("#c-orig").setAttribute("aria-pressed",String(S.colorMode==="orig"));
+  $("#c-solid").setAttribute("aria-pressed",String(S.colorMode==="solid"));
+  $("#solid-row").hidden=S.colorMode!=="solid"; $("#boost-row").hidden=S.colorMode==="solid";
+  $("#solidcolor").value=S.solidColor[S.shirt];
+  $("#boost").checked=S.boost;
+  $("#fade").value=S.fade; $("#fadeamt-row").hidden=S.fade==="none";
+  $("#fadeamt").value=S.fadeAmt; $("#fadeamt-out").textContent=`${S.fadeAmt} %`;
+  $("#removebg").checked=S.removeBg; $("#tol-row").hidden=!S.removeBg; $("#bgall-row").hidden=!S.removeBg; $("#bgall").checked=S.bgAll;
+  $("#tol").value=S.tol; $("#tol-out").textContent=`${S.tol} %`;
+  $("#width").value=S.widthCm; $("#dpi").value=String(S.dpi);
+  $("#v-shirt").setAttribute("aria-pressed",String(S.view==="shirt"));
+  $("#v-alpha").setAttribute("aria-pressed",String(S.view==="alpha"));
+  $("#v-orig").setAttribute("aria-pressed",String(S.view==="orig"));
+}
+
+/* ---------- Chargement ---------- */
+function setSource(img,name){
+  ORIG_W=img.naturalWidth||img.width; ORIG_H=img.naturalHeight||img.height;
+  const max=2200, f=Math.min(1,max/Math.max(ORIG_W,ORIG_H));
+  const c=document.createElement("canvas"); c.width=Math.max(1,Math.round(ORIG_W*f)); c.height=Math.max(1,Math.round(ORIG_H*f));
+  c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+  SRC=c; S.srcName=name; IS_SAMPLE=false; analyze();
+}
+function loadFile(file){
+  if (!file||!/^image\//.test(file.type)){ say("Ce fichier n'est pas une image. Choisissez un PNG, un JPG ou un WebP.",true); return; }
+  const url=URL.createObjectURL(file), im=new Image();
+  im.onload=()=>{ setSource(im,file.name.replace(/\.[^.]+$/,"")); URL.revokeObjectURL(url); say(`Image chargée : ${file.name}`); };
+  im.onerror=()=>{ say("Impossible de lire cette image. Enregistrez-la en PNG puis réessayez.",true); URL.revokeObjectURL(url); };
+  im.src=url;
+}
+
+function mulberry32(a){ return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function makeSample(){
+  // Visuel d'exemple : soleil couchant en dégradé, sur fond noir uni (typique d'un visuel prévu pour t-shirt).
+  const w=1400,h=1600,c=document.createElement("canvas"); c.width=w; c.height=h;
+  const x=c.getContext("2d"), cx=700, cy=720, R=520, rng=mulberry32(11);
+  x.fillStyle="#000"; x.fillRect(0,0,w,h);
+  x.save(); x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.clip();
+  const sky=x.createLinearGradient(0,cy-R,0,cy+R);
+  sky.addColorStop(0,"#ffe46b"); sky.addColorStop(.35,"#ff8a3d"); sky.addColorStop(.62,"#e8336e"); sky.addColorStop(.85,"#6b2a8f"); sky.addColorStop(1,"#1a0f3a");
+  x.fillStyle=sky; x.fillRect(cx-R,cy-R,2*R,2*R);
+  // bandes du soleil
+  x.fillStyle="#000";
+  for (let i=0;i<7;i++){ const y=cy+40+i*58, hh=6+i*5; x.fillRect(cx-R,y,2*R,hh); }
+  // montagnes
+  const g=x.createLinearGradient(0,cy+80,0,cy+R); g.addColorStop(0,"#2b7d8f"); g.addColorStop(1,"#03080c");
+  x.fillStyle=g; x.beginPath(); x.moveTo(cx-R,cy+R);
+  [[-520,250],[-380,130],[-260,210],[-120,60],[20,190],[170,90],[300,200],[420,140],[520,230]].forEach(([a,b])=>x.lineTo(cx+a,cy+b));
+  x.lineTo(cx+R,cy+R); x.closePath(); x.fill();
+  // étoiles
+  x.fillStyle="#fff"; for (let i=0;i<40;i++){ const px=cx-R+rng()*2*R, py=cy-R+rng()*260, pr=1.5+rng()*3; x.globalAlpha=.4+rng()*.6; x.beginPath(); x.arc(px,py,pr,0,Math.PI*2); x.fill(); }
+  x.globalAlpha=1; x.restore();
+  // palmier
+  x.fillStyle="#000"; x.strokeStyle="#000"; x.lineWidth=26; x.lineCap="round";
+  x.beginPath(); x.moveTo(cx+300,cy+R); x.quadraticCurveTo(cx+260,cy+150,cx+330,cy-60); x.stroke();
+  for (let i=0;i<7;i++){ const an=-Math.PI*0.95+i*Math.PI*0.32; x.save(); x.translate(cx+330,cy-60); x.rotate(an);
+    x.beginPath(); x.moveTo(0,0); x.quadraticCurveTo(110,-60,230,30); x.quadraticCurveTo(110,-10,0,0); x.fill(); x.restore(); }
+  // titre
+  const tg=x.createLinearGradient(0,1300,0,1480); tg.addColorStop(0,"#ffffff"); tg.addColorStop(1,"#ffb38a");
+  x.fillStyle=tg; x.font='800 150px "Unbounded","Arial Black",Arial,sans-serif'; x.textAlign="center"; x.textBaseline="middle";
+  x.fillText("SUNSET",cx,1360,1200);
+  x.font='700 54px "Unbounded","Arial Black",Arial,sans-serif'; x.fillStyle="#e8336e"; x.fillText("CLUB · DOUALA",cx,1490,1100);
+  return c;
+}
+
+/* ---------- Événements ---------- */
+document.querySelectorAll(".shirt").forEach(b=>b.addEventListener("click",()=>{ if(S.shirt===b.dataset.shirt) return; S.shirt=b.dataset.shirt; renderControls(); scheduleRender(); }));
+document.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click",()=>{ Object.assign(S,PRESETS[b.dataset.preset]); renderControls(); scheduleRender(); say(`Préréglage « ${b.textContent} » appliqué.`); }));
+const bind=(id,key,parse,fn)=>$("#"+id).addEventListener("input",e=>{ S[key]=parse(e.target.value); renderControls(); fn(); });
+bind("lpi","lpi",Number,scheduleRender);
+bind("angle","angle",Number,scheduleRender);
+bind("mindot","minDot",Number,scheduleRender);
+bind("cut","cut",Number,scheduleRender);
+bind("solid","solid",Number,scheduleRender);
+bind("density","density",Number,scheduleRender);
+bind("fadeamt","fadeAmt",Number,scheduleRender);
+bind("tol","tol",Number,scheduleAnalyze);
+$("#fade").addEventListener("change",e=>{ S.fade=e.target.value; renderControls(); scheduleRender(); });
+$("#boost").addEventListener("change",e=>{ S.boost=e.target.checked; scheduleRender(); });
+$("#removebg").addEventListener("change",e=>{ S.removeBg=e.target.checked; renderControls(); scheduleAnalyze(); });
+$("#bgall").addEventListener("change",e=>{ S.bgAll=e.target.checked; scheduleAnalyze(); });
+$("#solidcolor").addEventListener("input",e=>{ S.solidColor[S.shirt]=e.target.value; scheduleRender(); });
+$("#c-orig").addEventListener("click",()=>{ S.colorMode="orig"; renderControls(); scheduleRender(); });
+$("#c-solid").addEventListener("click",()=>{ S.colorMode="solid"; renderControls(); scheduleRender(); });
+$("#width").addEventListener("change",e=>{ const v=parseFloat(String(e.target.value).replace(",",".")); if(!(v>=4&&v<=45)){ e.target.value=S.widthCm; say("La largeur doit être comprise entre 4 et 45 cm.",true); return; } S.widthCm=v; say(""); scheduleRender(); });
+$("#dpi").addEventListener("change",e=>{ S.dpi=+e.target.value; scheduleRender(); });
+$("#v-shirt").addEventListener("click",()=>{ S.view="shirt"; renderControls(); drawPreview(); });
+$("#v-alpha").addEventListener("click",()=>{ S.view="alpha"; renderControls(); drawPreview(); });
+$("#v-orig").addEventListener("click",()=>{ S.view="orig"; renderControls(); drawPreview(); });
+$("#pick").addEventListener("click",()=>$("#file").click());
+$("#file").addEventListener("change",e=>{ loadFile(e.target.files[0]); e.target.value=""; });
+$("#export").addEventListener("click",exportPng);
+const stage=$("#stage");
+$("#view").addEventListener("click",e=>{ const r=e.currentTarget.getBoundingClientRect(); LP.u=clamp((e.clientX-r.left)/r.width,0,1); LP.v=clamp((e.clientY-r.top)/r.height,0,1); drawLoupe(); });
+["dragenter","dragover"].forEach(t=>stage.addEventListener(t,e=>{ e.preventDefault(); stage.classList.add("drag"); }));
+["dragleave","drop"].forEach(t=>stage.addEventListener(t,e=>{ e.preventDefault(); stage.classList.remove("drag"); }));
+stage.addEventListener("drop",e=>{ const f=e.dataTransfer&&e.dataTransfer.files[0]; if(f) loadFile(f); });
+document.addEventListener("paste",e=>{ const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith("image/")); if(it) loadFile(it.getAsFile()); });
+window.addEventListener("resize",()=>{ clearTimeout(window.__rz); window.__rz=setTimeout(drawLoupe,120); });
+const mq=matchMedia("(prefers-color-scheme: dark)"); mq.addEventListener?.("change",drawShapeIcons);
+new MutationObserver(drawShapeIcons).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+if (window.claude && typeof window.claude.use==="function"){
+  window.claude.use("downloads").then(d=>{ if(!d){ $("#export").disabled=true; say("L'export n'est pas disponible dans cette vue. Ouvrez la page sur claude.ai pour récupérer le PNG."); } });
+}
+
+buildShapes(); drawShapeIcons(); drawLogo(); renderControls();
+$("#status").textContent="Chargement de l'exemple…";
+Promise.race([document.fonts?document.fonts.load('800 150px "Unbounded"'):Promise.resolve(),new Promise(r=>setTimeout(r,1500))])
+  .catch(()=>{}).then(()=>{ const s=makeSample(); ORIG_W=s.width; ORIG_H=s.height; IS_SAMPLE=true; SRC=s; S.srcName="sunset-club"; analyze(); say("Exemple chargé. Remplacez-le par votre visuel : bouton « Charger une image », glisser-déposer ou Ctrl+V."); });
+})();
+</script>
