@@ -158,5 +158,6 @@ Tout le calcul se fait dans le navigateur ; seul JSZip (`jszip@3.10.1`, cdnjs) e
 - **Dégradés** : vers le bas, vers le haut, depuis le centre, ou contours usés.
 - **Fond** : suppression d'un fond uni détecté sur les bords, éventuellement aussi à l'intérieur du motif.
 - **Loupe** : zone réelle de 2 × 2 cm du fichier exporté.
+- **Export ZIP** : un clic produit les deux versions (t-shirt noir et t-shirt blanc) avec les mêmes réglages, plus `reglages.txt` (linéature, forme, seuils, tailles).
 
-Le PNG exporté ne contient que des pixels pleins ou transparents (pas de semi-transparence qui laisserait un voile de blanc), à 300 ou 360 dpi, résolution inscrite dans le fichier (chunk pHYs), recadré sur le motif. Tout le calcul se fait dans le navigateur, sans bibliothèque externe. Publiée comme artifact claude.ai, la page enregistre le PNG via la capacité `downloads`.
+Le PNG exporté ne contient que des pixels pleins ou transparents (pas de semi-transparence qui laisserait un voile de blanc), à 300 ou 360 dpi, résolution inscrite dans le fichier (chunk pHYs), recadré sur le motif. Tout le calcul se fait dans le navigateur ; seul JSZip (`jszip@3.10.1`, cdnjs) est chargé de l'extérieur, pour l'export ZIP. Publiée comme artifact claude.ai, la page enregistre le PNG via la capacité `downloads`.

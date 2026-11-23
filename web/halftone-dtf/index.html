@@ -2,6 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 /* Layout : une presse à transfert. Réglages à gauche, plateau « t-shirt » au centre, loupe 2 × 2 cm et bilan d'encre à droite. */
@@ -139,7 +140,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <div class="top-actions">
       <input type="file" id="file" accept="image/*" hidden>
       <button class="btn" id="pick" type="button">Charger une image</button>
-      <button class="btn primary" id="export" type="button">Exporter le PNG</button>
+      <button class="btn" id="export" type="button">Exporter le PNG</button>
+      <button class="btn primary" id="export-zip" type="button">Exporter les 2 versions (ZIP)</button>
     </div>
   </header>
 
@@ -590,39 +592,100 @@ async function saveFile(filename,blob){
 }
 function say(t,err=false){ const m=$("#msg"); m.textContent=t; m.classList.toggle("err",err); }
 
+// Trame l'image entière en PNG pleine résolution, pour le t-shirt de S.shirt.
+async function renderFullPng(label,from,span){
+  const {Wfull:W,Hfull:H}=G, pt=$("#progress-text"), pb=$("#progress-bar");
+  if (W*H>60e6) throw {code:"too_big"};
+  const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  const x=cv.getContext("2d"), step=Math.max(16,Math.floor(1.2e6/W));
+  pt.textContent=`${label} : tramage à ${S.dpi} dpi (${W} × ${H} px)…`;
+  for (let y=0;y<H;y+=step){
+    const h=Math.min(step,H-y), id=x.createImageData(W,h);
+    renderRegion(W,H,0,y,W,h,id.data); x.putImageData(id,0,y);
+    pb.style.width=(from+(y+h)/H*span*0.9).toFixed(1)+"%"; await tick();
+  }
+  pt.textContent=`${label} : encodage du PNG…`; await tick();
+  const bytes=withDpi(new Uint8Array(await (await toBlob(cv)).arrayBuffer()),S.dpi);
+  cv.width=cv.height=0; pb.style.width=(from+span).toFixed(1)+"%";
+  return bytes;
+}
+const shirtWord=sh=>sh==="black"?"noir":"blanc";
+const fileName=sh=>`${slug(S.srcName)}_halftone_tshirt-${shirtWord(sh)}_${String(S.widthCm).replace(".",",")}cm_${S.dpi}dpi.png`;
+
+function fiche(dims){
+  const L=[];
+  L.push("ATELIER HALFTONE DTF · RÉGLAGES","");
+  L.push(`Visuel          : ${S.srcName}`);
+  L.push(`Linéature       : ${S.lpi} lpi (cellule ${fmt(25.4/S.lpi,2)} mm), angle ${fmt(S.angle)}°`);
+  L.push(`Forme du point  : ${SHAPES[S.shape].label.toLowerCase()}`);
+  L.push(`Point minimal   : ${fmt(S.minDot,2)} mm`);
+  L.push(`Effacement      : ${S.cut} %   Aplats au-dessus de : ${S.solid} %   Densité : ${S.density}`);
+  L.push(`Dégradé         : ${$("#fade").selectedOptions[0].textContent}${S.fade!=="none"?` (${S.fadeAmt} %)`:""}`);
+  L.push(`Fond            : ${S.removeBg?(S.bgAll?"retiré partout":"retiré depuis les bords"):"conservé"}`,"");
+  dims.forEach(d=>{
+    L.push(`T-SHIRT ${shirtWord(d.shirt).toUpperCase()}`);
+    L.push(`  Fichier       : ${d.name}`);
+    L.push(`  Taille        : ${fmt(S.widthCm)} × ${fmt(d.H/S.dpi*2.54)} cm (${d.W} × ${d.H} px à ${S.dpi} dpi)`);
+    L.push(`  Points        : ${S.colorMode==="solid"?"couleur unique "+S.solidColor[d.shirt].toUpperCase():"couleurs de l'image"+(S.boost?" ravivées":"")}`,"");
+  });
+  L.push("CONSEILS");
+  L.push("- Importez chaque PNG à 100 % dans le RIP : la résolution est inscrite dans le fichier.");
+  L.push("- Gardez le blanc à 100 % sous chaque point et désactivez le choke s'il ronge les petits points.");
+  L.push("- Faites un essai sur une chute de tissu avant une série.");
+  return L.join("\n");
+}
+
+function exportError(e){
+  const code=e&&e.code;
+  if (code==="declined") say("Export annulé.");
+  else if (code==="too_big") say("L'image est trop grande pour être exportée d'un bloc. Réduisez la largeur imprimée.",true);
+  else if (code==="too_large") say("Le fichier est trop lourd pour cette vue. Réduisez la largeur imprimée.",true);
+  else if (code==="rate_limited") say("Une demande d'enregistrement est déjà ouverte. Répondez-y, puis réessayez.",true);
+  else if (code==="nozip") say("L'outil de compression ne s'est pas chargé. Vérifiez la connexion, rechargez la page, ou exportez les PNG un par un.",true);
+  else if (code==="unavailable"||code==="not_granted"||code==="capability_disabled"||code==="capability_removed") say("Le téléchargement n'est pas disponible dans cette vue. Ouvrez la page sur claude.ai pour exporter.",true);
+  else say("L'export a échoué, sans doute par manque de mémoire. Réduisez la largeur imprimée et réessayez.",true);
+}
+function setBusy(on){
+  busy=on; $("#export").disabled=on; $("#export-zip").disabled=on;
+  if (on){ say(""); $("#progress").hidden=false; }
+  else setTimeout(()=>{ $("#progress").hidden=true; $("#progress-bar").style.width="0"; },700);
+}
+
 async function exportPng(){
   if (busy||!G) return;
-  busy=true; $("#export").disabled=true; say("");
-  const pr=$("#progress"), pt=$("#progress-text"), pb=$("#progress-bar"); pr.hidden=false;
+  setBusy(true);
   try{
-    const {Wfull:W,Hfull:H}=G;
-    if (W*H>60e6) throw {code:"too_big"};
-    const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
-    const x=cv.getContext("2d"), step=Math.max(16,Math.floor(1.2e6/W));
-    pt.textContent=`Tramage à ${S.dpi} dpi (${W} × ${H} px)…`;
-    for (let y=0;y<H;y+=step){
-      const h=Math.min(step,H-y), id=x.createImageData(W,h);
-      renderRegion(W,H,0,y,W,h,id.data); x.putImageData(id,0,y);
-      pb.style.width=((y+h)/H*90).toFixed(1)+"%"; await tick();
-    }
-    pt.textContent="Encodage du PNG…"; await tick();
-    const bytes=withDpi(new Uint8Array(await (await toBlob(cv)).arrayBuffer()),S.dpi);
-    cv.width=cv.height=0; pb.style.width="100%";
-    const name=`${slug(S.srcName)}_halftone_tshirt-${S.shirt==="black"?"noir":"blanc"}_${String(S.widthCm).replace(".",",")}cm_${S.dpi}dpi.png`;
+    const bytes=await renderFullPng(`T-shirt ${shirtWord(S.shirt)}`,0,100), name=fileName(S.shirt);
     const r=await saveFile(name,new Blob([bytes],{type:"image/png"}));
     if (r && r.status==="saved") say(`PNG enregistré : ${name} (${fmt(bytes.length/1048576,1)} Mo).`);
     else say("PNG transmis.");
-  } catch(e){
-    const code=e&&e.code;
-    if (code==="declined") say("Export annulé.");
-    else if (code==="too_big") say("L'image est trop grande pour être exportée d'un bloc. Réduisez la largeur imprimée.",true);
-    else if (code==="too_large") say("Le fichier est trop lourd pour cette vue. Réduisez la largeur imprimée.",true);
-    else if (code==="rate_limited") say("Une demande d'enregistrement est déjà ouverte. Répondez-y, puis réessayez.",true);
-    else if (code==="unavailable"||code==="not_granted"||code==="capability_disabled"||code==="capability_removed") say("Le téléchargement n'est pas disponible dans cette vue. Ouvrez la page sur claude.ai pour exporter.",true);
-    else say("L'export a échoué, sans doute par manque de mémoire. Réduisez la largeur imprimée et réessayez.",true);
-  } finally {
-    busy=false; $("#export").disabled=false; setTimeout(()=>{ pr.hidden=true; pb.style.width="0"; },700);
-  }
+  } catch(e){ exportError(e); }
+  finally { setBusy(false); }
+}
+
+// Les deux versions (t-shirt noir et blanc) avec les mêmes réglages, dans un ZIP.
+async function exportZip(){
+  if (busy||!G) return;
+  setBusy(true);
+  const keep=S.shirt;
+  try{
+    if (!window.JSZip) throw {code:"nozip"};
+    const zip=new JSZip(), dims=[];
+    for (const [i,sh] of ["black","white"].entries()){
+      S.shirt=sh; buildCoverage();
+      const bytes=await renderFullPng(`T-shirt ${shirtWord(sh)}`,i*46,46), name=fileName(sh);
+      zip.file(name,bytes); dims.push({shirt:sh,name,W:G.Wfull,H:G.Hfull});
+    }
+    zip.file("reglages.txt","\ufeff"+fiche(dims));
+    $("#progress-text").textContent="Compression du ZIP…"; await tick();
+    const blob=await zip.generateAsync({type:"blob",compression:"STORE"});
+    $("#progress-bar").style.width="100%";
+    const name=`${slug(S.srcName)}_halftone_dtf_noir-et-blanc.zip`;
+    const r=await saveFile(name,blob);
+    if (r && r.status==="saved") say(`ZIP enregistré : ${name} (2 PNG + réglages, ${fmt(blob.size/1048576,1)} Mo).`);
+    else say("ZIP transmis.");
+  } catch(e){ exportError(e); }
+  finally { S.shirt=keep; buildCoverage(); setBusy(false); }
 }
 
 /* ---------- Couleurs ---------- */
@@ -764,6 +827,7 @@ $("#v-orig").addEventListener("click",()=>{ S.view="orig"; renderControls(); dra
 $("#pick").addEventListener("click",()=>$("#file").click());
 $("#file").addEventListener("change",e=>{ loadFile(e.target.files[0]); e.target.value=""; });
 $("#export").addEventListener("click",exportPng);
+$("#export-zip").addEventListener("click",exportZip);
 const stage=$("#stage");
 $("#view").addEventListener("click",e=>{ const r=e.currentTarget.getBoundingClientRect(); LP.u=clamp((e.clientX-r.left)/r.width,0,1); LP.v=clamp((e.clientY-r.top)/r.height,0,1); drawLoupe(); });
 ["dragenter","dragover"].forEach(t=>stage.addEventListener(t,e=>{ e.preventDefault(); stage.classList.add("drag"); }));
@@ -775,7 +839,7 @@ const mq=matchMedia("(prefers-color-scheme: dark)"); mq.addEventListener?.("chan
 new MutationObserver(drawShapeIcons).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
 if (window.claude && typeof window.claude.use==="function"){
-  window.claude.use("downloads").then(d=>{ if(!d){ $("#export").disabled=true; say("L'export n'est pas disponible dans cette vue. Ouvrez la page sur claude.ai pour récupérer le PNG."); } });
+  window.claude.use("downloads").then(d=>{ if(!d){ $("#export").disabled=true; $("#export-zip").disabled=true; say("L'export n'est pas disponible dans cette vue. Ouvrez la page sur claude.ai pour récupérer le PNG."); } });
 }
 
 buildShapes(); drawShapeIcons(); drawLogo(); renderControls();
