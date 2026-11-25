@@ -101,6 +101,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .stage canvas{display:block;max-width:100%;max-height:min(66vh,720px);width:auto;height:auto;position:relative;z-index:0}
 .stage.drag{outline:3px dashed var(--accent);outline-offset:-8px}
 .marker{position:absolute;z-index:2;border:2px solid var(--accent);border-radius:3px;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.6)}
+.badge{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:10px;z-index:3;font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:4px 10px;border-radius:999px}
 .drop-hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:#fff;background:rgba(0,0,0,.5);padding:3px 9px;border-radius:999px;z-index:3}
 .stats{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;gap:6px;align-items:baseline;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:13px}
@@ -271,6 +272,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       <div class="stage black" id="stage">
         <canvas id="view" aria-label="Aperçu du transfert"></canvas>
         <div class="marker" id="marker" hidden></div>
+        <span class="badge" id="badge"></span>
         <span class="drop-hint">Glissez une image ici, ou collez-la (Ctrl+V). Cliquez pour placer la loupe.</span>
       </div>
       <div class="stats" id="stats"></div>
@@ -407,6 +409,7 @@ function buildCoverage(){
   const n=SW*SH, raw=new Float32Array(n), COL=new Uint8ClampedArray(n*3);
   const black=S.shirt==="black", lo=S.cut/100, hi=Math.max(lo+0.02,S.solid/100), gam=Math.pow(2,-S.density/50);
   let minx=SW,miny=SH,maxx=-1,maxy=-1;
+  const cellMm0=25.4/S.lpi, bboxCut=Math.max(0.02,Math.PI*(S.minDot/2)**2/(cellMm0*cellMm0)*0.5);
   for (let i=0;i<n;i++){
     const r=PX[i*4], g=PX[i*4+1], b=PX[i*4+2], a=ALPHA[i]/255;
     const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
@@ -414,7 +417,7 @@ function buildCoverage(){
     const base=black ? mx/255 : 1-mn/255;
     let t=(base-lo)/(hi-lo); t=t<=0?0:t>=1?1:Math.pow(t,gam); t*=a;
     raw[i]=t;
-    if (t>0.02){ const x=i%SW, y=(i/SW)|0; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; }
+    if (t>bboxCut){ const x=i%SW, y=(i/SW)|0; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; }
     let R=r,Gc=g,B=b;
     if (S.boost){
       if (black){ if (mx>8){ const k=255/mx; R=r*k; Gc=g*k; B=b*k; } else { R=Gc=B=255; } }
@@ -503,6 +506,7 @@ function drawPreview(){
     let ink=0; for (let i=3;i<id.data.length;i+=4) if(id.data[i]) ink++;
     PV={W,H,ink:ink/(W*H)};
   }
+  $("#badge").textContent = S.view==="shirt" ? `Tissu simulé (${S.shirt==="black"?"noir":"blanc"}) · le fichier exporté n'a pas de fond` : S.view==="alpha" ? "Damier = zones transparentes du fichier" : "Image d'origine";
   const st=$("#stage"); st.className="stage "+(S.view==="alpha"?"checker":S.shirt);
   $("#loupe").className="loupe "+(S.view==="alpha"?"checker":S.shirt);
   renderStats(); renderWarns(); drawLoupe();
@@ -657,7 +661,7 @@ async function exportPng(){
   try{
     const bytes=await renderFullPng(`T-shirt ${shirtWord(S.shirt)}`,0,100), name=fileName(S.shirt);
     const r=await saveFile(name,new Blob([bytes],{type:"image/png"}));
-    if (r && r.status==="saved") say(`PNG enregistré : ${name} (${fmt(bytes.length/1048576,1)} Mo).`);
+    if (r && r.status==="saved") say(`PNG enregistré, fond transparent : ${name} (${fmt(bytes.length/1048576,1)} Mo).`);
     else say("PNG transmis.");
   } catch(e){ exportError(e); }
   finally { setBusy(false); }
@@ -682,7 +686,7 @@ async function exportZip(){
     $("#progress-bar").style.width="100%";
     const name=`${slug(S.srcName)}_halftone_dtf_noir-et-blanc.zip`;
     const r=await saveFile(name,blob);
-    if (r && r.status==="saved") say(`ZIP enregistré : ${name} (2 PNG + réglages, ${fmt(blob.size/1048576,1)} Mo).`);
+    if (r && r.status==="saved") say(`ZIP enregistré : ${name} (2 PNG à fond transparent + réglages, ${fmt(blob.size/1048576,1)} Mo).`);
     else say("ZIP transmis.");
   } catch(e){ exportError(e); }
   finally { S.shirt=keep; buildCoverage(); setBusy(false); }
